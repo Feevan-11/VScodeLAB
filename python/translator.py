@@ -822,12 +822,16 @@ def write_line_with_ending(f, line_content, is_last_line=False):
 
 
 def main():
-    name = "TEST"
-    asm_file = f"{name}.asm"
-    #coe_file = f"{name}.coe"
-    mif_file = f"{name}.mif"
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    name = "DMNGM1"
+    mif_dir = os.path.join(script_dir,"mif")
+    asm_dir = os.path.join(script_dir,"asm")
 
-    if not os.path.exists(asm_file):
+    asm_file = os.path.join(asm_dir, f"{name}.asm")
+    #coe_file = os.path.join(asm_dir, f"{name}.coe")
+    mif_file = os.path.join(mif_dir, f"{name}.mif")
+
+    if not asm_file:
         print(f"[erro] can't find: {asm_file}")
         return
 

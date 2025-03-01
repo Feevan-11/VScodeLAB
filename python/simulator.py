@@ -1,4 +1,4 @@
-
+import os
 import sys
 
 NUM_REGS = 32
@@ -383,7 +383,14 @@ def execute_instructions(instructions):
 def main():
     global PC
 
-    with open("TEST.mif", "r") as f:
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    name = 'DMNGM1'
+
+    mif_dir = os.path.join(script_dir,"mif")
+    filename = os.path.join(mif_dir, f"{name}.mif")
+
+    with open(filename, "r") as f:
         lines = f.readlines()
 
     for line in lines:

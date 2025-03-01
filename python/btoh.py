@@ -45,11 +45,16 @@ def convert_hex_to_bin(input_txt, output_mif):
             f.write(f"{combined}\n")
 
 if __name__ == "__main__":
-    input_txt = "a.txt"
-    if not os.path.isfile(input_txt):
-        print("文件不存在。")
-        sys.exit(1)
-    
-    output_mif = os.path.splitext(input_txt)[0] + ".mif"
+
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    name = 'dmn'
+    name1 = 'dmnsg'
+    mif_dir = os.path.join(script_dir,"mif")
+    txt_dir = os.path.join(script_dir,"txt")
+
+    input_txt = os.path.join(txt_dir, f"{name}.txt")
+
+    output_mif = os.path.join(mif_dir, f"{name1}.mif")
+
     convert_hex_to_bin(input_txt, output_mif)
     print(f"转换完成！生成的MIF文件: {output_mif}")

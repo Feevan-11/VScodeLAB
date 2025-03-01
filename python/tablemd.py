@@ -28,8 +28,14 @@ def process_asm_file(filename):
     return table_data
 
 def main():
-    name = "ROM"
-    filename = f"{name}.asm"
+
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    name = 'DMN'
+    md_dir = os.path.join(script_dir,"md")
+    asm_dir = os.path.join(script_dir,"asm")
+
+    filename = os.path.join(asm_dir, f"{name}.asm")
+
     if not filename:
         print("未找到.asm文件")
         return
@@ -42,7 +48,7 @@ def main():
     md_table = tabulate(table_data, headers=headers, tablefmt="github")
     
     # 写入Markdown文件
-    outputf = f"{name}.md"
+    outputf = os.path.join(md_dir, f"{name}.md")
     with open(outputf, 'w', encoding='utf-8') as f:
 
         f.write(md_table)

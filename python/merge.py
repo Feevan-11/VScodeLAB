@@ -1,3 +1,5 @@
+import os
+
 def process_mif(input_filename, output_filename):
     # 读取输入文件并预处理
     try:
@@ -32,7 +34,15 @@ def process_mif(input_filename, output_filename):
     print(f"转换完成！共处理 {len(valid_lines)} 行，生成 {len(combined)} 行256位数据")
 
 if __name__ == "__main__":
-    input_file = "TEST.mif"    # 输入文件名
-    output_file = "TT.mif"  # 输出文件名
+
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    input_file = "DMNGM1"    # 输入文件名
+    output_file = "DMNGM11"  # 输出文件名
+
+    mif_dir = os.path.join(script_dir,"mif")
+
+    input_filename = os.path.join(mif_dir, f"{input_file}.mif")
+    output_filename = os.path.join(mif_dir, f"{output_file}.mif")
     
-    process_mif(input_file, output_file)
+    process_mif(input_filename, output_filename)
