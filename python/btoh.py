@@ -47,8 +47,8 @@ def convert_hex_to_bin(input_txt, output_mif):
 if __name__ == "__main__":
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    name = 'dmn'
-    name1 = 'dmnsg'
+    name = 'sg'
+    name1 = 'GM0'
     mif_dir = os.path.join(script_dir,"mif")
     txt_dir = os.path.join(script_dir,"txt")
 
