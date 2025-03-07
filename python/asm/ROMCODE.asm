@@ -1,3 +1,4 @@
+; --- SEGMENT 1 ---
 lui  x1, 0xC0000
 lui  x2, 0xC0000
 lui  x3, 0xA0000

@@ -667,6 +667,73 @@ def main():
     print(" DMA0 descriptors  STAR:", f"{(alen + blen):08x}"," Lenth:",f"{dalen:08x}")
     print(" DMA1 descriptors  STAR:", f"{(alen + blen + dalen):08x}"," Lenth:",f"{dblen:08x}")
     #print("[INFO] Successfully generated  cdma0_sg.txt  / cdma1_sg.txt")
+    
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    name0 = "ROM"
+    name1 = "GM1"
+    txt_dir = os.path.join(script_dir,"txt")
+
+    ROM_file0 = os.path.join(txt_dir, f"{name0}.txt")
+    GM1_file1 = os.path.join(txt_dir, f"{name1}.txt")
+
+    #reg_values0 = read_reg_values(txt_file0)
+    #reg_values1 = read_reg_values(txt_file1)    
+
+    with open(ROM_file0, 'w') as f0:
+        f0.write("; --- SEGMENT 1 ---" +"\n")
+        f0.write("x5 0x" + f"{(0x00000000 & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x6 0x" + f"{(0xA8000000 & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x7 0x" + f"{(0x40000000 & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x8 0x" + f"{(0xB0001000 & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x9 0x" + f"{(alen & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x10 0x" + f"{(0x00001000 & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x11 0x" + f"{(alen & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x12 0x" + f"{(0xAC000000 & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x13 0x" + f"{(blen & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x14 0x" + f"{((alen+blen) & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x15 0x" + f"{(0xA0000000 & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x16 0x" + f"{(alen & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x17 0x" + f"{((alen+blen+dalen) & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x18 0x" + f"{(0xA4000000 & 0xFFFFFFFF):08x}"+"\n")
+
+
+    with open(GM1_file1, 'w') as f1:
+        f1.write("; --- SEGMENT 1 ---" +"\n")
+        f1.write("x5 0x" + f"{(0x00400000 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x6 0x" + f"{(0x80000000 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x7 0x" + f"{(0x40001000 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x8 0x" + f"{(0x88000000 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x9 0x" + f"{((16*A_COLS) & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x10 0x" + f"{((16*A_COLS) & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("; --- SEGMENT 2 ---" +"\n")
+        f1.write("x1 0x" + f"{(0xC0000800 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x2 0x" + f"{(0xC0000840 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x3 0x" + f"{(0x00001008 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x4 0x" + f"{(0x00001000 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x5 0x" + f"{(0xA8000000 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x6 0x" + f"{(0xAC000000 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x7 0x" + f"{((0xA8000000+alen-64) & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x8 0x" + f"{((0xAC000000+alen-64) & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("; --- SEGMENT 3 ---" +"\n")
+        f1.write("x1 0x" + f"{(0xC0000000 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x2 0x" + f"{(0xC0000400 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x3 0x" + f"{(0xA0000000 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x4 0x" + f"{(0xA4000000 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x5 0x" + f"{(0x00401001 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x6 0x" + f"{(0x00001000 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x7 0x" + f"{((0xA0000000+ADlen-64) & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x8 0x" + f"{((0xA4000000+ADlen-64) & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("; --- SEGMENT 4 ---" +"\n")
+        f1.write("x1 0x" + f"{(0xC0000000 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x2 0x" + f"{(0xC0000400 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x3 0x" + f"{(0xA0000000+ADlen & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x4 0x" + f"{(0xA4000000+ADlen & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x5 0x" + f"{(0x00401001 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x6 0x" + f"{(0x00001000 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x7 0x" + f"{((0xA0000000+AAlen+ADlen-64) & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x8 0x" + f"{((0xA4000000+AAlen+ADlen-64) & 0xFFFFFFFF):08x}"+"\n")
+
+
 
 
 if __name__ == "__main__":
