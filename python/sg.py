@@ -113,7 +113,7 @@ def write_txt_file(words, filename):
             hex_string = hex(int(bin_str, 2))
             f.write(hex_string+ "\n")
 
-
+"""
 def generate_cdma0_descriptors_for_matrix_A_IN(
     A_rows=64,
     A_cols=128,
@@ -124,12 +124,12 @@ def generate_cdma0_descriptors_for_matrix_A_IN(
     Shared_Men2_base=0x90000000,
     element_size=4
 ):
-    """
-    生成针对矩阵 A 的 SG 描述符列表(每个描述符8个word)，
-    假设 A 按行存储，大小 A_rows x A_cols，每次搬移 block_width 行(整列)。
-    目的地址在 dest0/dest1 之间来回切换。
-    返回值: descriptors_A, 其中 descriptors_A 是 [ [word0,word1,...], [word0,word1,...], ... ]
-    """
+    
+    #生成针对矩阵 A 的 SG 描述符列表(每个描述符8个word)，
+    #假设 A 按行存储，大小 A_rows x A_cols，每次搬移 block_width 行(整列)。
+    #目的地址在 dest0/dest1 之间来回切换。
+    #返回值: descriptors_A, 其中 descriptors_A 是 [ [word0,word1,...], [word0,word1,...], ... ]
+    
     descriptors = []
     # 总共有  (A_rows / block_width) 个子块 (不考虑整除余数)
     Anum_blocks = A_rows // block_width
@@ -154,7 +154,81 @@ def generate_cdma0_descriptors_for_matrix_A_IN(
               descriptors.append(desc_words)
 
     return descriptors
+"""
 
+def generate_cdma0_descriptors_for_matrix_A_IN(
+    A_rows=64,
+    A_cols=128,
+    block_width=16,
+    Global_0_base=0x04000000,
+    Shared_Men0_base=0x80000000,
+    element_size=2
+):
+    """
+    生成针对矩阵 A 的 SG 描述符列表(每个描述符8个word)，
+    假设 A 按行存储，大小 A_rows x A_cols，每次搬移 block_width 行(整列)。
+    目的地址在 dest0/dest1 之间来回切换。
+    返回值: descriptors_A, 其中 descriptors_A 是 [ [word0,word1,...], [word0,word1,...], ... ]
+    """
+    descriptors = []
+    # 总共有  (A_rows / block_width) 个子块 (不考虑整除余数)
+    Anum_blocks = A_rows // block_width
+
+    # 每个子块: block_width 行, 每行 A_cols 个元素, each元素=4字节 => block_size_bytes
+    block_size_bytes = block_width * A_cols * element_size
+
+    for i in range(Anum_blocks):
+       
+        # 源地址：基地址 + i* (block_width*A_cols*4)
+        src_addr = Global_0_base + i * block_size_bytes
+        #print(f'{src_addr:08x}')
+        # 目的地址在 0x80000000 / 0x90000000 间交替
+        dst_addr = Shared_Men0_base + i * block_size_bytes
+        # 先把 next_desc_addr 设为 0，后面再由主调函数统一处理链接
+        next_desc_addr = 0
+        if (i != 0):
+            desc_words = make_sg_cdma_descriptor(next_desc_addr, src_addr, dst_addr, block_size_bytes)
+            descriptors.append(desc_words)
+
+    return descriptors
+
+def generate_cdma1_descriptors_for_matrix_B_IN(
+    B_rows=128,
+    B_cols=64,
+    block_width=16,
+    Global_1_base=0x40001000,
+    Shared_Men1_base=0x90000000,
+    element_size=2
+):
+    """
+    生成针对矩阵 A 的 SG 描述符列表(每个描述符8个word)，
+    假设 A 按行存储，大小 A_rows x A_cols，每次搬移 block_width 行(整列)。
+    目的地址在 dest0/dest1 之间来回切换。
+    返回值: descriptors_A, 其中 descriptors_A 是 [ [word0,word1,...], [word0,word1,...], ... ]
+    """
+    descriptors = []
+    # 总共有  (A_rows / block_width) 个子块 (不考虑整除余数)
+    Bnum_blocks = B_cols // block_width
+
+    # 每个子块: block_width 行, 每列 B_rows 个元素, each元素=2字节 => block_size_bytes
+    block_size_bytes = block_width * B_rows * element_size
+
+    for i in range(Bnum_blocks):
+       
+        # 源地址：基地址 + i* (block_width*A_cols*4)
+        src_addr = Global_1_base + i * block_size_bytes
+        #print(f'{src_addr:08x}')
+        # 目的地址在 0x80000000 / 0x90000000 间交替
+        dst_addr = Shared_Men1_base + i * block_size_bytes
+        # 先把 next_desc_addr 设为 0，后面再由主调函数统一处理链接
+        next_desc_addr = 0
+        if (i != 0):
+            desc_words = make_sg_cdma_descriptor(next_desc_addr, src_addr, dst_addr, block_size_bytes)
+            descriptors.append(desc_words)
+
+    return descriptors
+
+"""
 def generate_cdma1_descriptors_for_matrix_B_IN(
     A_rows=64,
     B_rows=128,
@@ -165,12 +239,12 @@ def generate_cdma1_descriptors_for_matrix_B_IN(
     Shared_Men3_base=0x98000000,
     element_size=4
 ):
-    """
-    生成针对矩阵 B 的 SG 描述符列表(每个描述符8个word)，
-    假设 B 按“列存储”，大小 B_rows x B_cols，每次搬移 block_width 列(整行)。
-    目的地址在 dest0/dest1 之间来回切换。
-    返回值: descriptors_B, 其中 descriptors_B 是 [ [word0,word1,...], [word0,word1,...], ... ]
-    """
+    
+    #生成针对矩阵 B 的 SG 描述符列表(每个描述符8个word)，
+    #假设 B 按“列存储”，大小 B_rows x B_cols，每次搬移 block_width 列(整行)。
+    #目的地址在 dest0/dest1 之间来回切换。
+    #返回值: descriptors_B, 其中 descriptors_B 是 [ [word0,word1,...], [word0,word1,...], ... ]
+    
     descriptors = []
     # 总共有 (B_cols / block_width) 个子块
     Bnum_blocks = B_cols // block_width
@@ -197,7 +271,7 @@ def generate_cdma1_descriptors_for_matrix_B_IN(
                 descriptors.append(desc_words)
 
     return descriptors
-
+"""
 def generate_cdma0_descriptors_for_matrix_A_OUT(
     A_rows=64,
     A_cols=128,
@@ -285,11 +359,10 @@ def generate_cdma1_descriptors_for_matrix_B_OUT(
 
 def generate_dma0_descriptors_for_MM2S(
     A_rows=64,
-    A_cols=128,
+    A_B=128,
     B_cols=64,
     block_width=16,
     Shared_Men0_base=0x80000000,
-    Shared_Men2_base=0x90000000,
     element_size=2
 ):
     
@@ -299,16 +372,13 @@ def generate_dma0_descriptors_for_MM2S(
     Bnum_blocks = B_cols // block_width
 
     # 每个子块: block_width 行, 每行 A_cols 个元素, each元素=4字节 => block_size_bytes
-    block_size_bytes = block_width * A_cols * element_size + 0x0C000000
-    print(block_size_bytes)
+    block_size_bytes = block_width * A_B * element_size + 0x0C000000
+    block_size = block_width * A_B * element_size
 
     for i in range(Anum_blocks):
-
+        BUFFER_addr = Shared_Men0_base + (i * block_size)
         for j in range(Bnum_blocks):
-          A = i*Bnum_blocks + j
           # 源地址：基地址 + i* (block_width*A_cols*4)
-          BUFFER_addr = Shared_Men0_base if (A % 2 == 0) else Shared_Men2_base
-          # 先把 next_desc_addr 设为 0，后面再由主调函数统一处理链接
           next_desc_addr = 0
           desc_words = make_sg_dma_descriptor(next_desc_addr, BUFFER_addr, block_size_bytes)
           descriptors.append(desc_words)
@@ -317,11 +387,10 @@ def generate_dma0_descriptors_for_MM2S(
 
 def generate_dma1_descriptors_for_MM2S(
     A_rows=64,
-    B_rows=128,
+    A_B=128,
     B_cols=64,
     block_width=16,
     Shared_Men1_base=0x88000000,
-    Shared_Men3_base=0x98000000,
     element_size=2
 ):
     
@@ -331,15 +400,14 @@ def generate_dma1_descriptors_for_MM2S(
     Bnum_blocks = B_cols // block_width
 
     # 每个子块: block_width 行, 每行 A_cols 个元素, each元素=4字节 => block_size_bytes
-    block_size_bytes = block_width * B_rows * element_size + 0x0C000000
+    block_size_bytes = block_width * A_B * element_size + 0x0C000000
+    block_size = block_width * A_B * element_size
 
     for i in range(Anum_blocks):
-
+        
         for j in range(Bnum_blocks):
-          A = i*Bnum_blocks + j
           # 源地址：基地址 + i* (block_width*A_cols*4)
-          BUFFER_addr = Shared_Men1_base if (A % 2 == 0) else Shared_Men3_base
-          # 先把 next_desc_addr 设为 0，后面再由主调函数统一处理链接
+          BUFFER_addr = Shared_Men1_base + (j * block_size) 
           next_desc_addr = 0
           desc_words = make_sg_dma_descriptor(next_desc_addr, BUFFER_addr, block_size_bytes)
           descriptors.append(desc_words)
@@ -348,11 +416,9 @@ def generate_dma1_descriptors_for_MM2S(
 
 def generate_dma0_descriptors_for_S2MM(
     A_rows=64,
-    A_cols=128,
     B_cols=64,
     block_width=16,
-    Shared_Men0_base=0x84000000,
-    Shared_Men2_base=0x94000000,
+    Shared_Men2_base=0x90000000,
     element_size=2
 ):
 
@@ -368,25 +434,19 @@ def generate_dma0_descriptors_for_S2MM(
     for i in range(Anum_blocks):
 
         for j in range(Bnum_blocks):
-          A = i*Bnum_blocks + j
-          
-          BUFFER_addr = Shared_Men0_base if (A % 2 == 0) else Shared_Men2_base
-          BUFFER_addr = BUFFER_addr + addr
+          BUFFER_addr = Shared_Men2_base + addr
           next_desc_addr = 0
           desc_words = make_sg_dma_descriptor(next_desc_addr, BUFFER_addr, block_size_bytes)
-          if (A % 2 == 1):
-              addr = addr + 512
+          addr = addr + 512
           descriptors.append(desc_words)
 
     return descriptors
 
 def generate_dma1_descriptors_for_S2MM(
     A_rows=64,
-    B_rows=128,
     B_cols=64,
     block_width=16,
-    Shared_Men1_base=0x8C000000,
-    Shared_Men3_base=0x9C000000,
+    Shared_Men3_base=0x98000000,
     element_size=2
 ):
 
@@ -403,13 +463,10 @@ def generate_dma1_descriptors_for_S2MM(
 
         for j in range(Bnum_blocks):
           A = i*Bnum_blocks + j
-          BUFFER_addr = Shared_Men1_base if (A % 2 == 0) else Shared_Men3_base
-          BUFFER_addr = BUFFER_addr + addr
+          BUFFER_addr = Shared_Men3_base + addr
           next_desc_addr = 0
           desc_words = make_sg_dma_descriptor(next_desc_addr, BUFFER_addr, block_size_bytes)
-          if (A % 2 == 1):
-              addr = addr + 512
-
+          addr = addr + 512
           descriptors.append(desc_words)
 
     return descriptors
@@ -443,32 +500,37 @@ def link_descriptors_in_memory(descriptor_list, base_addr=0x00000000, desc_size=
 
     return flattened
 
+def flat(descriptor_list):
+    flattened = []  # 存放最终按顺序展开的 32位word
+
+    for i in range(len(descriptor_list)):
+        words = descriptor_list[i]
+        flattened.extend(words)
+
+    return flattened
+
 def main():
 
 
-    A_ROWS = 64
+    A_ROWS = 128
     A_COLS = 128
     B_ROWS = 128
-    B_COLS = 64
+    B_COLS = 128
     # 1) 生成 A、B 对应的描述符列表
     descriptors_A_IN = generate_cdma0_descriptors_for_matrix_A_IN(
         A_rows=A_ROWS,
         A_cols=A_COLS,
-        B_cols=B_COLS,
         block_width=16,
-        Global_0_base=0x04000000,
+        Global_0_base=0x00400000,
         Shared_Men0_base=0x80000000,
-        Shared_Men2_base=0x90000000,
         element_size=2
     )
     descriptors_B_IN = generate_cdma1_descriptors_for_matrix_B_IN(
-        A_rows=A_ROWS,
         B_rows=B_ROWS,
         B_cols=B_COLS,
         block_width=16,
-        Global_1_base=0x48000000,
+        Global_1_base=0x40001000,
         Shared_Men1_base=0x88000000,
-        Shared_Men3_base=0x98000000,
         element_size=2
     )
     descriptors_A_OUT = generate_cdma0_descriptors_for_matrix_A_OUT(
@@ -491,53 +553,50 @@ def main():
         Shared_Men3_base=0x9C000000,
         element_size=2
     )
-    descriptors_A = descriptors_A_IN + descriptors_A_OUT
-    descriptors_B = descriptors_B_IN + descriptors_B_OUT
+    #descriptors_A = descriptors_A_IN + descriptors_A_OUT
+    #descriptors_B = descriptors_B_IN + descriptors_B_OUT
+    descriptors_A = descriptors_A_IN
+    descriptors_B = descriptors_B_IN
+
     descriptors_DMA0_S2MM = generate_dma0_descriptors_for_S2MM(
         A_rows=A_ROWS,
-        A_cols=A_COLS,
         B_cols=B_COLS,
         block_width=16,
-        Shared_Men0_base=0x84000000,
-        Shared_Men2_base=0x94000000,
+        Shared_Men2_base=0x90000000,
         element_size=2
     )
     descriptors_DMA1_S2MM = generate_dma1_descriptors_for_S2MM(
         A_rows=A_ROWS,
-        B_rows=B_ROWS,
         B_cols=B_COLS,
         block_width=16,
-        Shared_Men1_base=0x8C000000,
-        Shared_Men3_base=0x9C000000,
+        Shared_Men3_base=0x98000000,
         element_size=2
     )
     descriptors_DMA0_MM2S = generate_dma0_descriptors_for_MM2S(
         A_rows=A_ROWS,
-        A_cols=A_COLS,
+        A_B = B_ROWS,
         B_cols=B_COLS,
         block_width=16,
         Shared_Men0_base=0x80000000,
-        Shared_Men2_base=0x90000000,
         element_size=2
     )
     descriptors_DMA1_MM2S = generate_dma1_descriptors_for_MM2S(
         A_rows=A_ROWS,
-        B_rows=B_ROWS,
+        A_B = B_ROWS,
         B_cols=B_COLS,
         block_width=16,
         Shared_Men1_base=0x88000000,
-        Shared_Men3_base=0x98000000,
         element_size=2
     )
 
     # 2) 给这两份描述符列表分别创建“内存中线性存放”布局，并将 Word0 指向下一描述符
     #    这里假设 CDMA0的描述符从 0x00000000 开始, CDMA1的描述符从 0x00100000 开始 (示例)
-    cdma0_base = 0xA0000000
-    cdma1_base = 0xA4000000
-    dma0_S2MM =  0xA8000000
-    dma1_S2MM =  0xAC000000
+    cdma0_base = 0xA8000000
+    cdma1_base = 0xAC000000
+    dma0_S2MM =  0xA0000000
+    dma1_S2MM =  0xA4000000
     ADD = int(A_ROWS/16) * int(B_COLS/16) * 64
-    print(ADD)
+    print('ADD',ADD)
     dma0_MM2S =  dma0_S2MM + ADD
     dma1_MM2S =  dma1_S2MM + ADD
 
@@ -574,7 +633,7 @@ def main():
     write_txt_file(dma1_MM2S_sg_data, dma1_MM2S_file)
     write_txt_file(dma0_S2MM_sg_data, dma0_S2MM_file)
     write_txt_file(dma1_S2MM_sg_data, dma1_S2MM_file)
-    write_txt_file(ALL,all_file)
+    
 
     print(" CDMA0 descriptors count:", len(descriptors_A))
     print(" CDMA1 descriptors count:", len(descriptors_B))
@@ -582,6 +641,31 @@ def main():
     print(" DMA1_MM2S descriptors count:", len(descriptors_DMA1_MM2S))
     print(" DMA0_S2MM descriptors count:", len(descriptors_DMA0_S2MM))
     print(" DMA1_S2MM descriptors count:", len(descriptors_DMA1_S2MM))
+
+    STAR = 0
+    alen = 64*len(descriptors_A)
+    blen = 64*len(descriptors_B)
+    ADlen = 64*len(descriptors_DMA0_S2MM)
+    AAlen = 64*len(descriptors_DMA0_MM2S)
+    dalen = 64*(len(descriptors_DMA0_MM2S)+len(descriptors_DMA0_S2MM))
+    dblen = 64*(len(descriptors_DMA1_MM2S)+len(descriptors_DMA1_S2MM))
+
+    descriptorss = []
+    alllen = int(65536 - (alen + blen + dalen + dblen)/64)
+    for i in range(alllen):
+        A = 0
+        word = make_sg_dma_descriptor(A,A,A)
+        descriptorss.append(word)
+    deadata = flat(descriptorss)
+    AL = ALL + deadata
+    write_txt_file(AL , all_file)
+    print("all:",len(descriptorss))
+    print(" CDMA0 descriptors STAR:", STAR,"        Lenth:",f"{alen:08x}")
+    print(" CDMA1 descriptors STAR:", f"{alen:08x}"," Lenth:",f"{blen:08x}")
+    print(" DMA  S  2  M  M   STAR:", 0,"         tail:",f"{(ADlen-64):08x}")
+    print(" DMA  M  M  2  S   STAR:", f"{(ADlen):08x}","  tail:",f"{(ADlen + AAlen-64):08x}")
+    print(" DMA0 descriptors  STAR:", f"{(alen + blen):08x}"," Lenth:",f"{dalen:08x}")
+    print(" DMA1 descriptors  STAR:", f"{(alen + blen + dalen):08x}"," Lenth:",f"{dblen:08x}")
     #print("[INFO] Successfully generated  cdma0_sg.txt  / cdma1_sg.txt")
 
 

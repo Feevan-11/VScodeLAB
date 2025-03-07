@@ -385,7 +385,7 @@ def main():
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     
-    name = 'DMNGM1'
+    name = 'TROM'
 
     mif_dir = os.path.join(script_dir,"mif")
     filename = os.path.join(mif_dir, f"{name}.mif")

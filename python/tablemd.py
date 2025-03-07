@@ -30,7 +30,7 @@ def process_asm_file(filename):
 def main():
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    name = 'GM1'
+    name = 'TROM'
     md_dir = os.path.join(script_dir,"md")
     asm_dir = os.path.join(script_dir,"asm")
 

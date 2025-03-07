@@ -823,7 +823,7 @@ def write_line_with_ending(f, line_content, is_last_line=False):
 
 def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    name = "DMNGM1"
+    name = "TGM1"
     mif_dir = os.path.join(script_dir,"mif")
     asm_dir = os.path.join(script_dir,"asm")
 

@@ -3,16 +3,29 @@ import os
 
 def convert_hex_to_bin(input_txt, output_mif):
     with open(input_txt, 'r') as f:
-        hex_lines = [line.strip().upper().replace('0x', '') for line in f if line.strip()]
+        hex_lines = []
+        for line in f:
+            stripped_line = line.strip()
+            if not stripped_line:
+                continue  # 跳过空行
+            # 去掉0x前缀并转换为大写
+            stripped_line = stripped_line.upper().replace('0X', '')
+            # 检查十六进制长度是否超过8位
+            if len(stripped_line) > 8:
+                print(f"错误：十六进制数过长（超过8位）: {stripped_line}")
+                return
+            # 高位补零到8位
+            padded_line = stripped_line.zfill(8)
+            hex_lines.append(padded_line)
     
     if not hex_lines:
         print("输入文件为空或没有有效数据。")
         return
     
-    hex_length = len(hex_lines[0])
-    bit_width = hex_length * 4
+    hex_length = 8  # 经过处理后，所有行都保证为8位
+    bit_width = hex_length * 4  # 固定为32位
     
-    # 检查所有行长度一致
+    # 检查所有行长度是否一致（此时应均为8位）
     for line in hex_lines:
         if len(line) != hex_length:
             print("错误：十六进制数的长度不一致。")
@@ -31,7 +44,7 @@ def convert_hex_to_bin(input_txt, output_mif):
     bin_lines = []
     for line in hex_lines:
         dec_num = int(line, 16)
-        bin_str = bin(dec_num)[2:].zfill(32)
+        bin_str = bin(dec_num)[2:].zfill(32)  # 确保二进制长度为32位
         bin_lines.append(bin_str)
     
     # 分块处理，每8个为一组
@@ -45,15 +58,13 @@ def convert_hex_to_bin(input_txt, output_mif):
             f.write(f"{combined}\n")
 
 if __name__ == "__main__":
-
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    name = 'sg'
-    name1 = 'GM0'
-    mif_dir = os.path.join(script_dir,"mif")
-    txt_dir = os.path.join(script_dir,"txt")
+    name = 'allsg'
+    name1 = 'TGM0'
+    mif_dir = os.path.join(script_dir, "mif")
+    txt_dir = os.path.join(script_dir, "txt")
 
     input_txt = os.path.join(txt_dir, f"{name}.txt")
-
     output_mif = os.path.join(mif_dir, f"{name1}.mif")
 
     convert_hex_to_bin(input_txt, output_mif)
