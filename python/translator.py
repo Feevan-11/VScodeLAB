@@ -823,73 +823,53 @@ def write_line_with_ending(f, line_content, is_last_line=False):
 
 def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    name = "TGM1"
-    mif_dir = os.path.join(script_dir,"mif")
-    asm_dir = os.path.join(script_dir,"asm")
+    mif_dir = os.path.join(script_dir, "mif")
+    asm_dir = os.path.join(script_dir, "asm")
 
-    asm_file = os.path.join(asm_dir, f"{name}.asm")
-    #coe_file = os.path.join(asm_dir, f"{name}.coe")
-    mif_file = os.path.join(mif_dir, f"{name}.mif")
+    # 定义需要处理的文件名列表
+    names = ["ROM", "GM1"]
 
-    if not asm_file:
-        print(f"[erro] can't find: {asm_file}")
-        return
+    for name in names:
+        # 为每个文件生成路径
+        asm_file = os.path.join(asm_dir, f"{name}.asm")
+        mif_file = os.path.join(mif_dir, f"{name}.mif")
 
-    with open(asm_file, 'r') as f:
-        all_lines = []
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith('#'):
-                continue
-            all_lines.append(line)
+        # 检查 ASM 文件是否存在
+        if not os.path.exists(asm_file):
+            print(f"[Error] Cannot find: {asm_file}")
+            continue  # 跳过当前文件，继续下一个
 
+        # 读取并处理 ASM 文件内容
+        with open(asm_file, 'r') as f:
+            all_lines = []
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue
+                all_lines.append(line)
 
-    groups = []
-    ins = 4
-    for i in range(0, len(all_lines), ins):
-        chunk = all_lines[i:i+ins]
-        if len(chunk) < ins:
+        # 分组逻辑（每4条指令为一组）
+        groups = []
+        ins = 4
+        for i in range(0, len(all_lines), ins):
+            chunk = all_lines[i:i+ins]
+            if len(chunk) < ins:
+                chunk += [""] * (ins - len(chunk))
+            groups.append(chunk)
 
-            chunk += [""] * (ins - len(chunk))
-        groups.append(chunk)
+        # 写入 MIF 文件
+        with open(mif_file, 'w') as f_mif:
+            for chunk_index, chunk in enumerate(groups):
+                instr_mif_list = []
+                for line in chunk:
+                    machine_int = parse_one_instruction(line)  # 假设已实现该函数
+                    machine_bin = format(machine_int, '032b')   # 转换为32位二进制
+                    instr_mif_list.append(machine_bin)
+                
+                all_128_bits = "".join(instr_mif_list)
+                f_mif.write(all_128_bits + "\n")
 
-    #with open(coe_file, 'w') as f_coe, open(mif_file, 'w') as f_mif:
-    with  open(mif_file, 'w') as f_mif:
-        #f_coe.write("memory_initialization_radix=2;\n")
-        #f_coe.write("memory_initialization_vector=\n")
-        
-        for chunk_index, chunk in enumerate(groups):
-
-            instr_coe_list = []
-            instr_mif_list = []
-            
-            for line in chunk:
-
-                machine_int = parse_one_instruction(line)
-
-                machine_int = format(machine_int, '032b')
-                #machine_h = int(machine_int)
-                #machine_hh = format(machine_h, '08x')
-
-                #big
-                #instr_coe_list.append(chunk_index)
-                #instr_coe_list.append(machine_hh)
-                instr_mif_list.append(machine_int)
-
-
-            #all_128_bits_coe =''.join(instr_coe_list)
-            """
-            is_last_line = (chunk_index == len(groups) - 1)
-            if is_last_line:
-                f_coe.write(all_128_bits_coe + ";\n")
-            else:
-                f_coe.write(all_128_bits_coe + ",\n")
-            """
-            all_128_bits = "".join(instr_mif_list)
-            f_mif.write(all_128_bits + "\n")
-            #{coe_file} (coe file)\n  2)
-
-    print(f"[Success] generated:\n  1)  {mif_file} (mif_file)")
+        print(f"[Success] Generated {name} files:\n   {mif_file}")
 
 if __name__ == "__main__":
     main()

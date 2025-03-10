@@ -37,8 +37,8 @@ if __name__ == "__main__":
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
-    input_file = "TGM1"    # 输入文件名
-    output_file = "TGM11"  # 输出文件名
+    input_file = "GM1"    # 输入文件名
+    output_file = "GM11"  # 输出文件名
 
     mif_dir = os.path.join(script_dir,"mif")
 

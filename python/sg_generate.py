@@ -509,13 +509,12 @@ def flat(descriptor_list):
 
     return flattened
 
-def main():
+def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16):
 
-
-    A_ROWS = 128
-    A_COLS = 128
-    B_ROWS = 128
-    B_COLS = 128
+    A_ROWS = A__ROWS
+    A_COLS = A__COLS
+    B_ROWS = B__ROWS
+    B_COLS = B__COLS
     # 1) 生成 A、B 对应的描述符列表
     descriptors_A_IN = generate_cdma0_descriptors_for_matrix_A_IN(
         A_rows=A_ROWS,
@@ -733,8 +732,11 @@ def main():
         f1.write("x7 0x" + f"{((0xA0000000+AAlen+ADlen-64) & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x8 0x" + f"{((0xA4000000+AAlen+ADlen-64) & 0xFFFFFFFF):08x}"+"\n")
 
-
-
+def main():
+    A_ROWS = 32
+    A_B = 32
+    B_COLS = 32
+    op(A__ROWS = A_ROWS,A__COLS = A_B,B__ROWS = A_B,B__COLS = B_COLS)
 
 if __name__ == "__main__":
     main()
