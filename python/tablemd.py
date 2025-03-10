@@ -30,30 +30,30 @@ def process_asm_file(filename):
 def main():
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    name = 'TROM'
+    names = ['ROM','GM1']
     md_dir = os.path.join(script_dir,"md")
     asm_dir = os.path.join(script_dir,"asm")
+    for name in names:
+        filename = os.path.join(asm_dir, f"{name}.asm")
 
-    filename = os.path.join(asm_dir, f"{name}.asm")
+        if not filename:
+            print("未找到.asm文件")
+            return
 
-    if not filename:
-        print("未找到.asm文件")
-        return
-
-    print(f"处理文件: {filename}")
+        print(f"处理文件: {filename}")
     
     # 生成Markdown内容
-    headers = ["PC", "Slot3", "Slot2", "Slot1", "Slot0"]
-    table_data = process_asm_file(filename)
-    md_table = tabulate(table_data, headers=headers, tablefmt="github")
+        headers = ["PC", "Slot3", "Slot2", "Slot1", "Slot0"]
+        table_data = process_asm_file(filename)
+        md_table = tabulate(table_data, headers=headers, tablefmt="github")
     
-    # 写入Markdown文件
-    outputf = os.path.join(md_dir, f"{name}.md")
-    with open(outputf, 'w', encoding='utf-8') as f:
+        # 写入Markdown文件
+        outputf = os.path.join(md_dir, f"{name}.md")
+        with open(outputf, 'w', encoding='utf-8') as f:
 
-        f.write(md_table)
+            f.write(md_table)
     
-    print("Markdown表格已生成")
+        print("Markdown表格已生成")
 
 if __name__ == "__main__":
     from datetime import datetime

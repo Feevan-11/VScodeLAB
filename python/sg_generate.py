@@ -718,7 +718,9 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16):
         f1.write("x2 0x" + f"{(0xC0000400 & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x3 0x" + f"{(0xA0000000 & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x4 0x" + f"{(0xA4000000 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x5 0x" + f"{(0x00401001 & 0xFFFFFFFF):08x}"+"\n")
+        sgbbt = len(descriptors_DMA0_S2MM) << 16
+        sgbbt = sgbbt + 0x1001
+        f1.write("x5 0x" + f"{(sgbbt & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x6 0x" + f"{(0x00001000 & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x7 0x" + f"{((0xA0000000+ADlen-64) & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x8 0x" + f"{((0xA4000000+ADlen-64) & 0xFFFFFFFF):08x}"+"\n")
@@ -727,7 +729,9 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16):
         f1.write("x2 0x" + f"{(0xC0000400 & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x3 0x" + f"{(0xA0000000+ADlen & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x4 0x" + f"{(0xA4000000+ADlen & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x5 0x" + f"{(0x00401001 & 0xFFFFFFFF):08x}"+"\n")
+        sgbbt1 = len(descriptors_DMA0_MM2S) << 16
+        sgbbt1 = sgbbt1 + 0x1001
+        f1.write("x5 0x" + f"{(sgbbt1 & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x6 0x" + f"{(0x00001000 & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x7 0x" + f"{((0xA0000000+AAlen+ADlen-64) & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x8 0x" + f"{((0xA4000000+AAlen+ADlen-64) & 0xFFFFFFFF):08x}"+"\n")
