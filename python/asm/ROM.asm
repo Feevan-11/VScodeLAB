@@ -25,7 +25,7 @@ addi x0, x0, 0
 addi x9, x9, 0x40
 sw x7, 0x18(x2)  
 sw x5, 0x18(x1)  
-addi x10, x10, 0x0
+addi x10, x10, 0x800
 addi x0, x0, 0 
 sw x8, 0x20(x2)
 sw x6, 0x20(x1) 
@@ -63,7 +63,7 @@ addi x12, x12, 0x0
 addi x13, x13, 0x40
 addi x14, x14, 0x80
 addi x15, x15, 0x0
-addi x16, x16, 0x40
+addi x16, x16, 0x200
 addi x17, x17, 0x280
 addi x18, x18, 0x0
 addi x0, x0, 0        

@@ -528,7 +528,7 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16):
         B_rows=B_ROWS,
         B_cols=B_COLS,
         block_width=16,
-        Global_1_base=0x40001000,
+        Global_1_base=0x40000800,
         Shared_Men1_base=0x88000000,
         element_size=2
     )
@@ -685,13 +685,13 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16):
         f0.write("x7 0x" + f"{(0x40000000 & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x8 0x" + f"{(0xB0001000 & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x9 0x" + f"{(alen & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x10 0x" + f"{(0x00001000 & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x10 0x" + f"{(0x00000800 & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x11 0x" + f"{(alen & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x12 0x" + f"{(0xAC000000 & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x13 0x" + f"{(blen & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x14 0x" + f"{((alen+blen) & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x15 0x" + f"{(0xA0000000 & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x16 0x" + f"{(alen & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x16 0x" + f"{(dalen & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x17 0x" + f"{((alen+blen+dalen) & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x18 0x" + f"{(0xA4000000 & 0xFFFFFFFF):08x}"+"\n")
 
@@ -700,7 +700,7 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16):
         f1.write("; --- SEGMENT 1 ---" +"\n")
         f1.write("x5 0x" + f"{(0x00400000 & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x6 0x" + f"{(0x80000000 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x7 0x" + f"{(0x40001000 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x7 0x" + f"{(0x40000800 & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x8 0x" + f"{(0x88000000 & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x9 0x" + f"{((16*A_COLS) & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x10 0x" + f"{((16*A_COLS) & 0xFFFFFFFF):08x}"+"\n")
