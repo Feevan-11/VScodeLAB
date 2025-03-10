@@ -33,7 +33,7 @@ def process_mif(input_filename, output_filename):
     
     print(f"转换完成！共处理 {len(valid_lines)} 行，生成 {len(combined)} 行256位数据")
 
-if __name__ == "__main__":
+def main():
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -46,3 +46,6 @@ if __name__ == "__main__":
     output_filename = os.path.join(mif_dir, f"{output_file}.mif")
     
     process_mif(input_filename, output_filename)
+
+if __name__ == "__main__":
+    main()

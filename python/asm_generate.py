@@ -113,7 +113,7 @@ def generate_output(processed_segments, reg_config, output_file='output.asm'):
             f.write(segment_map[seg_id])
             f.write("\n")
 
-if __name__ == "__main__":
+def main():
     # 初始化路径
     script_dir = os.path.dirname(os.path.abspath(__file__))
     
@@ -162,3 +162,6 @@ if __name__ == "__main__":
             print(f"成功生成：{cfg['asm_out']}")
         except ValueError as e:
             print(f"生成失败：{str(e)}")
+
+if __name__ == "__main__":
+    main()

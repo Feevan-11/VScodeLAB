@@ -1,0 +1,1 @@
+python sg_generate.py && python asm_generate.py && python translator.py && python merge.py && python matrix.py && python btoh.py && python merge_mif_files.py

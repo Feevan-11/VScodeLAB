@@ -57,10 +57,10 @@ def convert_hex_to_bin(input_txt, output_mif):
             combined = ''.join(reversed_chunk)
             f.write(f"{combined}\n")
 
-if __name__ == "__main__":
+def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     name = 'allsg'
-    name1 = 'TGM0'
+    name1 = 'GM0'
     mif_dir = os.path.join(script_dir, "mif")
     txt_dir = os.path.join(script_dir, "txt")
 
@@ -69,3 +69,6 @@ if __name__ == "__main__":
 
     convert_hex_to_bin(input_txt, output_mif)
     print(f"转换完成！生成的MIF文件: {output_mif}")
+
+if __name__ == "__main__":
+    main()

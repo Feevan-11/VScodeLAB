@@ -120,7 +120,7 @@ def matrix_to_mif(matrix, filename, order='C',HER =True):
         if HER:
             mif_content.append(f"{block_idx:04X} : {hex_str};")
         else:
-            mif_content.append(f"{binary_str};")
+            mif_content.append(f"{binary_str}")
         
         
     
