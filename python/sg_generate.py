@@ -160,7 +160,7 @@ def generate_cdma0_descriptors_for_matrix_A_IN(
     A_rows=64,
     A_cols=128,
     block_width=16,
-    Global_0_base=0x04000000,
+    Global_0_base=0x00010000,
     Shared_Men0_base=0x80000000,
     element_size=2
 ):
@@ -186,9 +186,9 @@ def generate_cdma0_descriptors_for_matrix_A_IN(
         dst_addr = Shared_Men0_base + i * block_size_bytes
         # 先把 next_desc_addr 设为 0，后面再由主调函数统一处理链接
         next_desc_addr = 0
-        if (i != 0):
-            desc_words = make_sg_cdma_descriptor(next_desc_addr, src_addr, dst_addr, block_size_bytes)
-            descriptors.append(desc_words)
+        #if (i != 0):
+        desc_words = make_sg_cdma_descriptor(next_desc_addr, src_addr, dst_addr, block_size_bytes)
+        descriptors.append(desc_words)
 
     return descriptors
 
@@ -222,9 +222,9 @@ def generate_cdma1_descriptors_for_matrix_B_IN(
         dst_addr = Shared_Men1_base + i * block_size_bytes
         # 先把 next_desc_addr 设为 0，后面再由主调函数统一处理链接
         next_desc_addr = 0
-        if (i != 0):
-            desc_words = make_sg_cdma_descriptor(next_desc_addr, src_addr, dst_addr, block_size_bytes)
-            descriptors.append(desc_words)
+        #if (i != 0):
+        desc_words = make_sg_cdma_descriptor(next_desc_addr, src_addr, dst_addr, block_size_bytes)
+        descriptors.append(desc_words)
 
     return descriptors
 
@@ -520,7 +520,7 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16):
         A_rows=A_ROWS,
         A_cols=A_COLS,
         block_width=16,
-        Global_0_base=0x00400000,
+        Global_0_base=0x00010000,
         Shared_Men0_base=0x80000000,
         element_size=2
     )
@@ -650,7 +650,7 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16):
     dblen = 64*(len(descriptors_DMA1_MM2S)+len(descriptors_DMA1_S2MM))
 
     descriptorss = []
-    alllen = int(65536 - (alen + blen + dalen + dblen)/64)
+    alllen = int(1024 - (alen + blen + dalen + dblen)/64)
     for i in range(alllen):
         A = 0
         word = make_sg_dma_descriptor(A,A,A)
@@ -697,14 +697,14 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16):
 
 
     with open(GM1_file1, 'w') as f1:
+        #f1.write("; --- SEGMENT 1 ---" +"\n")
+        #f1.write("x5 0x" + f"{(0x00400000 & 0xFFFFFFFF):08x}"+"\n")
+        #f1.write("x6 0x" + f"{(0x80000000 & 0xFFFFFFFF):08x}"+"\n")
+        #f1.write("x7 0x" + f"{(0x40000800 & 0xFFFFFFFF):08x}"+"\n")
+        #f1.write("x8 0x" + f"{(0x88000000 & 0xFFFFFFFF):08x}"+"\n")
+        #f1.write("x9 0x" + f"{((16*A_COLS*2) & 0xFFFFFFFF):08x}"+"\n")
+        #f1.write("x10 0x" + f"{((16*A_COLS*2) & 0xFFFFFFFF):08x}"+"\n")
         f1.write("; --- SEGMENT 1 ---" +"\n")
-        f1.write("x5 0x" + f"{(0x00400000 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x6 0x" + f"{(0x80000000 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x7 0x" + f"{(0x40000800 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x8 0x" + f"{(0x88000000 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x9 0x" + f"{((16*A_COLS) & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x10 0x" + f"{((16*A_COLS) & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("; --- SEGMENT 2 ---" +"\n")
         f1.write("x1 0x" + f"{(0xC0000800 & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x2 0x" + f"{(0xC0000840 & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x3 0x" + f"{(0x00001008 & 0xFFFFFFFF):08x}"+"\n")
@@ -713,7 +713,7 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16):
         f1.write("x6 0x" + f"{(0xAC000000 & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x7 0x" + f"{((0xA8000000+alen-64) & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x8 0x" + f"{((0xAC000000+alen-64) & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("; --- SEGMENT 3 ---" +"\n")
+        f1.write("; --- SEGMENT 2 ---" +"\n")
         f1.write("x1 0x" + f"{(0xC0000000 & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x2 0x" + f"{(0xC0000400 & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x3 0x" + f"{(0xA0000000 & 0xFFFFFFFF):08x}"+"\n")
@@ -724,7 +724,7 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16):
         f1.write("x6 0x" + f"{(0x00001000 & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x7 0x" + f"{((0xA0000000+ADlen-64) & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x8 0x" + f"{((0xA4000000+ADlen-64) & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("; --- SEGMENT 4 ---" +"\n")
+        f1.write("; --- SEGMENT 3 ---" +"\n")
         f1.write("x1 0x" + f"{(0xC0000000 & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x2 0x" + f"{(0xC0000400 & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x3 0x" + f"{(0xA0000000+ADlen & 0xFFFFFFFF):08x}"+"\n")
@@ -737,9 +737,9 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16):
         f1.write("x8 0x" + f"{((0xA4000000+AAlen+ADlen-64) & 0xFFFFFFFF):08x}"+"\n")
 
 def main():
-    A_ROWS = 32
-    A_B = 32
-    B_COLS = 32
+    A_ROWS = 64
+    A_B = 256
+    B_COLS = 64
     op(A__ROWS = A_ROWS,A__COLS = A_B,B__ROWS = A_B,B__COLS = B_COLS)
 
 if __name__ == "__main__":

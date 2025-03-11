@@ -1,7 +1,7 @@
 import numpy as np
 
 # 将数字 1 转换为 FP16
-fp16_number = np.float16(128.0)
+fp16_number = np.float16(88.0)
 
 # 获取 FP16 的字节表示
 
