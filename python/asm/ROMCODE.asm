@@ -134,15 +134,27 @@ addi x0, x0, 0
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0
-lp.setup  x1,  1000
+lp.setup  x1,  10
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0
+lp.setup  x2,  100
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
+addi x0, x0, 0
+lp.goto x2, -0x10
 addi x0, x0, 0 
-lp.goto x1, -0x10
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+lp.goto x1, -0x40 
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
@@ -174,22 +186,34 @@ addi x0, x0, 0
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0
-lp.setup  x1,  1000
+lp.setup  x1,  10
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0
+lp.setup  x2,  100
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
-addi x0, x0, 0 
-lp.goto x1, -0x10
-addi x0, x0, 0 
-addi x0, x0, 0 
+addi x0, x0, 0
+lp.goto x2, -0x10
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
+addi x0, x0, 0
 addi x0, x0, 0 
 addi x0, x0, 0 
+addi x0, x0, 0 
+lp.goto x1, -0x40 
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0
 lp.setup  x1, 50
 addi x0, x0, 0 
 addi x0, x0, 0 
@@ -198,7 +222,7 @@ addi x0, x0, 0
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
-lp.goto x1, 0xCF0
+lp.goto x1, 0xC90
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 

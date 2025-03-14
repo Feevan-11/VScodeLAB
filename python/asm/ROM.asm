@@ -22,7 +22,7 @@ addi x0, x0, 0
 sw x4, 0x4(x2)
 sw x4, 0x4(x1)
 addi x0, x0, 0
-addi x9, x9, 0x100
+addi x9, x9, 0x200
 sw x7, 0x18(x2)  
 sw x5, 0x18(x1)  
 addi x10, x10, 0x800
@@ -55,16 +55,16 @@ lui x12, 0xAC000
 lui x13, 0x0
 lui x14, 0x0
 lui x15, 0xA0000
-lui x16, 0x1
-lui x17, 0x1
+lui x16, 0x2
+lui x17, 0x2
 lui x18, 0xA4000
-addi x11, x11, 0x100
+addi x11, x11, 0x200
 addi x12, x12, 0x0
-addi x13, x13, 0x100
-addi x14, x14, 0x200
+addi x13, x13, 0x200
+addi x14, x14, 0x400
 addi x15, x15, 0x0
-addi x16, x16, 0x800
-addi x17, x17, 0xA00
+addi x16, x16, 0x0
+addi x17, x17, 0x400
 addi x18, x18, 0x0
 addi x0, x0, 0        
 addi x0, x0, 0 
@@ -133,15 +133,27 @@ addi x0, x0, 0
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0
-lp.setup  x1,  1000
+lp.setup  x1,  10
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0
+lp.setup  x2,  100
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
+addi x0, x0, 0
+lp.goto x2, -0x10
 addi x0, x0, 0 
-lp.goto x1, -0x10
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+lp.goto x1, -0x40 
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
@@ -173,22 +185,34 @@ addi x0, x0, 0
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0
-lp.setup  x1,  1000
+lp.setup  x1,  10
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0
+lp.setup  x2,  100
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
-addi x0, x0, 0 
-lp.goto x1, -0x10
-addi x0, x0, 0 
-addi x0, x0, 0 
+addi x0, x0, 0
+lp.goto x2, -0x10
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
+addi x0, x0, 0
 addi x0, x0, 0 
 addi x0, x0, 0 
+addi x0, x0, 0 
+lp.goto x1, -0x40 
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0
 lp.setup  x1, 50
 addi x0, x0, 0 
 addi x0, x0, 0 
@@ -197,7 +221,7 @@ addi x0, x0, 0
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
-lp.goto x1, 0xCF0
+lp.goto x1, 0xC90
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
