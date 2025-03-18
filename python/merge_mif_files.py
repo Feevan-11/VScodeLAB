@@ -2,40 +2,39 @@ import os
 
 def merge_and_replace(source_file, append_file):
     """
-    将 append_file 的内容追加到 source_file 末尾，并覆盖原 source_file
-    :param source_file: 被追加的目标文件名（会被覆盖）
-    :param append_file: 要追加的源文件名
+    Appends the contents of the append_file to the end of source_file and overwrites the original source_file
+    :param source_file: appended target file name (will be overwritten)
+    :param append_file: The name of the source file to append
     """
     try:
-        # 读取被追加文件（source_file）的原始内容
+        # Read the original contents of the appended file (source_file).
         with open(source_file, 'r') as f:
             source_data = [line.strip() for line in f if line.strip()]
         
-        # 读取追加文件（append_file）的内容
+        # Read the contents of the appended file (append_file).
         with open(append_file, 'r') as f:
             append_data = [line.strip() for line in f if line.strip()]
         
-        # 验证二进制格式
+        # Verify the binary format
         valid_chars = {'0', '1'}
         all_lines = source_data + append_data
         for line in all_lines:
             if not all(c in valid_chars for c in line):
-                raise ValueError(f"非法二进制数据: {line}")
+                raise ValueError(f"Illegal binary data: {line}")
         
-        # 覆盖写入原文件
+        # Overwrite to the original file
         with open(source_file, 'w') as f:
             f.write('\n'.join(all_lines))
-        
-        # 输出统计信息
-        print(f"[{source_file}] 合并完成，追加 {len(append_data)} 行")
-        print(f"总行数：{len(all_lines)} (原 {len(source_data)} + 新 {len(append_data)})")
+
+        print(f"[{source_file}] The merge is complete，ADD {len(append_data)} line")
+        print(f"all lines：{len(all_lines)} (old {len(source_data)} + new {len(append_data)})")
     
     except FileNotFoundError as e:
-        print(f"文件不存在：{e.filename}")
+        print(f"The file does not exist：{e.filename}")
     except ValueError as e:
-        print(f"数据验证失败：{str(e)}")
+        print(f"Data validation failed：{str(e)}")
     except Exception as e:
-        print(f"操作失败：{str(e)}")
+        print(f"The operation failed：{str(e)}")
 
 def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -47,16 +46,16 @@ def main():
     mif_file0 = os.path.join(mif_dir, f"{name0}.mif")
     mif_file1 = os.path.join(mat_dir, f"{name1}.mif")
 
-    # 第一组：GM0.mif + a_2.mif
-    print("正在处理 GM0 系列...")
+    # first：GM0.mif + a_2.mif
+    print("The GM0 series is being processed...")
     merge_and_replace(mif_file0, mif_file1)
     
     name2 = "GM11"
     name3 = "b_2"
     mif_file2 = os.path.join(mif_dir, f"{name2}.mif")
     mif_file3 = os.path.join(mat_dir, f"{name3}.mif")
-    # 第二组：GM11.mif + b_2.mif
-    print("\n正在处理 GM11 系列...")
+    # The second group：GM11.mif + b_2.mif
+    print("\nGM11 series is being processed...")
     merge_and_replace(mif_file2, mif_file3)
 
 if __name__ == "__main__":

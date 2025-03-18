@@ -134,7 +134,7 @@ addi x0, x0, 0
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0
-lp.setup  x1,  10
+lp.setup  x1,  20
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0
@@ -186,7 +186,7 @@ addi x0, x0, 0
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0
-lp.setup  x1,  10
+lp.setup  x1,  20
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0

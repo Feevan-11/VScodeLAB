@@ -724,7 +724,7 @@ def parse_one_instruction(line):
         return encode_sltiu(rd, rs1, imm)
 
     elif inst in ['lb', 'lh', 'lbu', 'lhu','lw']:
-        # 格式：lb x1, 8(x2)
+        # lb x1, 8(x2)
         if len(parts) != 3:
             raise ValueError(f"erro: {line}")
         rd_str = parts[1]
@@ -749,7 +749,7 @@ def parse_one_instruction(line):
             return encode_lw(rd, rs1, imm)
 
     elif inst in ['sb', 'sh']:
-        # 格式：sb x2, 8(x3)
+        # sb x2, 8(x3)
         if len(parts) != 3:
             raise ValueError(f"erro: {line}")
         rs2_str = parts[1]
@@ -768,7 +768,7 @@ def parse_one_instruction(line):
             return encode_sh(rs2, rs1, imm)
 
     elif inst == 'auipc':
-        # 格式：auipc x1, 0x12345
+        # auipc x1, 0x12345
         if len(parts) != 3:
             raise ValueError(f"erro: {line}")
         rd = reg_index(parts[1])
@@ -820,26 +820,54 @@ def write_line_with_ending(f, line_content, is_last_line=False):
     else:
         f.write(line_content + ",\n")
 
+def process_mif(input_filename, output_filename):
+    # Reads input files and preprocesses them
+    try:
+        with open(input_filename, 'r') as f:
+            lines = [line.strip() for line in f if line.strip()]
+    except FileNotFoundError:
+        print(f"erro：file {input_filename} not find")
+        return
+
+    # Verify the formatting of each line
+    valid_lines = []
+    for idx, line in enumerate(lines, 1):
+        if len(line) != 128:
+            print(f"the {idx} Line length error: It should be 128 bits, but it is{len(line)}")
+            return
+        if not all(c in {'0', '1'} for c in line):
+            print(f"in {idx} The line contains illegal characters")
+            return
+        valid_lines.append(line)
+
+    # Combine binary data
+    combined = []
+    for i in range(0, len(valid_lines), 2):
+        if i+1 < len(valid_lines):
+            # The second row is placed on the left, and the first row is placed on the right
+            combined.append(valid_lines[i+1] + valid_lines[i])
+
+    # Write to the output file
+    with open(output_filename, 'w') as f:
+        f.write('\n'.join(combined))
+    
+    print(f"Conversion completed! Total processed {len(valid_lines)} row，generated {len(combined)} line 256 bit")
 
 def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     mif_dir = os.path.join(script_dir, "mif")
     asm_dir = os.path.join(script_dir, "asm")
 
-    # 定义需要处理的文件名列表
     names = ["ROM", "GM1"]
 
     for name in names:
-        # 为每个文件生成路径
         asm_file = os.path.join(asm_dir, f"{name}.asm")
         mif_file = os.path.join(mif_dir, f"{name}.mif")
 
-        # 检查 ASM 文件是否存在
         if not os.path.exists(asm_file):
             print(f"[Error] Cannot find: {asm_file}")
-            continue  # 跳过当前文件，继续下一个
+            continue  
 
-        # 读取并处理 ASM 文件内容
         with open(asm_file, 'r') as f:
             all_lines = []
             for line in f:
@@ -848,7 +876,6 @@ def main():
                     continue
                 all_lines.append(line)
 
-        # 分组逻辑（每4条指令为一组）
         groups = []
         ins = 4
         for i in range(0, len(all_lines), ins):
@@ -857,19 +884,31 @@ def main():
                 chunk += [""] * (ins - len(chunk))
             groups.append(chunk)
 
-        # 写入 MIF 文件
+        # write MIF 
         with open(mif_file, 'w') as f_mif:
             for chunk_index, chunk in enumerate(groups):
                 instr_mif_list = []
                 for line in chunk:
-                    machine_int = parse_one_instruction(line)  # 假设已实现该函数
-                    machine_bin = format(machine_int, '032b')   # 转换为32位二进制
+                    machine_int = parse_one_instruction(line)  
+                    machine_bin = format(machine_int, '032b')   
                     instr_mif_list.append(machine_bin)
                 
                 all_128_bits = "".join(instr_mif_list)
                 f_mif.write(all_128_bits + "\n")
 
-        print(f"[Success] Generated {name} files:\n   {mif_file}")
+        print(f"Successfully Generated :{mif_file}")
+
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    input_file = "GM1"    
+    output_file = "GM11"  
+
+    mif_dir = os.path.join(script_dir,"mif")
+
+    input_filename = os.path.join(mif_dir, f"{input_file}.mif")
+    output_filename = os.path.join(mif_dir, f"{output_file}.mif")
+    
+    process_mif(input_filename, output_filename)
 
 if __name__ == "__main__":
     main()
