@@ -71,7 +71,7 @@ def main(random = False, A_row = 32, A__B = 16, B_col = 32):
     A_B = A__B
     Bcol = B_col
     A_custom = np.array([[1.0]*A_B for _ in range(Arow)], dtype=np.float16)
-    B_custom = np.array([[1.0, 2.0, 3.0, 4.0] + [1.0]*(Bcol-4) for _ in range(A_B)], dtype=np.float16)
+    B_custom = np.array([[1.0, 1.0, 1.0, 1.0] + [1.0]*(Bcol-4) for _ in range(A_B)], dtype=np.float16)
 
     # 生成矩阵
     if random_mode:

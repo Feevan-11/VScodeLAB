@@ -130,47 +130,60 @@ def generate_cdma0_descriptors_for_matrix_A_IN(
     """
     descriptors = []
     # There are (A_rows / block_width) sub-blocks in total (not taking into account the divisible remainder)
-    Anum_blocks = A_rows // block_width
+    Arow_blocks = A_rows // block_width
+    Acol_blocks = A_cols // block_width
 
     # Each subblock: block_width rows, A_cols elements per row, each element = 4 bytes = > block_size_bytes
-    block_size_bytes = block_width * A_cols * element_size
+    block_size_bytes = block_width * block_width * element_size
 
-    for i in range(Anum_blocks):
-       
-        # SA：BASE + i* (block_width*A_cols*4)
-        src_addr = Global_0_base + i * block_size_bytes
-        #print(f'{src_addr:08x}')
-        # DA 0x80000000 / 0x90000000 
-        dst_addr = Shared_Men0_base + i * block_size_bytes
-        # Set next_desc_addr to 0 first, and then the main tone function will handle the links uniformly
-        next_desc_addr = 0
-        #if (i != 0):
-        desc_words = make_sg_cdma_descriptor(next_desc_addr, src_addr, dst_addr, block_size_bytes)
-        descriptors.append(desc_words)
+    for i in range(Arow_blocks):
+        for j in range(Acol_blocks):
+            A = j + i*Acol_blocks
+            # SA：BASE + i* (block_width*A_cols*4)
+            src_addr = Global_0_base + A * block_size_bytes
+        
+            dst_addr = Shared_Men0_base + A * block_size_bytes
+            # Set next_desc_addr to 0 first, and then the main tone function will handle the links uniformly
+            next_desc_addr = 0
+            #if (i != 0):
+            desc_words = make_sg_cdma_descriptor(next_desc_addr, src_addr, dst_addr, block_size_bytes)
+            descriptors.append(desc_words)
+            if (A == Acol_blocks*Arow_blocks-1):
+                src_addr = src_addr + block_size_bytes
+                desc_words = make_sg_cdma_descriptor(next_desc_addr, src_addr, 0x90000000, block_size_bytes)
+                descriptors.append(desc_words)
+        
 
     return descriptors
 
 def generate_cdma1_descriptors_for_matrix_B_IN(
-    B_rows=128,
-    B_cols=64,
+    B_rows=64,
+    B_cols=128,
     block_width=16,
-    Global_1_base=0x40001000,
+    Global_1_base=0x40000800,
     Shared_Men1_base=0x90000000,
     element_size=2
 ):
 
     descriptors = []
-    Bnum_blocks = B_cols // block_width
+    Brow_blocks = B_rows // block_width
+    Bcol_blocks = B_cols // block_width
 
-    block_size_bytes = block_width * B_rows * element_size
+    block_size_bytes = block_width * block_width * element_size
 
-    for i in range(Bnum_blocks):
-       
-        src_addr = Global_1_base + i * block_size_bytes
-        dst_addr = Shared_Men1_base + i * block_size_bytes
-        next_desc_addr = 0
-        desc_words = make_sg_cdma_descriptor(next_desc_addr, src_addr, dst_addr, block_size_bytes)
-        descriptors.append(desc_words)
+    for i in range(Brow_blocks):
+        for j in range(Bcol_blocks):
+            B = j + i*Bcol_blocks
+            src_addr = Global_1_base + B * block_size_bytes
+        
+            dst_addr = Shared_Men1_base + B * block_size_bytes
+            next_desc_addr = 0
+            desc_words = make_sg_cdma_descriptor(next_desc_addr, src_addr, dst_addr, block_size_bytes)
+            descriptors.append(desc_words)
+            if (B == Bcol_blocks*Brow_blocks-1):
+                src_addr = src_addr + block_size_bytes
+                desc_words = make_sg_cdma_descriptor(next_desc_addr, src_addr, 0x98000000, block_size_bytes)
+                descriptors.append(desc_words)
 
     return descriptors
 
@@ -246,77 +259,73 @@ def generate_cdma1_descriptors_for_matrix_B_OUT(
 
 
 def generate_dma0_descriptors_for_MM2S(
-    A_rows=64,
-    A_B=128,
-    B_cols=64,
+    rows=64,
+    cols=64,
     block_width=16,
     Shared_Men0_base=0x80000000,
     element_size=2
 ):
     
     descriptors = []
-    # There are (A_rows / block_width) sub-blocks in total (excluding the divisible remainder)
-    Anum_blocks = A_rows // block_width
-    Bnum_blocks = B_cols // block_width
+    # There are (rows / block_width) sub-blocks in total (excluding the divisible remainder)
+    ROW_blocks = rows // block_width
+    COL_blocks = cols // block_width
 
-    # Each subblock: block_width rows, A_cols elements per row, each element = 4 bytes = > block_size_bytes
-    block_size_bytes = block_width * A_B * element_size + 0x0C000000
-    block_size = block_width * A_B * element_size
+    # Each subblock: block_width rows, cols elements per row, each element = 4 bytes = > block_size_bytes
+    block_size = block_width * block_width * element_size
 
-    for i in range(Anum_blocks):
-        BUFFER_addr = Shared_Men0_base + (i * block_size)
-        for j in range(Bnum_blocks):
+    for i in range(ROW_blocks):
+        
+        for j in range(COL_blocks):
+          
+          A = i*COL_blocks + j
+          BUFFER_addr = Shared_Men0_base + (A * block_size)
+          eye_addr = 0x90000000
           next_desc_addr = 0
-          '''
-          if(i*Bnum_blocks + j == 0):
-          #if((i*Bnum_blocks + j)%16 == 0):
-              block_size_bytes = block_width * A_B * element_size + 0x08000000
-          #elif((i*Bnum_blocks + j)%16 == 15):  
-          elif(i*Bnum_blocks + j == Anum_blocks *Bnum_blocks - 1):
-              block_size_bytes = block_width * A_B * element_size + 0x04000000
-          else:
-              block_size_bytes = block_width * A_B * element_size
-          '''
-          desc_words = make_sg_dma_descriptor(next_desc_addr, BUFFER_addr, block_size_bytes)
-          descriptors.append(desc_words)
+
+          block_size_bytes = block_width * block_width * element_size + 0x08000000
+          desc_words0 = make_sg_dma_descriptor(next_desc_addr, BUFFER_addr, block_size_bytes)
+          descriptors.append(desc_words0)  
+
+          block_size_bytes = block_width * block_width * element_size + 0x04000000
+          desc_words1 = make_sg_dma_descriptor(next_desc_addr, eye_addr, block_size_bytes)
+          descriptors.append(desc_words1)
 
     return descriptors
 
 def generate_dma1_descriptors_for_MM2S(
-    A_rows=64,
-    A_B=128,
-    B_cols=64,
+    rows=64,
+    cols=64,
     block_width=16,
     Shared_Men1_base=0x88000000,
     element_size=2
 ):
     
     descriptors = []
-    Anum_blocks = A_rows // block_width
-    Bnum_blocks = B_cols // block_width
+    ROW_blocks = rows // block_width
+    COL_blocks = cols // block_width
 
-    block_size_bytes = block_width * A_B * element_size + 0x0C000000
-    block_size = block_width * A_B * element_size
+    block_size = block_width * block_width * element_size
 
-    for i in range(Anum_blocks):
+    for i in range(ROW_blocks):
         
-        for j in range(Bnum_blocks):
-          BUFFER_addr = Shared_Men1_base + (j * block_size) 
+        for j in range(COL_blocks):
+          
+          A = i*COL_blocks + j
+          BUFFER_addr = Shared_Men1_base + (A * block_size)
+          eye_addr = 0x98000000
           next_desc_addr = 0
-          '''
-          if(i*Bnum_blocks + j == 0):
-          #if((i*Bnum_blocks + j)%16 == 0):
-              block_size_bytes = block_width * A_B * element_size + 0x08000000
-          #elif((i*Bnum_blocks + j)%16 == 15):  
-          elif(i*Bnum_blocks + j == Anum_blocks *Bnum_blocks - 1):
-              block_size_bytes = block_width * A_B * element_size + 0x04000000
-          else:
-              block_size_bytes = block_width * A_B * element_size
-          '''
-          desc_words = make_sg_dma_descriptor(next_desc_addr, BUFFER_addr, block_size_bytes)
-          descriptors.append(desc_words)
+          
+          block_size_bytes = block_width * block_width * element_size + 0x08000000
+          desc_words0 = make_sg_dma_descriptor(next_desc_addr, eye_addr, block_size_bytes)
+          descriptors.append(desc_words0)  
+
+          block_size_bytes = block_width * block_width * element_size + 0x04000000
+          desc_words1 = make_sg_dma_descriptor(next_desc_addr, BUFFER_addr, block_size_bytes)
+          descriptors.append(desc_words1)
 
     return descriptors
+
 
 def generate_dma0_descriptors_for_S2MM(
     A_rows=64,
@@ -350,7 +359,11 @@ def generate_dma0_descriptors_for_S2MM(
           desc_words = make_sg_dma_descriptor(next_desc_addr, BUFFER_addr, block_size_bytes)
           addr = addr + 512
           descriptors.append(desc_words)
-
+          ''' 
+          BUFFER_addr = Shared_Men2_base + addr
+          desc_words = make_sg_dma_descriptor(next_desc_addr, BUFFER_addr, block_size_bytes)
+          descriptors.append(desc_words)
+          ''' 
     return descriptors
 
 def generate_dma1_descriptors_for_S2MM(
@@ -386,6 +399,11 @@ def generate_dma1_descriptors_for_S2MM(
           desc_words = make_sg_dma_descriptor(next_desc_addr, BUFFER_addr, block_size_bytes)
           addr = addr + 512
           descriptors.append(desc_words)
+          ''' 
+          BUFFER_addr = Shared_Men3_base + addr
+          desc_words = make_sg_dma_descriptor(next_desc_addr, BUFFER_addr, block_size_bytes)
+          descriptors.append(desc_words)
+          '''   
 
     return descriptors
 
@@ -479,28 +497,26 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x00010000):
         A_rows=A_ROWS,
         B_cols=B_COLS,
         block_width=16,
-        Shared_Men2_base=0x90000000,
+        Shared_Men2_base=0x90000200,
         element_size=2
     )
     descriptors_DMA1_S2MM = generate_dma1_descriptors_for_S2MM(
         A_rows=A_ROWS,
         B_cols=B_COLS,
         block_width=16,
-        Shared_Men3_base=0x98000000,
+        Shared_Men3_base=0x98000200,
         element_size=2
     )
     descriptors_DMA0_MM2S = generate_dma0_descriptors_for_MM2S(
-        A_rows=A_ROWS,
-        A_B = B_ROWS,
-        B_cols=B_COLS,
+        rows=A_ROWS,
+        cols=B_COLS,
         block_width=16,
         Shared_Men0_base=0x80000000,
         element_size=2
     )
     descriptors_DMA1_MM2S = generate_dma1_descriptors_for_MM2S(
-        A_rows=A_ROWS,
-        A_B = B_ROWS,
-        B_cols=B_COLS,
+        rows=A_ROWS,
+        cols=B_COLS,
         block_width=16,
         Shared_Men1_base=0x88000000,
         element_size=2
@@ -558,8 +574,7 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x00010000):
     print(" DMA1_MM2S descriptors count:", len(descriptors_DMA1_MM2S))
     print(" DMA0_S2MM descriptors count:", len(descriptors_DMA0_S2MM))
     print(" DMA1_S2MM descriptors count:", len(descriptors_DMA1_S2MM))
-    allSG = len(descriptors_A) + len(descriptors_B) + len(descriptors_DMA0_MM2S) + len(descriptors_DMA1_MM2S) 
-    + len(descriptors_DMA0_S2MM)+ len(descriptors_DMA1_S2MM)
+    allSG = len(descriptors_A) + len(descriptors_B) + len(descriptors_DMA0_MM2S) + len(descriptors_DMA1_MM2S) + len(descriptors_DMA0_S2MM)+ len(descriptors_DMA1_S2MM)
     allSGdescriptors = int(A_DATA_START/64)
     if(allSGdescriptors >= allSG):
         print("There is no need to add space to the SG descriptor")
@@ -657,19 +672,18 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x00010000):
         f1.write("x3 0x" + f"{(0xA0000000+ADlen & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x4 0x" + f"{(0xA4000000+ADlen & 0xFFFFFFFF):08x}"+"\n")
         #sgbbt1 = len(descriptors_DMA0_MM2S) << 16
-        sgbbt1 =  0x1001
+        sgbbt1 = 0x1001
         f1.write("x5 0x" + f"{(sgbbt1 & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x6 0x" + f"{(0x00001000 & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x7 0x" + f"{((0xA0000000+AAlen+ADlen-64) & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x8 0x" + f"{((0xA4000000+AAlen+ADlen-64) & 0xFFFFFFFF):08x}"+"\n")
 
-def main(AROWS = 32,AB =32,BCOLS = 32):
+def main(AROWS = 32,BCOLS = 32):
     A_ROWS = AROWS
-    A_B = AB
     B_COLS = BCOLS
-    A_DATA_START = 0x00020000
+    A_DATA_START = 0x00022000
     print("Number of SG descriptors: ",int(A_DATA_START/64))
-    op(A__ROWS = A_ROWS,A__COLS = A_B,B__ROWS = A_B,B__COLS = B_COLS,A_DATA_START = A_DATA_START)
+    op(A__ROWS = A_ROWS,A__COLS = BCOLS,B__ROWS = AROWS,B__COLS = B_COLS,A_DATA_START = A_DATA_START)
 
 if __name__ == "__main__":
-    main(AROWS = 32,AB =32,BCOLS = 32)
+    main(AROWS = 32,BCOLS = 32)

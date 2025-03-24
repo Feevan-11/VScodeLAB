@@ -1,7 +1,7 @@
 import numpy as np
 
 # Convert the number  to FP16
-fp16_number = np.float16(88.0)
+fp16_number = np.float16(0.0)
 
 # Gets the byte representation of FP16
 

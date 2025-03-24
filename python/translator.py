@@ -858,11 +858,20 @@ def main():
     mif_dir = os.path.join(script_dir, "mif")
     asm_dir = os.path.join(script_dir, "asm")
 
-    names = ["ROM", "GM1"]
+    names = [
+        {"input":"ROM",
+         "output":"AROM",
+        },
+        {"input":"GM1",
+         "output":"AGM1",
+        } 
+    ]
 
     for name in names:
-        asm_file = os.path.join(asm_dir, f"{name}.asm")
-        mif_file = os.path.join(mif_dir, f"{name}.mif")
+        input_n = name["input"]
+        output_n = name["output"]
+        asm_file = os.path.join(asm_dir, f"{input_n}.asm")
+        mif_file = os.path.join(mif_dir, f"{output_n}.mif")
 
         if not os.path.exists(asm_file):
             print(f"[Error] Cannot find: {asm_file}")
@@ -900,15 +909,24 @@ def main():
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
-    input_file = "GM1"    
-    output_file = "GM11"  
+    NS = [
+        {"input":"AROM",
+         "output":"ROM",
+        },
+        {"input":"AGM1",
+         "output":"GM1",
+        } 
+    ]
+    for n in NS:
+        input_file = n["input"]  
+        output_file = n["output"]
 
-    mif_dir = os.path.join(script_dir,"mif")
+        mif_dir = os.path.join(script_dir,"mif")
 
-    input_filename = os.path.join(mif_dir, f"{input_file}.mif")
-    output_filename = os.path.join(mif_dir, f"{output_file}.mif")
+        input_filename = os.path.join(mif_dir, f"{input_file}.mif")
+        output_filename = os.path.join(mif_dir, f"{output_file}.mif")
     
-    process_mif(input_filename, output_filename)
+        process_mif(input_filename, output_filename)
 
 if __name__ == "__main__":
     main()
