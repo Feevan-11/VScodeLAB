@@ -18,10 +18,11 @@ def read_reg_values(file_path):
             if seg_match:
                 current_segment = int(seg_match.group(1))
                 continue
-            
-            # Parse register assignments
-            reg, value = line.split()
-            segment_regs[current_segment][reg.lower()] = int(value, 0)
+
+            if ' ' in line:
+                reg, value = line.split()
+                segment_regs[current_segment][reg.lower()] = int(value, 0)
+
     
     return segment_regs
 
@@ -39,6 +40,7 @@ def split_into_segments(asm_code):
                 segments.append(('\n'.join(current_segment), segment_id))
                 current_segment = []
             segment_id = int(seg_match.group(1))
+            current_segment.append(line)
             continue
         
         current_segment.append(line)
@@ -111,11 +113,37 @@ def generate_output(processed_segments, reg_config, output_file='output.asm'):
             f.write(segment_map[seg_id])
             f.write("\n")
 
-def main():
+def main(GM1 = 3):
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    
-    configs = [
+    if (GM1 == 3):
+        configs = [
+        {
+            "asm_in": os.path.join("asm", "ROMCODE.asm"),
+            "reg_config": os.path.join("txt", "ROM.txt"),
+            "asm_out": os.path.join("asm", "ROM.asm")
+        },
+        {
+            "asm_in": os.path.join("asm", "GM1NI.asm"),
+            "reg_config": os.path.join("txt", "GM1.txt"),
+            "asm_out": os.path.join("asm", "GM1.asm")
+        }
+     ]
+    elif(GM1 == 2):
+        configs = [
+        {
+            "asm_in": os.path.join("asm", "TROM.asm"),
+            "reg_config": os.path.join("txt", "ROM.txt"),
+            "asm_out": os.path.join("asm", "ROM.asm")
+        },
+        {
+            "asm_in": os.path.join("asm", "GM1CODE.asm"),
+            "reg_config": os.path.join("txt", "GM1.txt"),
+            "asm_out": os.path.join("asm", "GM1.asm")
+        }
+        ]
+    else:
+        configs = [
         {
             "asm_in": os.path.join("asm", "ROMCODE.asm"),
             "reg_config": os.path.join("txt", "ROM.txt"),
@@ -126,7 +154,7 @@ def main():
             "reg_config": os.path.join("txt", "GM1.txt"),
             "asm_out": os.path.join("asm", "GM1.asm")
         }
-    ]
+     ]
 
     for cfg in configs:
         reg_values = read_reg_values(cfg["reg_config"])

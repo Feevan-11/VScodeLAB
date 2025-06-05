@@ -631,7 +631,7 @@ def main(AROWS = 32,AB =32,BCOLS = 32):
     A_ROWS = AROWS
     A_B = AB
     B_COLS = BCOLS
-    A_DATA_START = 0x00020000
+    A_DATA_START = 0x00001000
     print("Number of SG descriptors: ",int(A_DATA_START/64))
     op(A__ROWS = A_ROWS,A__COLS = A_B,B__ROWS = A_B,B__COLS = B_COLS,A_DATA_START = A_DATA_START)
 

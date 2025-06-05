@@ -61,7 +61,7 @@ def matrix_to_mif(matrix, filename, split_by, block_size, internal_order, HER=Tr
     with open(filename, 'w') as f:
         f.write('\n'.join(mif_content))
 
-def main(random = False, A_row = 32, A__B = 16, B_col = 32):
+def main(random = False, A_row = 32, A__B = 16, B_col = 32,T = True):
 
     # 配置参数
     random_mode = random  # True=随机矩阵，False=自定义矩阵
@@ -70,8 +70,12 @@ def main(random = False, A_row = 32, A__B = 16, B_col = 32):
     Arow = A_row
     A_B = A__B
     Bcol = B_col
-    A_custom = np.array([[1.0]*A_B for _ in range(Arow)], dtype=np.float16)
-    B_custom = np.array([[1.0, 1.0, 1.0, 1.0] + [1.0]*(Bcol-4) for _ in range(A_B)], dtype=np.float16)
+    A_custom = np.array([[2.0] + [1.0]*(A_B-1) for _ in range(Arow)], dtype=np.float16)
+    if T:
+        B_custom = np.eye(A__B, dtype=np.float16)
+    else:
+        B_custom = np.array([[2.0] + [1.0]*(Bcol-1) for _ in range(A_B)], dtype=np.float16)
+    
 
     # 生成矩阵
     if random_mode:
@@ -122,4 +126,4 @@ def main(random = False, A_row = 32, A__B = 16, B_col = 32):
             f.write(line + '\n')
 
 if __name__ == "__main__":
-    main(random = False, A_row = 32, A__B = 16, B_col = 32)
+    main(random = False, A_row = 32, A__B = 32, B_col = 32)

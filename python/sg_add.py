@@ -464,7 +464,7 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x00010000):
         B_rows=B_ROWS,
         B_cols=B_COLS,
         block_width=16,
-        Global_1_base=0x40000800,
+        Global_1_base=0x40001000,
         Shared_Men1_base=0x88000000,
         element_size=2
     )
@@ -582,15 +582,15 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x00010000):
         print("Need to add space to the SG descriptor")
 
     STAR = 0
-    alen = 64*len(descriptors_A)
-    blen = 64*len(descriptors_B)
-    ADlen = 64*len(descriptors_DMA0_S2MM)
-    AAlen = 64*len(descriptors_DMA0_MM2S)
-    dalen = 64*(len(descriptors_DMA0_MM2S)+len(descriptors_DMA0_S2MM))
-    dblen = 64*(len(descriptors_DMA1_MM2S)+len(descriptors_DMA1_S2MM))
+    CDMA0_len = 64*len(descriptors_A)
+    CDMA1_len = 64*len(descriptors_B)
+    DMA0_S2MM_len = 64*len(descriptors_DMA0_S2MM)
+    DMA0_MM2S_len = 64*len(descriptors_DMA0_MM2S)
+    DMA0_len = 64*(len(descriptors_DMA0_MM2S)+len(descriptors_DMA0_S2MM))
+    DMA1_len = 64*(len(descriptors_DMA1_MM2S)+len(descriptors_DMA1_S2MM))
 
     descriptorss = []
-    alllen = int(int(A_DATA_START/64) - (alen + blen + dalen + dblen)/64)
+    alllen = int(int(A_DATA_START/64) - (CDMA0_len + CDMA1_len + DMA0_len + DMA1_len)/64)
     for i in range(alllen):
         A = 0
         word = make_sg_dma_descriptor(A,A,A)
@@ -617,8 +617,21 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x00010000):
     ROM_file0 = os.path.join(txt_dir, f"{name0}.txt")
     GM1_file1 = os.path.join(txt_dir, f"{name1}.txt")
 
-    #reg_values0 = read_reg_values(txt_file0)
-    #reg_values1 = read_reg_values(txt_file1)    
+    ROM_LOOP_file0 = os.path.join(txt_dir, f"{name0}LOOP.txt")
+    GM1_LOOP_file1 = os.path.join(txt_dir, f"{name1}LOOP.txt")
+
+    def descriptors(len):
+        ds_x1 = (len/45)/300 
+        ds_x1 = int(ds_x1)
+        return ds_x1
+    def cdma(row,col):
+        cd_x1 = ((row*col*2)/28)/300 
+        cd_x1 = int(cd_x1)
+        return cd_x1
+    def sa(row,col):
+        sa_x1 = ((16*32)*(row/16)*(col/16)/14)/300 
+        sa_x1 = int(sa_x1)
+        return sa_x1
 
     with open(ROM_file0, 'w') as f0:
         f0.write("; --- SEGMENT 1 ---" +"\n")
@@ -626,17 +639,51 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x00010000):
         f0.write("x6 0x" + f"{(0xA8000000 & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x7 0x" + f"{(0x40000000 & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x8 0x" + f"{(0xB0001000 & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x9 0x" + f"{(alen & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x10 0x" + f"{(0x00000800 & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x11 0x" + f"{(alen & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x9 0x" + f"{(CDMA0_len & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x10 0x" + f"{(0x00001000 & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x11 0x" + f"{(CDMA0_len & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x12 0x" + f"{(0xAC000000 & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x13 0x" + f"{(blen & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x14 0x" + f"{((alen+blen) & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x13 0x" + f"{(CDMA1_len & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x14 0x" + f"{((CDMA0_len+CDMA1_len) & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x15 0x" + f"{(0xA0000000 & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x16 0x" + f"{(dalen & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x17 0x" + f"{((alen+blen+dalen) & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x16 0x" + f"{(DMA0_len & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x17 0x" + f"{((CDMA0_len+CDMA1_len+DMA0_len) & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x18 0x" + f"{(0xA4000000 & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("; --- SEGMENT 2 ---" +"\n")
+        f0.write("x0 0x" + f"{(0x0 & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("; --- SEGMENT 3 ---" +"\n")
+        f0.write("x0 0x" + f"{(0x0 & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("; --- SEGMENT 4 ---" +"\n")
+        f0.write("x0 0x" + f"{(0x0 & 0xFFFFFFFF):08x}"+"\n")
 
+    with open(ROM_LOOP_file0, 'w') as f0_L:
+        f0_L.write("; --- SEGMENT 1 ---" +"\n")
+        cdma0_ds_x1 = int(CDMA0_len/45 + 10)
+        f0_L.write("x1 0x" + f"{(cdma0_ds_x1 & 0xFFFFFFFF):08x}"+"\n")  #CDMA0
+
+        f0_L.write("; --- SEGMENT 2 ---" +"\n")
+        cdma1_ds_x1 = int(CDMA1_len/45 + 10)
+        f0_L.write("x1 0x" + f"{(cdma1_ds_x1 & 0xFFFFFFFF):08x}"+"\n")  #CDMA1
+
+        f0_L.write("; --- SEGMENT 3 ---" +"\n")
+        dma0_ds_x1 = descriptors(DMA0_len)
+        f0_L.write("x1 0x" + f"{(dma0_ds_x1 & 0xFFFFFFFF):08x}"+"\n")  #DMA0
+
+        f0_L.write("; --- SEGMENT 4 ---" +"\n")
+        dma1_ds_x1 = descriptors(DMA1_len)
+        f0_L.write("x1 0x" + f"{(dma1_ds_x1 & 0xFFFFFFFF):08x}"+"\n")  #DMA1
+
+    with open(GM1_LOOP_file1, 'w') as f1_L:
+        f1_L.write("; --- SEGMENT 1 ---" +"\n") #CDMA
+        CDMA_X1 = cdma(A__ROWS,A__COLS)
+        f1_L.write("x1 0x" + f"{(CDMA_X1 & 0xFFFFFFFF):08x}"+"\n")
+
+        f1_L.write("; --- SEGMENT 2 ---" +"\n") 
+        f1_L.write("x1 0x" + f"{(0 & 0xFFFFFFFF):08x}"+"\n")
+
+        f1_L.write("; --- SEGMENT 3 ---" +"\n") #SA
+        sa_x1 = sa(A__ROWS,A__COLS)
+        f1_L.write("x1 0x" + f"{(sa_x1 & 0xFFFFFFFF):08x}"+"\n")
 
     with open(GM1_file1, 'w') as f1:
         #f1.write("; --- SEGMENT 1 ---" +"\n")
@@ -653,8 +700,8 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x00010000):
         f1.write("x4 0x" + f"{(0x00001000 & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x5 0x" + f"{(0xA8000000 & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x6 0x" + f"{(0xAC000000 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x7 0x" + f"{((0xA8000000+alen-64) & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x8 0x" + f"{((0xAC000000+alen-64) & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x7 0x" + f"{((0xA8000000+CDMA0_len-64) & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x8 0x" + f"{((0xAC000000+CDMA0_len-64) & 0xFFFFFFFF):08x}"+"\n")
         f1.write("; --- SEGMENT 2 ---" +"\n")
         f1.write("x1 0x" + f"{(0xC0000000 & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x2 0x" + f"{(0xC0000400 & 0xFFFFFFFF):08x}"+"\n")
@@ -664,24 +711,24 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x00010000):
         sgbbt =  0x1001
         f1.write("x5 0x" + f"{(sgbbt & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x6 0x" + f"{(0x00001000 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x7 0x" + f"{((0xA0000000+ADlen-64) & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x8 0x" + f"{((0xA4000000+ADlen-64) & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x7 0x" + f"{((0xA0000000+DMA0_S2MM_len-64) & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x8 0x" + f"{((0xA4000000+DMA0_S2MM_len-64) & 0xFFFFFFFF):08x}"+"\n")
         f1.write("; --- SEGMENT 3 ---" +"\n")
         f1.write("x1 0x" + f"{(0xC0000000 & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x2 0x" + f"{(0xC0000400 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x3 0x" + f"{(0xA0000000+ADlen & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x4 0x" + f"{(0xA4000000+ADlen & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x3 0x" + f"{(0xA0000000+DMA0_S2MM_len & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x4 0x" + f"{(0xA4000000+DMA0_S2MM_len & 0xFFFFFFFF):08x}"+"\n")
         #sgbbt1 = len(descriptors_DMA0_MM2S) << 16
         sgbbt1 = 0x1001
         f1.write("x5 0x" + f"{(sgbbt1 & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x6 0x" + f"{(0x00001000 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x7 0x" + f"{((0xA0000000+AAlen+ADlen-64) & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x8 0x" + f"{((0xA4000000+AAlen+ADlen-64) & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x7 0x" + f"{((0xA0000000+DMA0_MM2S_len+DMA0_S2MM_len-64) & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x8 0x" + f"{((0xA4000000+DMA0_MM2S_len+DMA0_S2MM_len-64) & 0xFFFFFFFF):08x}"+"\n")
 
-def main(AROWS = 32,BCOLS = 32):
+def main(AROWS = 32,BCOLS = 32, START = 0x00001000):
     A_ROWS = AROWS
     B_COLS = BCOLS
-    A_DATA_START = 0x00022000
+    A_DATA_START = START 
     print("Number of SG descriptors: ",int(A_DATA_START/64))
     op(A__ROWS = A_ROWS,A__COLS = BCOLS,B__ROWS = AROWS,B__COLS = B_COLS,A_DATA_START = A_DATA_START)
 

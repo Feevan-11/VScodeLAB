@@ -1,10 +1,12 @@
 import os
 import sys
 
-NUM_REGS = 32
+NUM_REGS = 36
 memory = {}
 regs = [0] * NUM_REGS
 PC = 0
+exec_log = [[],[],[],[]]
+flag = 0
 
 def sign_extend(value, bit_width):
 
@@ -105,11 +107,23 @@ def decode_instruction(instr_32_bits):
         return {'type': 'auipc', 'rd': rd, 'imm': imm}
     
     elif opcode == 0b0001011:  # lp.setup
-        imm = (instr_val & 0xFFFFF000)
+        imm = sign_extend((instr_val >> 20) & 0xFFF, 12)
+        rd = rd + 32
         return {'type': 'lp.setup', 'rd': rd, 'imm': imm}
     
     elif opcode == 0b0101011:  # lp.goto
-        imm = (instr_val & 0xFFFFF000)
+        # 提取J-type立即数字段
+        imm_20 = (instr_val >> 31) & 0x1        # bit[31]
+        imm_10_1 = (instr_val >> 21) & 0x3FF    # bits[21-30]
+        imm_11 = (instr_val >> 20) & 0x1        # bit[20]
+        imm_19_12 = (instr_val >> 12) & 0xFF    # bits[12-19]
+
+        # 组合成21位立即数（符号位在bit20）
+        imm_21 = (imm_20 << 20) | (imm_19_12 << 12) | (imm_11 << 11) | (imm_10_1 << 1)
+        
+        # 符号扩展为32位
+        imm = sign_extend(imm_21, 21)
+        rd = rd + 32
         return {'type': 'lp.goto', 'rd': rd, 'imm': imm}
 
 
@@ -121,7 +135,7 @@ def decode_instruction(instr_32_bits):
 def execute_instructions(instructions):
     global regs, memory, PC
 
-    exec_log = []
+    
     old_regs = regs[:]
     old_mem = dict(memory)
 
@@ -145,14 +159,14 @@ def execute_instructions(instructions):
             if rd != 0:
                 result = old_regs[rs1] + imm
                 reg_writes.append((rd, result))
-            exec_log.append(
+            exec_log[i].append(
                 f"Instr {i}: addi x{rd}, x{rs1}, {imm:08X} -> x{rd} = {old_regs[rs1]:08X} + {imm:08X}"
             )
 
         elif t == 'lui':
             if rd != 0:
                 reg_writes.append((rd, imm))
-            exec_log.append(
+            exec_log[i].append(
                 f"Instr {i}: lui x{rd}, 0x{imm:08X} -> x{rd} = 0x{imm:08X}"
             )
 
@@ -160,10 +174,10 @@ def execute_instructions(instructions):
             addr = old_regs[rs1] + imm
             data = old_regs[rs2]
             if addr < 0:
-                exec_log.append("addr erro:")
+                exec_log[i].append("addr erro:")
             else:  
                 mem_writes.append((addr, data))
-            exec_log.append(
+            exec_log[i].append(
                 f"Instr {i}: sw x{rs2}, {imm:08X}(x{rs1}) -> mem[{addr:08X}] = {data:08X}"
             )
 
@@ -171,77 +185,77 @@ def execute_instructions(instructions):
             if rd != 0:
                 result = old_regs[rs1] & old_regs[rs2]
                 reg_writes.append((rd, result))
-            exec_log.append(
+            exec_log[i].append(
                 f"Instr {i}: and x{rd}, x{rs1}, x{rs2} -> x{rd} = {old_regs[rs1]:08X} & {old_regs[rs2]:08X}"
             )
 
         elif t == 'lp.setup':
             if rd != 0:
                 reg_writes.append((rd, imm))
-            exec_log.append(
+            exec_log[i].append(
                 f"Instr {i}: lp.setup x{rd}, {imm:08X} -> x{rd} = {imm:08X}"
             )
 
         elif t == 'lp.goto':
-            new_PC = PC + imm
-            exec_log.append(
-                f"Instr {i}: lp.goto x{rd}, {imm:08X} ->  PC = {PC} + {imm:08X} = {new_PC}"
+            new_PC = PC  + imm
+            exec_log[i].append(
+                f"Instr {i}: lp.goto x{rd}, {imm:08X} ->  PC = {PC:08X} + {imm:08X} = {new_PC:08X}"
             )
             PC = new_PC
 
         elif t == 'add':
             result = old_regs[rs1] + old_regs[rs2]
-            exec_log.append(
+            exec_log[i].append(
                 f"Instr {i}: add x{rd}, x{rs1}, x{rs2} -> x{rd} = {old_regs[rs1]:08X} + {old_regs[rs2]:08X}"
             )
         elif t == 'sub':
             result = old_regs[rs1] - old_regs[rs2]
-            exec_log.append(
+            exec_log[i].append(
                 f"Instr {i}: sub x{rd}, x{rs1}, x{rs2} -> x{rd} = {old_regs[rs1]:08X} - {old_regs[rs2]:08X}"
             )
         elif t == 'xor':
 
             result = old_regs[rs1] ^ old_regs[rs2]
-            exec_log.append(
+            exec_log[i].append(
                 f"Instr {i}: xor x{rd}, x{rs1}, x{rs2} -> x{rd} = {old_regs[rs1]:08X} ^ {old_regs[rs2]:08X}"
             )
         elif t == 'or':
 
             result = old_regs[rs1] | old_regs[rs2]
-            exec_log.append(
+            exec_log[i].append(
                 f"Instr {i}: or x{rd}, x{rs1}, x{rs2} -> x{rd} = {old_regs[rs1]:08X} | {old_regs[rs2]:08X}"
             )
         elif t == 'sll':
 
             shamt = old_regs[rs2] & 0x1F
             result = old_regs[rs1] << shamt
-            exec_log.append(
+            exec_log[i].append(
                 f"Instr {i}: sll x{rd}, x{rs1}, x{rs2} -> x{rd} = {old_regs[rs1]:08X} << {shamt}"
             )
         elif t == 'srl':
 
             shamt = old_regs[rs2] & 0x1F
             result = (old_regs[rs1] & 0xFFFFFFFF) >> shamt
-            exec_log.append(
+            exec_log[i].append(
                 f"Instr {i}: srl x{rd}, x{rs1}, x{rs2} -> x{rd} = {old_regs[rs1]:08X} >> {shamt} (logical)"
             )
         elif t == 'sra':
 
             shamt = old_regs[rs2] & 0x1F
             result = (sign_extend(old_regs[rs1], 32) >> shamt) & 0xFFFFFFFF
-            exec_log.append(
+            exec_log[i].append(
                 f"Instr {i}: sra x{rd}, x{rs1}, x{rs2} -> x{rd} = {sign_extend(old_regs[rs1],32):08X} >> {shamt} (arithmetic)"
             )
         elif t == 'slt':
 
             result = 1 if sign_extend(old_regs[rs1], 32) < sign_extend(old_regs[rs2], 32) else 0
-            exec_log.append(
+            exec_log[i].append(
                 f"Instr {i}: slt x{rd}, x{rs1}, x{rs2} -> x{rd} = ({sign_extend(old_regs[rs1],32):08X} < {sign_extend(old_regs[rs2],32):08X}) ? 1 : 0"
             )
         elif t == 'sltu':
 
             result = 1 if (old_regs[rs1] & 0xFFFFFFFF) < (old_regs[rs2] & 0xFFFFFFFF) else 0
-            exec_log.append(
+            exec_log[i].append(
                 f"Instr {i}: sltu x{rd}, x{rs1}, x{rs2} -> x{rd} = ({old_regs[rs1]:08X} < {old_regs[rs2]:08X}) ? 1 : 0 (unsigned)"
             )
 
@@ -249,50 +263,50 @@ def execute_instructions(instructions):
         elif t == 'xori':
 
             result = old_regs[rs1] ^ imm
-            exec_log.append(
+            exec_log[i].append(
                 f"Instr {i}: xori x{rd}, x{rs1}, {imm:08X} -> x{rd} = {old_regs[rs1]:08X} ^ {imm:08X}"
             )
         elif t == 'ori':
 
             result = old_regs[rs1] | imm
-            exec_log.append(
+            exec_log[i].append(
                 f"Instr {i}: ori x{rd}, x{rs1}, {imm:08X} -> x{rd} = {old_regs[rs1]:08X} | {imm:08X}"
             )
         elif t == 'andi':
 
             result = old_regs[rs1] & imm
-            exec_log.append(
+            exec_log[i].append(
                  f"Instr {i}: andi x{rd}, x{rs1}, {imm:08X} -> x{rd} = {old_regs[rs1]:08X} & {imm:08X}"
             )
         elif t == 'slli':
 
             result = old_regs[rs1] << imm
-            exec_log.append(
+            exec_log[i].append(
                  f"Instr {i}: slli x{rd}, x{rs1}, {shamt} -> x{rd} = {old_regs[rs1]:08X} << {shamt}"
             )
         elif t == 'srli':
 
             result = (old_regs[rs1] & 0xFFFFFFFF) >> imm
-            exec_log.append(
+            exec_log[i].append(
                  f"Instr {i}: srli x{rd}, x{rs1}, {shamt} -> x{rd} = {old_regs[rs1]:08X} >> {shamt} (logical)"
             )
         elif t == 'srai':
 
             result = (sign_extend(old_regs[rs1], 32) >> imm) & 0xFFFFFFFF
-            exec_log.append(
+            exec_log[i].append(
                  f"Instr {i}: srai x{rd}, x{rs1}, {shamt} -> x{rd} = {sign_extend(old_regs[rs1],32):08X} >> {shamt} (arithmetic)"
             )
         elif t == 'slti':
 
             result = 1 if sign_extend(old_regs[rs1], 32) < imm else 0
-            exec_log.append(
+            exec_log[i].append(
                  f"Instr {i}: slti x{rd}, x{rs1}, {imm:08X} -> x{rd} = 1 if {sign_extend(old_regs[rs1],32):08X} < {imm:08X} else 0"
             )
 
         elif t == 'sltiu':
 
             result = 1 if (old_regs[rs1] & 0xFFFFFFFF) < (imm & 0xFFFFFFFF) else 0
-            exec_log.append(
+            exec_log[i].append(
                  f"Instr {i}: sltiu x{rd}, x{rs1}, {imm:08X} -> x{rd} = 1 if {old_regs[rs1]:08X} < {imm & 0xFFFFFFFF:08X} (unsigned) else 0"
             )
 
@@ -302,27 +316,27 @@ def execute_instructions(instructions):
             mem_val = memory.get(addr, 0)
             if t == 'lb':
                 result = sign_extend(mem_val & 0xFF, 8)
-                exec_log.append(
+                exec_log[i].append(
                     f"Instr {i}: lb x{rd}, {imm:08X}(x{rs1}) -> mem[{addr:08X}] (half) sign-extended"
                 )
             elif t == 'lh':
                 result = sign_extend(mem_val & 0xFFFF, 16)
-                exec_log.append(
+                exec_log[i].append(
                     f"Instr {i}: lh x{rd}, {imm:08X}(x{rs1}) -> mem[{addr:08X}] (half) sign-extended"
                 )
             elif t == 'lw':
                 result = mem_val & 0xFFFFFFFF
-                exec_log.append(
+                exec_log[i].append(
                     f"Instr {i}: lw x{rd}, {imm:08X}(x{rs1}) -> mem[{addr:08X}] (half) sign-extended"
                 )
             elif t == 'lbu':
                 result = mem_val & 0xFF
-                exec_log.append(
+                exec_log[i].append(
                     f"Instr {i}: lbu x{rd}, {imm:08X}(x{rs1}) -> mem[{addr:08X}] (half) sign-extended"
                 )
             elif t == 'lhu':
                 result = mem_val & 0xFFFF
-                exec_log.append(
+                exec_log[i].append(
                     f"Instr {i}: lhu x{rd}, {imm:08X}(x{rs1}) -> mem[{addr:08X}] (half) sign-extended"
                 )
         
@@ -332,18 +346,18 @@ def execute_instructions(instructions):
             data = old_regs[rs2]
             if t == 'sb':
                 if addr < 0:
-                    exec_log.append("addr erro:")
+                    exec_log[i].append("addr erro:")
                 else:    
                     mem_writes.append((addr, data & 0xFF))
-                exec_log.append(
+                exec_log[i].append(
                     f"Instr {i}: sb x{rs2}, {imm:08X}(x{rs1}) -> mem[{addr:08X}] = {old_regs[rs2] & 0xFF:02X} (byte)"
                 )
             elif t == 'sh':
                 if addr < 0:
-                    exec_log.append("addr erro:")
+                    exec_log[i].append("addr erro:")
                 else:  
                     mem_writes.append((addr, data & 0xFFFF))
-                exec_log.append(
+                exec_log[i].append(
                     f"Instr {i}: sh x{rs2}, {imm:08X}(x{rs1}) -> mem[{addr:08X}] = {old_regs[rs2] & 0xFFFF:04X} (half)"
                 )
         
@@ -351,41 +365,46 @@ def execute_instructions(instructions):
         elif t == 'auipc':
             result = (PC & 0xFFFFF000) + imm  
             pc_upper = (PC & 0xFFFFF000)
-            exec_log.append(
+            exec_log[i].append(
                 f"Instr {i}: auipc x{rd}, 0x{(imm >> 12):05X} -> x{rd} = 0x{pc_upper:05X}000 + 0x{(imm >> 12):05X}000"
             )    
 
         else:
-            exec_log.append(f"Instr {i}: unknown or unimplemented opcode.")
+            exec_log[i].append(f"Instr {i}: unknown or unimplemented opcode.")
 
 
         if result is not None and rd != 0:
             reg_writes.append((instr['rd'], result & 0xFFFFFFFF))        
 
+    global flag
 
-    print("====== Cycle Execution ======")
-    for line in exec_log:
-        print(line)
+    if (t == 'lp.setup') & (int(rd) == 33) & (flag < 4):
+        print("execute ",flag)
+        flag += 1 
+        for i, val in enumerate(regs):
+            print(f"x{i} = 0x{val & 0xFFFFFFFF:08X}")
 
-    #print("----- Write Back -----")
-    for (r, val) in reg_writes:
-        new_regs[r] = val & 0xFFFFFFFF
-        #print(f"  x{r} <- 0x{val & 0xFFFFFFFF:08X}")
+        for addr, val in sorted(memory.items()):
+            print(f"mem[{addr:08X}] = 0x{val & 0xFFFFFFFF:08X}")
 
-    for (addr, val) in mem_writes:
-        new_mem[addr] = val & 0xFFFFFFFF
-        #print(f"  mem[{addr}] <- 0x{val & 0xFFFFFFFF:08X}")
+    else:    
+        for (r, val) in reg_writes:
+            new_regs[r] = val & 0xFFFFFFFF
+            #print(f"  x{r} <- 0x{val & 0xFFFFFFFF:08X}")
 
+        for (addr, val) in mem_writes:
+            new_mem[addr] = val & 0xFFFFFFFF
+            #print(f"  mem[{addr}] <- 0x{val & 0xFFFFFFFF:08X}")
     regs = new_regs
     memory = new_mem
 
 
 def main():
     global PC
-
+    
     script_dir = os.path.dirname(os.path.abspath(__file__))
     
-    name = 'TROM'
+    name = 'AGM1'
 
     mif_dir = os.path.join(script_dir,"mif")
     filename = os.path.join(mif_dir, f"{name}.mif")
@@ -422,7 +441,7 @@ def main():
 
         execute_instructions(instructions)
         PC += 16
-
+"""
     print("===== Final Registers =====")
     for i, val in enumerate(regs):
         print(f"x{i} = 0x{val & 0xFFFFFFFF:08X}")
@@ -430,6 +449,6 @@ def main():
     print("\n===== Final Memory (non-zero) =====")
     for addr, val in sorted(memory.items()):
         print(f"mem[{addr:08X}] = 0x{val & 0xFFFFFFFF:08X}")
-
+"""
 if __name__ == "__main__":
     main()
