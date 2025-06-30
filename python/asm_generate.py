@@ -113,7 +113,7 @@ def generate_output(processed_segments, reg_config, output_file='output.asm'):
             f.write(segment_map[seg_id])
             f.write("\n")
 
-def main(GM1 = 3):
+def main(GM1 = 2):
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     if (GM1 == 3):
@@ -132,7 +132,7 @@ def main(GM1 = 3):
     elif(GM1 == 2):
         configs = [
         {
-            "asm_in": os.path.join("asm", "TROM.asm"),
+            "asm_in": os.path.join("asm", "ROMCODE.asm"),
             "reg_config": os.path.join("txt", "ROM.txt"),
             "asm_out": os.path.join("asm", "ROM.asm")
         },
@@ -145,12 +145,12 @@ def main(GM1 = 3):
     else:
         configs = [
         {
-            "asm_in": os.path.join("asm", "ROMCODE.asm"),
+            "asm_in": os.path.join("asm", "TROMCODE.asm"),
             "reg_config": os.path.join("txt", "ROM.txt"),
             "asm_out": os.path.join("asm", "ROM.asm")
         },
         {
-            "asm_in": os.path.join("asm", "GM1CODE.asm"),
+            "asm_in": os.path.join("asm", "TGM1CODE.asm"),
             "reg_config": os.path.join("txt", "GM1.txt"),
             "asm_out": os.path.join("asm", "GM1.asm")
         }

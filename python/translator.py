@@ -31,6 +31,40 @@ def encode_addi(rd, rs1, imm):
               | opcode
     return machine
 
+def encode_beq(rs1, rs2, imm):
+    """
+    beq xrs1, xrs2, imm
+    B-type: imm[12|10:5], rs2, rs1, funct3=0, imm[4:1|11], opcode=0x63
+    立即数处理：B-type指令的立即数是13位有符号数（以字节为单位，但偏移必须是偶数）
+    """
+    # 检查偏移量是否对齐（必须为2的倍数）
+    if imm % 2 != 0:
+        raise ValueError(f"BEQ offset must be even, got {imm}")
+    
+    # 转换为半字偏移量（除2）
+    offset = imm // 2
+    
+    # 检查偏移范围（-4096到4094半字，即-8192到8188字节）
+    if not (-4096 <= offset <= 4094):
+        raise ValueError(f"BEQ offset out of range: {offset} half-words")
+    
+    # 提取立即数的各个部分
+    imm_12 = (offset >> 11) & 0x1   # 最高位（第12位）
+    imm_11 = (offset >> 10) & 0x1   # 第11位
+    imm_10_5 = (offset >> 4) & 0x3F # 第10~5位（6位）
+    imm_4_1 = (offset >> 0) & 0x0F  # 第4~1位（4位）
+    
+    # 合并高位立即数部分
+    imm_31_25 = (imm_12 << 6) | imm_10_5  # [31:25] = {imm[12], imm[10:5]}
+    
+    opcode = 0x63
+    funct3 = 0x0
+    
+    # 组合机器码
+    machine = (imm_31_25 << 25) | (rs2 << 20) | (rs1 << 15) | (funct3 << 12) | (imm_4_1 << 8)  | (imm_11 << 7)  | opcode
+              
+    return machine
+
 def encode_lui(rd, imm):
     """
     lui xrd, imm
@@ -591,6 +625,19 @@ def parse_one_instruction(line):
         imm = sign_extend(imm, 21)
         return encode_goto(rd, imm)
     
+    elif inst == 'beq':
+        # beq rs1, rs2, offset
+        if len(parts) != 4:
+            raise ValueError(f"Invalid BEQ format: {line}")
+        
+        rs1 = reg_index(parts[1])
+        rs2 = reg_index(parts[2])
+        imm = int(parts[3], 0)  # 立即数可以是10进制或16进制
+        
+        # 符号扩展并检查范围
+        imm = sign_extend(imm, 13)
+        return encode_beq(rs1, rs2, imm)
+
     elif inst == 'add':
         if len(parts) != 4:
             raise ValueError(f"erro: {line}")
