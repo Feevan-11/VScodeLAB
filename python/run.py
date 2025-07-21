@@ -14,9 +14,9 @@ from loop import main as loop_main
 
 
 if __name__ == "__main__":
-    A_ROW = 128
-    A_B = 128
-    B_COL = 128
+    A_ROW = 64
+    A_B = 64
+    B_COL = 64
     descriptors = 0x00008000
     random = False
     block_width = 16
@@ -27,12 +27,20 @@ if __name__ == "__main__":
 
     if(element_type == 0):
         element_size = 2
+        block_width = 16
+        APP0 = 3
     elif(element_type == 1): 
         element_size = 4
+        block_width = 8
+        APP0 = 1
     elif(element_type == 2): 
         element_size = 8
+        block_width = 4
+        APP0 = 0
     elif(element_type == 3): 
         element_size = 2
+        block_width = 16
+        APP0 = 2
 
     mood = 2 #1+,2*,3ni,4T
 

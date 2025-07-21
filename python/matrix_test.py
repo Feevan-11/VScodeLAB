@@ -121,11 +121,11 @@ def main(random=False, A_row=32, A_B=32, B_col=32, T=True, dtype=0):
         B = np.random.uniform(-1, 1, (A_B, B_col)).astype(np_type)
     else:
         # Create custom matrices
-        A = np.array([[2.0] + [1.0]*(A_B-1) for _ in range(A_row)], dtype=np_type)
+        A = np.array([[1.0] + [1.0]*(A_B-1) for _ in range(A_row)], dtype=np_type)
         if T:
             B = np.eye(A_B, dtype=np_type)
         else:
-            B = np.array([[2.0] + [1.0]*(B_col-1) for _ in range(A_B)], dtype=np_type)
+            B = np.array([[1.0] + [1.0]*(B_col-1) for _ in range(A_B)], dtype=np_type)
 
     # Handle bfloat16 conversion
     if dtype_str == 'bf16':
