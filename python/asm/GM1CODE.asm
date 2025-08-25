@@ -101,8 +101,8 @@ sw x5, 0x0(x2)
 sw x5, 0x0(x1)
 addi x0, x0, 0  
 addi x0, x0, 0 
-sw x10, 0x10(x2)
-sw x9, 0x10(x1) 
+sw x10, 0x40(x2)
+sw x9, 0x40(x1) 
 addi x0, x0, 0
 addi x0, x0, 0 
 sw x12, 0x10(x2)

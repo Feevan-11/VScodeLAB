@@ -135,4 +135,4 @@ def main(random = False, A_row = 32, A__B = 16, B_col = 32,T = True, type = 0 ):
             f.write(line + '\n')
 
 if __name__ == "__main__":
-    main(random = False, A_row = 32, A__B = 32, B_col = 32)
+    main(random = False, A_row = 64, A__B = 64, B_col = 64)

@@ -1,4 +1,5 @@
 import os
+import config
 
 def make_sg_cdma_descriptor(
     next_desc_addr,
@@ -443,60 +444,23 @@ def flat(descriptor_list):
     return flattened
 
 def op_DMA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element_size = 2, APP0 = 0,
-       Global0_base = 0x00010000,Global1_base = 0x40001000,data0_in = 0x80000000,data1_in = 0x88000000,
-       data0_out    = 0x80000000,data1_out    = 0x88000000,DMA0_base= 0xC0000000,DMA1_base= 0xC0000000):
+       data0_in = 0x80000000,data1_in = 0x80400000,data0_out = 0x90000000,data1_out = 0x90400000,
+       DMA0_REG_base= 0xC0000000,DMA1_REG_base= 0xC0000400):
 
     A_ROWS = A__ROWS
     A_COLS = A__COLS
     B_ROWS = B__ROWS
     B_COLS = B__COLS
-    # 1) Generate a list of descriptors corresponding to A and B
-    descriptors_A_IN = generate_cdma0_descriptors_for_matrix_A_IN(
-        A_rows=A_ROWS,
-        A_cols=A_COLS,
-        block_width=block_width,
-        Global_0_base=Global0_base,
-        Shared_Men0_base=0x80000000,
-        element_size=element_size
-    )
-    descriptors_B_IN = generate_cdma1_descriptors_for_matrix_B_IN(
-        B_rows=B_ROWS,
-        B_cols=B_COLS,
-        block_width=block_width,
-        Global_1_base=Global1_base,
-        Shared_Men1_base=0x88000000,
-        element_size=element_size
-    )
-    descriptors_A_OUT = generate_cdma0_descriptors_for_matrix_A_OUT(
-        A_rows=A_ROWS,
-        A_cols=A_COLS,
-        B_cols=B_COLS,
-        block_width=block_width,
-        Global_0_base=0x24000000,
-        Shared_Men0_base=0x84000000,
-        Shared_Men2_base=0x94000000,
-        element_size=element_size
-    )
-    descriptors_B_OUT = generate_cdma1_descriptors_for_matrix_B_OUT(
-        A_rows=A_ROWS,
-        B_rows=B_ROWS,
-        B_cols=B_COLS,
-        block_width=block_width,
-        Global_1_base=0x68000000,
-        Shared_Men1_base=0x8C000000,
-        Shared_Men3_base=0x9C000000,
-        element_size=element_size
-    )
-    #descriptors_A = descriptors_A_IN + descriptors_A_OUT
-    #descriptors_B = descriptors_B_IN + descriptors_B_OUT
-    descriptors_A = descriptors_A_IN
-    descriptors_B = descriptors_B_IN
+
+    global ALL
+    global sg_start
+    global GM1_setid
 
     descriptors_DMA0_S2MM = generate_dma0_descriptors_for_S2MM(
         A_rows=A_ROWS,
         B_cols=B_COLS,
         block_width=block_width,
-        Shared_Men2_base=0x90000000,
+        Shared_Men2_base=data0_out,
         element_size=element_size,
         APP0 = APP0
     )
@@ -504,7 +468,7 @@ def op_DMA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, elemen
         A_rows=A_ROWS,
         B_cols=B_COLS,
         block_width=block_width,
-        Shared_Men3_base=0x98000000,
+        Shared_Men3_base=data1_out,
         element_size=element_size,
         APP0 = APP0
     )
@@ -513,7 +477,7 @@ def op_DMA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, elemen
         A_B = B_ROWS,
         B_cols=B_COLS,
         block_width=block_width,
-        Shared_Men0_base=0x80000000,
+        Shared_Men0_base=data0_in,
         element_size=element_size,
         APP0 = APP0
     )
@@ -522,32 +486,26 @@ def op_DMA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, elemen
         A_B = B_ROWS,
         B_cols=B_COLS,
         block_width=block_width,
-        Shared_Men1_base=0x88000000,
+        Shared_Men1_base=data1_in,
         element_size=element_size,
         APP0 = APP0
     )
-
-    # 2) Create an In-Memory Linear Placement layout for each of the two descriptor lists, and point Word0 to the next descriptor
-    # Here we assume that the descriptor for CDMA0 starts at 0x00000000 and the descriptor for CDMA1 starts with 0x00100000 (example)
-    cdma0_base = 0xA0000000
-    cdma1_base = cdma0_base + len(descriptors_A) * 64
-    dma0_S2MM =  cdma1_base + len(descriptors_B) * 64
+    
+    dma0_S2MM =  sg_start
+    print(f'{sg_start:08x}')
     dma0_MM2S =  dma0_S2MM + len(descriptors_DMA0_S2MM) * 64
     dma1_S2MM =  dma0_MM2S + len(descriptors_DMA0_MM2S) * 64
     dma1_MM2S =  dma1_S2MM + len(descriptors_DMA1_S2MM) * 64
 
-    cdma0_sg_data = link_descriptors_in_memory(descriptors_A, base_addr=cdma0_base, desc_size=64)
-    cdma1_sg_data = link_descriptors_in_memory(descriptors_B, base_addr=cdma1_base, desc_size=64)
     dma0_MM2S_sg_data = link_descriptors_in_memory(descriptors_DMA0_MM2S, base_addr=dma0_MM2S, desc_size=64)
     dma1_MM2S_sg_data = link_descriptors_in_memory(descriptors_DMA1_MM2S, base_addr=dma1_MM2S, desc_size=64)
     dma0_S2MM_sg_data = link_descriptors_in_memory(descriptors_DMA0_S2MM, base_addr=dma0_S2MM, desc_size=64)
     dma1_S2MM_sg_data = link_descriptors_in_memory(descriptors_DMA1_S2MM, base_addr=dma1_S2MM, desc_size=64)
 
-    ALL = cdma0_sg_data + cdma1_sg_data + dma0_S2MM_sg_data + dma0_MM2S_sg_data + dma1_S2MM_sg_data + dma1_MM2S_sg_data
+    ALL = ALL + dma0_S2MM_sg_data + dma0_MM2S_sg_data + dma1_S2MM_sg_data + dma1_MM2S_sg_data
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    cdma0_name = 'cdma0_sg'
-    cdma1_name = 'cdma1_sg'
+
     dma0_MM2S_name = 'dma0_MM2S_sg'
     dma1_MM2S_name = 'dma1_MM2S_sg'
     dma0_S2MM_name = 'dma0_S2MM_sg'
@@ -555,38 +513,32 @@ def op_DMA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, elemen
 
     txt_dir = os.path.join(script_dir,"txt")
 
-    cdma0_file = os.path.join(txt_dir, f"{cdma0_name}.txt")
-    cdma1_file = os.path.join(txt_dir, f"{cdma1_name}.txt")
     dma0_MM2S_file = os.path.join(txt_dir, f"{dma0_MM2S_name}.txt")
     dma1_MM2S_file = os.path.join(txt_dir, f"{dma1_MM2S_name}.txt")
     dma0_S2MM_file = os.path.join(txt_dir, f"{dma0_S2MM_name}.txt")
     dma1_S2MM_file = os.path.join(txt_dir, f"{dma1_S2MM_name}.txt")
-    all_file = os.path.join(txt_dir, f"allsg.txt")
 
-    write_txt_file(cdma0_sg_data, cdma0_file)
-    write_txt_file(cdma1_sg_data, cdma1_file)
-    write_txt_file(dma0_MM2S_sg_data, dma0_MM2S_file)
-    write_txt_file(dma1_MM2S_sg_data, dma1_MM2S_file)
-    write_txt_file(dma0_S2MM_sg_data, dma0_S2MM_file)
-    write_txt_file(dma1_S2MM_sg_data, dma1_S2MM_file)
-    
-
-    print(" CDMA0 descriptors count:", len(descriptors_A))
-    print(" CDMA1 descriptors count:", len(descriptors_B))
+    global DMA_ID 
+    if DMA_ID == 1:
+        write_txt_file(dma0_MM2S_sg_data, dma0_MM2S_file)
+        write_txt_file(dma1_MM2S_sg_data, dma1_MM2S_file)
+        write_txt_file(dma0_S2MM_sg_data, dma0_S2MM_file)
+        write_txt_file(dma1_S2MM_sg_data, dma1_S2MM_file)
+    else:
+        write_txt_file_A(dma0_MM2S_sg_data, dma0_MM2S_file)
+        write_txt_file_A(dma1_MM2S_sg_data, dma1_MM2S_file)
+        write_txt_file_A(dma0_S2MM_sg_data, dma0_S2MM_file)
+        write_txt_file_A(dma1_S2MM_sg_data, dma1_S2MM_file)
+    if GM1_setid == 1:
+        mood = 'w'
+    else:
+        mood = 'a'
+    DMA_ID = DMA_ID + 1
     print(" DMA0_MM2S descriptors count:", len(descriptors_DMA0_MM2S))
     print(" DMA1_MM2S descriptors count:", len(descriptors_DMA1_MM2S))
     print(" DMA0_S2MM descriptors count:", len(descriptors_DMA0_S2MM))
     print(" DMA1_S2MM descriptors count:", len(descriptors_DMA1_S2MM))
-    allSG = len(descriptors_A) + len(descriptors_B) + len(descriptors_DMA0_MM2S) + len(descriptors_DMA1_MM2S) + len(descriptors_DMA0_S2MM)+ len(descriptors_DMA1_S2MM)
-    allSGdescriptors = int(Global0_base/64)
-    if(allSGdescriptors >= allSG):
-        print("There is no need to add space to the SG descriptor")
-    else:
-        print("Need to add space to the SG descriptor")
 
-    STAR = 0
-    CDMA0_len = 64*len(descriptors_A)
-    CDMA1_len = 64*len(descriptors_B)
     DMA0_S2MM_len = 64*len(descriptors_DMA0_S2MM)
     DMA0_MM2S_len = 64*len(descriptors_DMA0_MM2S)
     DMA1_S2MM_len = 64*len(descriptors_DMA1_S2MM)
@@ -594,96 +546,29 @@ def op_DMA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, elemen
     DMA0_len = 64*(len(descriptors_DMA0_MM2S)+len(descriptors_DMA0_S2MM))
     DMA1_len = 64*(len(descriptors_DMA1_MM2S)+len(descriptors_DMA1_S2MM))
 
-    descriptorss = []
-    alllen = int(int(Global0_base/64) - (CDMA0_len + CDMA1_len + DMA0_len + DMA1_len)/64)
-    for i in range(alllen):
-        A = 0
-        word = make_sg_dma_descriptor(A,A,A,A)
-        descriptorss.append(word)
-    deadata = flat(descriptorss)
-    AL = ALL + deadata
-    write_txt_file(AL , all_file)
-    #print("all:",len(descriptorss))
-    '''
-    print(" CDMA0 descriptors STAR:", STAR,"        Lenth:",f"{alen:08x}")
-    print(" CDMA1 descriptors STAR:", f"{alen:08x}"," Lenth:",f"{blen:08x}")
-    print(" DMA  S  2  M  M   STAR:", 0,"         tail:",f"{(ADlen-64):08x}")
-    print(" DMA  M  M  2  S   STAR:", f"{(ADlen):08x}","  tail:",f"{(ADlen + AAlen-64):08x}")
-    print(" DMA0 descriptors  STAR:", f"{(alen + blen):08x}"," Lenth:",f"{dalen:08x}")
-    print(" DMA1 descriptors  STAR:", f"{(alen + blen + dalen):08x}"," Lenth:",f"{dblen:08x}")'
-    '''
-    #print("[INFO] Successfully generated  cdma0_sg.txt  / cdma1_sg.txt")
-    
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    name0 = "ROM"
     name1 = "GM1"
     txt_dir = os.path.join(script_dir,"txt")
 
-    ROM_file0 = os.path.join(txt_dir, f"{name0}.txt")
     GM1_file1 = os.path.join(txt_dir, f"{name1}.txt")
 
-    ROM_LOOP_file0 = os.path.join(txt_dir, f"{name0}LOOP.txt")
     GM1_LOOP_file1 = os.path.join(txt_dir, f"{name1}LOOP.txt")
-
-    def descriptors(len):
-        ds_x1 = (len/45) 
-        ds_x1 = int(ds_x1)
-        return ds_x1
-    def cdma(row,col):
-        cd_x1 = ((row*col*2)/60)/300 
-        cd_x1 = int(cd_x1)
-        return cd_x1
-    def sa(row,col):
-        sa_x1 = (2*(16*col)*(row/16)*(row/16)/62)/300 
-        sa_x1 = int(sa_x1)
-        return sa_x1
     
-    with open(ROM_file0, 'w') as f0:
-        f0.write("; --- SEGMENT 1 ---" +"\n")
-        f0.write("x5 0x" + f"{(0x00000000 & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x6 0x" + f"{(0xA0000000 & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x7 0x" + f"{(0x40000000 & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x8 0x" + f"{(0xB0001000 & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x9 0x" + f"{(CDMA0_len+CDMA1_len+DMA0_len+DMA1_len & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x10 0x" + f"{(0x00001000 & 0xFFFFFFFF):08x}"+"\n")
 
-
-    with open(ROM_LOOP_file0, 'w') as f0_L:
-        f0_L.write("; --- SEGMENT 1 ---" +"\n")
-        ds_x1 = descriptors(CDMA0_len+CDMA1_len+DMA0_len+DMA1_len)
-        f0_L.write("x1 0x" + f"{(ds_x1+10 & 0xFFFFFFFF):08x}"+"\n")  
-
-    with open(GM1_LOOP_file1, 'w') as f1_L:
-        f1_L.write("; --- SEGMENT 1 ---" +"\n") #CDMA
-        CDMA_X1 = cdma(A__ROWS,A__COLS)
-        f1_L.write("x1 0x" + f"{(CDMA_X1 & 0xFFFFFFFF):08x}"+"\n")
-
-        f1_L.write("; --- SEGMENT 2 ---" +"\n") 
+    with open(GM1_LOOP_file1, mood) as f1_L:
+        f1_L.write(f"; --- SEGMENT {GM1_setid} ---" +"\n") #CDMA
+        #CDMA_X1 = cdma(A__ROWS,A__COLS)
         f1_L.write("x1 0x" + f"{(0 & 0xFFFFFFFF):08x}"+"\n")
 
-        f1_L.write("; --- SEGMENT 3 ---" +"\n") #SA
-        sa_x1 = sa(A__ROWS,A__COLS)
-        f1_L.write("x1 0x" + f"{(sa_x1 & 0xFFFFFFFF):08x}"+"\n")
 
-    with open(GM1_file1, 'w') as f1:
-        CDMA0_START = 0xA0000000
-        CDMA1_START = CDMA0_START + CDMA0_len
-        DMA0_S2MM_START =  CDMA1_START + CDMA1_len
+    with open(GM1_file1, mood) as f1:
+        DMA0_S2MM_START =  sg_start
         DMA0_MM2S_START =  DMA0_S2MM_START + DMA0_S2MM_len
         DMA1_S2MM_START =  DMA0_MM2S_START + DMA0_MM2S_len
         DMA1_MM2S_START =  DMA1_S2MM_START + DMA1_S2MM_len
-        f1.write("; --- SEGMENT 1 ---" +"\n")
-        f1.write("x1 0x" + f"{(0xC0000800 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x2 0x" + f"{(0xC0000840 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x3 0x" + f"{(0x00001008 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x4 0x" + f"{(0x00001000 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x5 0x" + f"{(CDMA0_START & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x6 0x" + f"{(CDMA1_START & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x7 0x" + f"{((CDMA1_START-64) & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x8 0x" + f"{((DMA0_S2MM_START -64) & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("; --- SEGMENT 2 ---" +"\n")
-        f1.write("x1 0x" + f"{(0xC0000000 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x2 0x" + f"{(0xC0000400 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write(f"; --- SEGMENT {GM1_setid} ---" +"\n")
+        f1.write("x1 0x" + f"{(DMA0_REG_base & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x2 0x" + f"{(DMA1_REG_base & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x3 0x" + f"{(DMA0_S2MM_START & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x4 0x" + f"{(DMA1_S2MM_START & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x5 0x" + f"{(0x1001 & 0xFFFFFFFF):08x}"+"\n")
@@ -695,20 +580,21 @@ def op_DMA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, elemen
         f1.write("x11 0x" + f"{((DMA0_MM2S_START+DMA0_MM2S_len-64) & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x12 0x" + f"{((DMA1_MM2S_START+DMA1_MM2S_len-64) & 0xFFFFFFFF):08x}"+"\n")
 
-def op_CDMA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element_size = 2, APP0 = 0,
-       Global0_base = 0x00010000,Global1_base = 0x40001000,CDMA0_base= 0xC0000000,CDMA1_base= 0xC0000000):
+    sg_start =   sg_start + DMA0_len + DMA1_len 
 
-    A_ROWS = A__ROWS
-    A_COLS = A__COLS
-    B_ROWS = B__ROWS
-    B_COLS = B__COLS
-    # 1) Generate a list of descriptors corresponding to A and B
+def op_CDMA(A_ROWS=16,A_COLS=16,B_ROWS=16,B_COLS=16, block_width = 16, element_size = 2,Global0_base = 0x00010000,
+            Global1_base = 0x40001000,CDMA0_reg_base= 0xC0000800,CDMA1_reg_base= 0xC0000840,DATA0 = 0x80000000,DATA1 = 0x88000000):
+
+    global ALL
+    global sg_start
+    global GM1_setid
+
     descriptors_A_IN = generate_cdma0_descriptors_for_matrix_A_IN(
         A_rows=A_ROWS,
         A_cols=A_COLS,
         block_width=block_width,
         Global_0_base=Global0_base,
-        Shared_Men0_base=0x80000000,
+        Shared_Men0_base=DATA0,
         element_size=element_size
     )
     descriptors_B_IN = generate_cdma1_descriptors_for_matrix_B_IN(
@@ -716,44 +602,22 @@ def op_CDMA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, eleme
         B_cols=B_COLS,
         block_width=block_width,
         Global_1_base=Global1_base,
-        Shared_Men1_base=0x88000000,
+        Shared_Men1_base=DATA1,
         element_size=element_size
     )
-    descriptors_A_OUT = generate_cdma0_descriptors_for_matrix_A_OUT(
-        A_rows=A_ROWS,
-        A_cols=A_COLS,
-        B_cols=B_COLS,
-        block_width=block_width,
-        Global_0_base=0x24000000,
-        Shared_Men0_base=0x84000000,
-        Shared_Men2_base=0x94000000,
-        element_size=element_size
-    )
-    descriptors_B_OUT = generate_cdma1_descriptors_for_matrix_B_OUT(
-        A_rows=A_ROWS,
-        B_rows=B_ROWS,
-        B_cols=B_COLS,
-        block_width=block_width,
-        Global_1_base=0x68000000,
-        Shared_Men1_base=0x8C000000,
-        Shared_Men3_base=0x9C000000,
-        element_size=element_size
-    )
-    #descriptors_A = descriptors_A_IN + descriptors_A_OUT
-    #descriptors_B = descriptors_B_IN + descriptors_B_OUT
+
     descriptors_A = descriptors_A_IN
     descriptors_B = descriptors_B_IN
 
-
-    # 2) Create an In-Memory Linear Placement layout for each of the two descriptor lists, and point Word0 to the next descriptor
-    # Here we assume that the descriptor for CDMA0 starts at 0x00000000 and the descriptor for CDMA1 starts with 0x00100000 (example)
-    cdma0_base = 0xA0000000
+    cdma0_base = sg_start
     cdma1_base = cdma0_base + len(descriptors_A) * 64
+    CDMA0_len  = 64*len(descriptors_A)
+    CDMA1_len  = 64*len(descriptors_B)
 
     cdma0_sg_data = link_descriptors_in_memory(descriptors_A, base_addr=cdma0_base, desc_size=64)
     cdma1_sg_data = link_descriptors_in_memory(descriptors_B, base_addr=cdma1_base, desc_size=64)
 
-    ALL = cdma0_sg_data + cdma1_sg_data 
+    ALL = ALL + cdma0_sg_data + cdma1_sg_data 
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     cdma0_name = 'cdma0_sg'
@@ -764,66 +628,134 @@ def op_CDMA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, eleme
     cdma0_file = os.path.join(txt_dir, f"{cdma0_name}.txt")
     cdma1_file = os.path.join(txt_dir, f"{cdma1_name}.txt")
 
-    all_file = os.path.join(txt_dir, f"allsg.txt")
 
-    write_txt_file(cdma0_sg_data, cdma0_file)
-    write_txt_file(cdma1_sg_data, cdma1_file)   
+    if GM1_setid == 1:
+        write_txt_file(cdma0_sg_data, cdma0_file)
+        write_txt_file(cdma1_sg_data, cdma1_file)
+        mood = 'w'   
+    else:
+        write_txt_file_A(cdma0_sg_data, cdma0_file)
+        write_txt_file_A(cdma1_sg_data, cdma1_file)  
+        mood = 'a'
 
     print(" CDMA0 descriptors count:", len(descriptors_A))
     print(" CDMA1 descriptors count:", len(descriptors_B))
 
-    allSG = len(descriptors_A) + len(descriptors_B) 
-    allSGLenth = allSGLenth + int(Global0_base/64)
     
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    name0 = "ROM"
     name1 = "GM1"
     txt_dir = os.path.join(script_dir,"txt")
 
-    ROM_file0 = os.path.join(txt_dir, f"{name0}.txt")
     GM1_file1 = os.path.join(txt_dir, f"{name1}.txt")
 
-    ROM_LOOP_file0 = os.path.join(txt_dir, f"{name0}LOOP.txt")
     GM1_LOOP_file1 = os.path.join(txt_dir, f"{name1}LOOP.txt")
+
+    with open(GM1_file1, mood) as f1:
+        CDMA0_START = sg_start
+        CDMA1_START = CDMA0_START + CDMA0_len
+        f1.write(f"; --- SEGMENT {GM1_setid} ---" +"\n")
+        f1.write("x1 0x" + f"{(CDMA0_reg_base                & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x2 0x" + f"{(CDMA1_reg_base                & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x3 0x" + f"{(0x00001008                    & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x4 0x" + f"{(0x00001000                    & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x5 0x" + f"{(CDMA0_START                   & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x6 0x" + f"{(CDMA1_START                   & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x7 0x" + f"{((CDMA1_START-64)              & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x8 0x" + f"{((CDMA1_START + CDMA1_len -64) & 0xFFFFFFFF):08x}"+"\n")
+
+    def cdma(row,col):
+        cd_x1 = ((row*col*2)/60)/300 
+        cd_x1 = int(cd_x1)
+        return cd_x1
+    
+    with open(GM1_LOOP_file1, mood) as f1_L:
+        f1_L.write(f"; --- SEGMENT {GM1_setid} ---" +"\n") #CDMA
+        CDMA_X1 = cdma(A_ROWS,A_COLS)
+        f1_L.write("x1 0x" + f"{(CDMA_X1 & 0xFFFFFFFF):08x}"+"\n")
+
+    sg_start =   sg_start + CDMA0_len + CDMA1_len 
+
+sg_start     = 0xA0000000
+GM1_setid    = 1
+ALL          = []
+DMA_ID       = 1
+
+def main(AROWS = 32,AB =32,BCOLS = 32,START = 0x00000100, block_width = 16, element_size = 2, APP0 = 0):
+    A_ROWS = AROWS
+    A_B = AB
+    B_COLS = BCOLS
+    A_DATA_START = START
+    global ALL
+    global sg_start
+    
+    print("Number of SG descriptors: ",int(A_DATA_START/64))
+    
+    global GM1_setid
+    
+    
+    #GM1_setid = GM1_setid + 1
+
+
+    op_DMA(A__ROWS = A_ROWS,A__COLS = A_B,B__ROWS = A_B,B__COLS = B_COLS,
+       block_width = block_width, element_size = element_size, APP0 = APP0)
+    
+
+    sg_lenth = int(sg_start-int(0xA0000000))
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    name0 = "ROM"
+    txt_dir = os.path.join(script_dir,"txt")
+    ROM_file0 = os.path.join(txt_dir, f"{name0}.txt")
+    ROM_LOOP_file0 = os.path.join(txt_dir, f"{name0}LOOP.txt")
+
+    all_file = os.path.join(txt_dir, f"allsg.txt")
+
+    allSGdescriptors = int(A_DATA_START/64)
+    if(allSGdescriptors >= int(sg_lenth/64)):
+        print("There is no need to add space to the SG descriptor")
+    else:
+        print("Need to add space to the SG descriptor")
+
+    #print(f'{sg_start:08x}')
+    descriptorss = []
+    alllen = int(int(A_DATA_START/64) - int(sg_lenth/64))
+    #print(int(A_DATA_START/64))
+    #print(int(sg_lenth/64))
+    for i in range(alllen):
+        A = 0
+        word = make_sg_dma_descriptor(A,A,A,A)
+        descriptorss.append(word)
+    deadata = flat(descriptorss)
+    AL = ALL + deadata
+    write_txt_file(AL , all_file)
 
     def descriptors(len):
         ds_x1 = (len/45) 
         ds_x1 = int(ds_x1)
         return ds_x1
-    def cdma(row,col):
-        cd_x1 = ((row*col*2)/60)/300 
-        cd_x1 = int(cd_x1)
-        return cd_x1
-    def sa(row,col):
-        sa_x1 = (2*(16*col)*(row/16)*(row/16)/62)/300 
-        sa_x1 = int(sa_x1)
-        return sa_x1
+    
     
     with open(ROM_file0, 'w') as f0:
         f0.write("; --- SEGMENT 1 ---" +"\n")
-        f0.write("x5 0x" + f"{(0x00000000 & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x6 0x" + f"{(0xA0000000 & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x7 0x" + f"{(0x40000000 & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x8 0x" + f"{(0xB0001000 & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x9 0x" + f"{(CDMA0_len+CDMA1_len& 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x1 0x" + f"{(0xFF004400  & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x2 0x" + f"{(0xFF004440  & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x3 0x" + f"{(0x00001000  & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x4 0x" + f"{(0x00001000  & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x5 0x" + f"{(0x00000000  & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x6 0x" + f"{(0xA0000000  & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x7 0x" + f"{(0x40000000  & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x8 0x" + f"{(0xB0001000  & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x9 0x" + f"{(sg_lenth    & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x10 0x" + f"{(0x00001000 & 0xFFFFFFFF):08x}"+"\n")
 
 
     with open(ROM_LOOP_file0, 'w') as f0_L:
         f0_L.write("; --- SEGMENT 1 ---" +"\n")
-        ds_x1 = descriptors(CDMA0_len+CDMA1_len)
-        f0_L.write("x1 0x" + f"{(ds_x1+10 & 0xFFFFFFFF):08x}"+"\n")  
-
-
-
-def main(AROWS = 32,AB =32,BCOLS = 32,START = 0x00010000, block_width = 16, element_size = 2, APP0 = 0):
-    A_ROWS = AROWS
-    A_B = AB
-    B_COLS = BCOLS
-    A_DATA_START = START
-    print("Number of SG descriptors: ",int(A_DATA_START/64))
-    op_DMA(A__ROWS = A_ROWS,A__COLS = A_B,B__ROWS = A_B,B__COLS = B_COLS,Global0_base = A_DATA_START,
-       block_width = block_width, element_size = element_size, APP0 = APP0)
+        ds_x1 = descriptors(sg_lenth)
+        f0_L.write("x1 0x" + f"{(ds_x1+10 & 0xFFFFFFFF):08x}"+"\n")
 
 if __name__ == "__main__":
-    main(AROWS = 64,AB =128,BCOLS = 64, block_width = 16, element_size = 2, APP0 = 0 )
+    main(AROWS = 16,AB =16,BCOLS = 16, block_width = 16, element_size = 2, APP0 = 0 )
+
+
+
+      
