@@ -51,12 +51,12 @@ def main():
     print("正在处理 GM0 系列...")
     merge_and_replace(mif_file0, mif_file1)
     
-    name2 = "GM11"
+    name2 = "GM1"
     name3 = "b_2"
     mif_file2 = os.path.join(mif_dir, f"{name2}.mif")
     mif_file3 = os.path.join(mat_dir, f"{name3}.mif")
-    # 第二组：GM11.mif + b_2.mif
-    print("\n正在处理 GM11 系列...")
+    # 第二组：GM1.mif + b_2.mif
+    print("\n正在处理 GM1 系列...")
     merge_and_replace(mif_file2, mif_file3)
 
 if __name__ == "__main__":
