@@ -614,7 +614,7 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x40010000):
         A_B = B_ROWS,
         B_cols=B_COLS,
         block_width=16,
-        Shared_Men0_base=0xC0000000,
+        Shared_Men0_base=0x40000000,
         element_size=2
     )
     descriptors_DMA1_MM2S = generate_dma1_descriptors_for_MM2S(
@@ -622,14 +622,14 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x40010000):
         A_B = B_ROWS,
         B_cols=B_COLS,
         block_width=16,
-        Shared_Men1_base=0xC2000000,
+        Shared_Men1_base=0x8000000,
         element_size=2
     )
 
     # 2) 给这两份描述符列表分别创建“内存中线性存放”布局，并将 Word0 指向下一描述符
     #    这里假设 CDMA0的描述符从 0x00000000 开始, CDMA1的描述符从 0x00100000 开始 (示例)
-    DMA0_SG_BASE = 0xF4400000
-    DMA1_SG_BASE = 0xF4800000
+    DMA0_SG_BASE = 0xF7400000
+    DMA1_SG_BASE = 0xF7600000
     CDMA0_SG_BASE = 0xF4000000
     CDMA1_SG_BASE = 0xF4200000
     cdma0_base = CDMA0_SG_BASE
@@ -722,8 +722,8 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x40010000):
     #reg_values0 = read_reg_values(txt_file0)
     #reg_values1 = read_reg_values(txt_file1)    
     
-    DMA0_BASE = 0xFF000000
-    DMA1_BASE = 0xFF000400
+    DMA0_BASE = 0xFF003000
+    DMA1_BASE = 0xFF003400
     CDMA0_BASE = 0xFF004400
     CDMA1_BASE = 0xFF004440
     cdma0_sg_start = 0x40000000

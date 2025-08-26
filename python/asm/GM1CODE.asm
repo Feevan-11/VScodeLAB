@@ -81,6 +81,7 @@ addi x6, x6, 0x000
 addi x7, x7, 0xFC0      
 addi x8, x8, 0xFC0
 addi x0, x0, 0 
+addi x0, x0, 0 
 sw x6, 0x4(x2)
 addi x0, x0, 0
 addi x0, x0, 0
@@ -123,7 +124,6 @@ addi x0, x0, 0
 addi x0, x0, 0 
 addi x0, x0, 0 
 lp.goto x1, -0x10
-addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
