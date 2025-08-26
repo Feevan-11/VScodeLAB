@@ -36,9 +36,9 @@ def convert_hex_to_bin(input_txt, output_mif):
             print(f"无效的十六进制数: {line}")
             return
     
-    # 检查行数是否为8的倍数
-    if len(hex_lines) % 8 != 0:
-        print("错误：输入数据行数不是8的倍数。")
+    # 检查行数是否为16的倍数（因为512位/32位=16个元素）
+    if len(hex_lines) % 16 != 0:
+        print("错误：输入数据行数不是16的倍数。")
         return
     
     bin_lines = []
@@ -47,8 +47,8 @@ def convert_hex_to_bin(input_txt, output_mif):
         bin_str = bin(dec_num)[2:].zfill(32)  # 确保二进制长度为32位
         bin_lines.append(bin_str)
     
-    # 分块处理，每8个为一组
-    chunks = [bin_lines[i:i+8] for i in range(0, len(bin_lines), 8)]
+    # 分块处理，每16个为一组（512位）
+    chunks = [bin_lines[i:i+16] for i in range(0, len(bin_lines), 16)]
     
     with open(output_mif, 'w') as f:
         for chunk in chunks:

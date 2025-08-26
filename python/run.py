@@ -8,9 +8,9 @@ from tablemd import main as ta_main
 from merge_mif_files import main as merge_mif_files_main
 
 if __name__ == "__main__":
-    A_ROW = 32
-    A_B = 32
-    B_COL = 32
+    A_ROW = 16
+    A_B = 16
+    B_COL = 16
     random = False
     #A_ROW,A_B,B_COL
     sg_generate_main(A_ROW,A_B,B_COL)    
