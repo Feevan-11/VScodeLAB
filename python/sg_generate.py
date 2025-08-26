@@ -628,10 +628,14 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x00010000):
 
     # 2) 给这两份描述符列表分别创建“内存中线性存放”布局，并将 Word0 指向下一描述符
     #    这里假设 CDMA0的描述符从 0x00000000 开始, CDMA1的描述符从 0x00100000 开始 (示例)
-    cdma0_base = 0xA8000000
-    cdma1_base = 0xAC000000
-    dma0_S2MM =  0xA0000000
-    dma1_S2MM =  0xA4000000
+    DMA0_SG_BASE = 0xF4400000
+    DMA1_SG_BASE = 0xF4800000
+    CDMA0_SG_BASE = 0xF4000000
+    CDMA1_SG_BASE = 0xF4200000
+    cdma0_base = CDMA0_SG_BASE
+    cdma1_base = CDMA1_SG_BASE
+    dma0_S2MM =  DMA0_SG_BASE
+    dma1_S2MM =  DMA1_SG_BASE
     ADD = int(A_ROWS/16) * int(B_COLS/16) * 64
     #print('ADD',ADD)
     dma0_MM2S =  dma0_S2MM + ADD
@@ -680,15 +684,15 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x00010000):
     print(" DMA1_S2MM descriptors count:", len(descriptors_DMA1_S2MM))
 
     STAR = 0
-    alen = 64*len(descriptors_A)
-    blen = 64*len(descriptors_B)
-    ADlen = 64*len(descriptors_DMA0_S2MM)
-    AAlen = 64*len(descriptors_DMA0_MM2S)
-    dalen = 64*(len(descriptors_DMA0_MM2S)+len(descriptors_DMA0_S2MM))
-    dblen = 64*(len(descriptors_DMA1_MM2S)+len(descriptors_DMA1_S2MM))
+    CDMA0len = 64*len(descriptors_A)
+    CDMA1len = 64*len(descriptors_B)
+    DMA0_S2MMlen = 64*len(descriptors_DMA0_S2MM)
+    DMA0_MM2Slen = 64*len(descriptors_DMA0_MM2S)
+    DMA0len = 64*(len(descriptors_DMA0_MM2S)+len(descriptors_DMA0_S2MM))
+    DMA1len = 64*(len(descriptors_DMA1_MM2S)+len(descriptors_DMA1_S2MM))
 
     descriptorss = []
-    alllen = int(int(A_DATA_START/64) - (alen + blen + dalen + dblen)/64)
+    alllen = int(int(A_DATA_START/64) - (CDMA0len + CDMA1len + DMA0len + DMA1len)/64)
     for i in range(alllen):
         A = 0
         word = make_sg_dma_descriptor(A,A,A)
@@ -697,12 +701,12 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x00010000):
     AL = ALL + deadata
     write_txt_file(AL , all_file)
     #print("all:",len(descriptorss))
-    print(" CDMA0 descriptors STAR:", STAR,"        Lenth:",f"{alen:08x}")
-    print(" CDMA1 descriptors STAR:", f"{alen:08x}"," Lenth:",f"{blen:08x}")
-    print(" DMA  S  2  M  M   STAR:", 0,"         tail:",f"{(ADlen-64):08x}")
-    print(" DMA  M  M  2  S   STAR:", f"{(ADlen):08x}","  tail:",f"{(ADlen + AAlen-64):08x}")
-    print(" DMA0 descriptors  STAR:", f"{(alen + blen):08x}"," Lenth:",f"{dalen:08x}")
-    print(" DMA1 descriptors  STAR:", f"{(alen + blen + dalen):08x}"," Lenth:",f"{dblen:08x}")
+    print(" CDMA0 descriptors STAR:", STAR,"        Lenth:",f"{CDMA0len:08x}")
+    print(" CDMA1 descriptors STAR:", f"{CDMA0len:08x}"," Lenth:",f"{CDMA1len:08x}")
+    print(" DMA  S  2  M  M   STAR:", 0,"         tail:",f"{(DMA0_S2MMlen-64):08x}")
+    print(" DMA  M  M  2  S   STAR:", f"{(DMA0_S2MMlen):08x}","  tail:",f"{(DMA0_S2MMlen + DMA0_MM2Slen-64):08x}")
+    print(" DMA0 descriptors  STAR:", f"{(CDMA0len + CDMA1len):08x}"," Lenth:",f"{DMA0len:08x}")
+    print(" DMA1 descriptors  STAR:", f"{(CDMA0len + CDMA1len + DMA0len):08x}"," Lenth:",f"{DMA1len:08x}")
     #print("[INFO] Successfully generated  cdma0_sg.txt  / cdma1_sg.txt")
     
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -715,23 +719,31 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x00010000):
 
     #reg_values0 = read_reg_values(txt_file0)
     #reg_values1 = read_reg_values(txt_file1)    
-
+    
+    DMA0_BASE = 0xFF000000
+    DMA1_BASE = 0xFF000400
+    CDMA0_BASE = 0xFF004400
+    CDMA1_BASE = 0xFF004440
     with open(ROM_file0, 'w') as f0:
         f0.write("; --- SEGMENT 1 ---" +"\n")
+        f0.write("x1 0x" + f"{(CDMA0_BASE & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x2 0x" + f"{(CDMA1_BASE & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x3 0x" + f"{(0x00001000 & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x4 0x" + f"{(0x00001000 & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x5 0x" + f"{(0x00000000 & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x6 0x" + f"{(0xA8000000 & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x6 0x" + f"{(CDMA0_SG_BASE & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x7 0x" + f"{(0x40000000 & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x8 0x" + f"{(0xB0001000 & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x9 0x" + f"{(alen & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x8 0x" + f"{(0xF0001000 & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x9 0x" + f"{(CDMA0len & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x10 0x" + f"{(0x00000800 & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x11 0x" + f"{(alen & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x12 0x" + f"{(0xAC000000 & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x13 0x" + f"{(blen & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x14 0x" + f"{((alen+blen) & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x15 0x" + f"{(0xA0000000 & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x16 0x" + f"{(dalen & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x17 0x" + f"{((alen+blen+dalen) & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x18 0x" + f"{(0xA4000000 & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x11 0x" + f"{(CDMA0len & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x12 0x" + f"{(CDMA1_SG_BASE & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x13 0x" + f"{(CDMA1len & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x14 0x" + f"{((CDMA0len+CDMA1len) & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x15 0x" + f"{(DMA0_SG_BASE & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x16 0x" + f"{(DMA0len & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x17 0x" + f"{((CDMA0len+CDMA1len+DMA0len) & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x18 0x" + f"{(DMA1_SG_BASE & 0xFFFFFFFF):08x}"+"\n")
 
 
     with open(GM1_file1, 'w') as f1:
@@ -743,36 +755,36 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x00010000):
         #f1.write("x9 0x" + f"{((16*A_COLS*2) & 0xFFFFFFFF):08x}"+"\n")
         #f1.write("x10 0x" + f"{((16*A_COLS*2) & 0xFFFFFFFF):08x}"+"\n")
         f1.write("; --- SEGMENT 1 ---" +"\n")
-        f1.write("x1 0x" + f"{(0xC0000800 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x2 0x" + f"{(0xC0000840 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x1 0x" + f"{(CDMA0_BASE & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x2 0x" + f"{(CDMA1_BASE & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x3 0x" + f"{(0x00001008 & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x4 0x" + f"{(0x00001000 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x5 0x" + f"{(0xA8000000 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x6 0x" + f"{(0xAC000000 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x7 0x" + f"{((0xA8000000+alen-64) & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x8 0x" + f"{((0xAC000000+alen-64) & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x5 0x" + f"{(CDMA0_SG_BASE & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x6 0x" + f"{(CDMA1_SG_BASE & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x7 0x" + f"{((CDMA0_SG_BASE+CDMA0len-64) & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x8 0x" + f"{((CDMA1_SG_BASE+CDMA0len-64) & 0xFFFFFFFF):08x}"+"\n")
+        #f1.write("; --- SEGMENT 2 ---" +"\n")
+        #f1.write("x1 0x" + f"{(DMA0_BASE & 0xFFFFFFFF):08x}"+"\n")
+        #f1.write("x2 0x" + f"{(DMA1_BASE & 0xFFFFFFFF):08x}"+"\n")
+        #f1.write("x3 0x" + f"{(DMA0_SG_BASE & 0xFFFFFFFF):08x}"+"\n")
+        #f1.write("x4 0x" + f"{(DMA1_SG_BASE & 0xFFFFFFFF):08x}"+"\n")
+        #sgbbt = len(descriptors_DMA0_S2MM) << 16
+        #sgbbt = sgbbt + 0x1001
+        #f1.write("x5 0x" + f"{(sgbbt & 0xFFFFFFFF):08x}"+"\n")
+        #f1.write("x6 0x" + f"{(0x00001000 & 0xFFFFFFFF):08x}"+"\n")
+        #f1.write("x7 0x" + f"{((DMA0_SG_BASE+DMA0_S2MMlen-64) & 0xFFFFFFFF):08x}"+"\n")
+        #f1.write("x8 0x" + f"{((DMA1_SG_BASE+DMA0_S2MMlen-64) & 0xFFFFFFFF):08x}"+"\n")
         f1.write("; --- SEGMENT 2 ---" +"\n")
-        f1.write("x1 0x" + f"{(0xC0000000 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x2 0x" + f"{(0xC0000400 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x3 0x" + f"{(0xA0000000 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x4 0x" + f"{(0xA4000000 & 0xFFFFFFFF):08x}"+"\n")
-        sgbbt = len(descriptors_DMA0_S2MM) << 16
-        sgbbt = sgbbt + 0x1001
-        f1.write("x5 0x" + f"{(sgbbt & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x6 0x" + f"{(0x00001000 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x7 0x" + f"{((0xA0000000+ADlen-64) & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x8 0x" + f"{((0xA4000000+ADlen-64) & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("; --- SEGMENT 3 ---" +"\n")
-        f1.write("x1 0x" + f"{(0xC0000000 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x2 0x" + f"{(0xC0000400 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x3 0x" + f"{(0xA0000000+ADlen & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x4 0x" + f"{(0xA4000000+ADlen & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x1 0x" + f"{(DMA0_BASE & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x2 0x" + f"{(DMA1_BASE & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x3 0x" + f"{(DMA0_SG_BASE+DMA0_S2MMlen & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x4 0x" + f"{(DMA1_SG_BASE+DMA0_S2MMlen & 0xFFFFFFFF):08x}"+"\n")
         sgbbt1 = len(descriptors_DMA0_MM2S) << 16
         sgbbt1 = sgbbt1 + 0x1001
         f1.write("x5 0x" + f"{(sgbbt1 & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x6 0x" + f"{(0x00001000 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x7 0x" + f"{((0xA0000000+AAlen+ADlen-64) & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x8 0x" + f"{((0xA4000000+AAlen+ADlen-64) & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x7 0x" + f"{((DMA0_SG_BASE+DMA0_MM2Slen+DMA0_S2MMlen-64) & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x8 0x" + f"{((DMA1_SG_BASE+DMA0_MM2Slen+DMA0_S2MMlen-64) & 0xFFFFFFFF):08x}"+"\n")
 
 def main(AROWS = 32,AB =32,BCOLS = 32):
     A_ROWS = AROWS
