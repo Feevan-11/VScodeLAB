@@ -622,7 +622,7 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x40010000):
         A_B = B_ROWS,
         B_cols=B_COLS,
         block_width=16,
-        Shared_Men1_base=0x8000000,
+        Shared_Men1_base=0x80000000,
         element_size=2
     )
 
