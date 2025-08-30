@@ -29,29 +29,43 @@ def matrix_to_mif(matrix, filename, split_by, block_size, internal_order, HER=Tr
     # 转换为元素列表
     elements_list = [all_bytes[i:i+2] for i in range(0, len(all_bytes), 2)]
     
-    # 补零到16的倍数
-    pad_count = (16 - (len(elements_list) % 16)) % 16
+    # 补零到32的倍数（因为每行512位，每个元素16位，所以每行32个元素）
+    pad_count = (32 - (len(elements_list) % 32)) % 32
     elements_list += [b'\x00\x00'] * pad_count
     
     # 生成MIF内容
     mif_content = []
     if HER:
         mif_content = [
-            "DEPTH = {};".format(len(elements_list)//16),
-            
+            "DEPTH = {};".format(len(elements_list)//32),
+            "WIDTH = 512;",
+            "ADDRESS_RADIX = HEX;",
+            "DATA_RADIX = HEX;",
+            "CONTENT",
+            "BEGIN"
         ]
     
-    # 处理每个16元素的块
-    for block_idx in range(len(elements_list) // 16):
-        block = elements_list[block_idx*16 : (block_idx+1)*16]
-        reversed_block = block[::-1]  # 小端序调整
-        block_bytes = b''.join(reversed_block)
+    # 处理每个32元素的块（512位）
+    for block_idx in range(len(elements_list) // 32):
+        block = elements_list[block_idx*32 : (block_idx+1)*32]
+        # 将块分成两个16元素的子块
+        subblock1 = block[16:32]  # 高地址部分（左边）
+        subblock2 = block[0:16]   # 低地址部分（右边）
+        
+        # 分别反转每个子块（小端序调整）
+        reversed_subblock1 = subblock1[::-1]
+        reversed_subblock2 = subblock2[::-1]
+        
+        # 合并子块：高地址在左，低地址在右
+        combined_block = reversed_subblock1 + reversed_subblock2
+        block_bytes = b''.join(combined_block)
         hex_str = block_bytes.hex().upper()
-        binary_str = format(int(hex_str, 16), '0256b')
         
         if HER:
             mif_content.append("{} : {};".format(format(block_idx, '04X'), hex_str))
         else:
+            # 对于二进制模式，转换为512位二进制字符串
+            binary_str = format(int(hex_str, 16), '0512b')
             mif_content.append(binary_str)
     
     if HER:
@@ -135,4 +149,4 @@ def main(random = False, A_row = 32, A__B = 16, B_col = 32,T = True, type = 0 ):
             f.write(line + '\n')
 
 if __name__ == "__main__":
-    main(random = False, A_row = 64, A__B = 64, B_col = 64)
+    main(random = False, A_row = 32, A__B = 32, B_col = 32)

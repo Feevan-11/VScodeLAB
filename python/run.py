@@ -1,11 +1,8 @@
-from sg_generate import main as sg_generate_main
 from sg_add import main as sg_add_main
-from sg_n import main as sg_n_main
 from asm_generate import main as asm_generate_main
 from translator import main as translator_main
 from matrix_mul import main as matrix_mul_main
 from matrix_add import main as matrix_add_main
-from matrix_n import main as matrix
 from hex_to_bin import main as hex_to_bin_main
 from merge_mif_files import main as merge_mif_files_main
 from SG_mul import main as sg_mul_main
@@ -42,16 +39,13 @@ if __name__ == "__main__":
         block_width = 16
         APP0 = 2
 
-    mood = 2 #1+,2*,3ni,4T
+    mood = 2 #1+,2*
 
     if(mood == 1):
         sg_add_main(A_ROW,B_COL,descriptors)
     elif(mood == 2): 
-        sg_mul_main(A_ROW,A_B,B_COL,descriptors,block_width = block_width, element_size = element_size, APP0 = APP0)
-    elif(mood == 3):
-        sg_n_main(A_ROW,descriptors)    
-    elif(mood == 4):
-        sg_generate_main(A_ROW,A_B,A_B,descriptors)
+        sg_mul_main(A_ROW,A_B,B_COL,descriptors,block_width = block_width, element_size = element_size, APP0 = APP0)  
+
 
     print("\n") 
     asm_generate_main(GM1 = mood)  
@@ -64,10 +58,6 @@ if __name__ == "__main__":
         matrix_add_main(random,A_ROW,B_COL)   
     elif(mood == 2):    
         matrix_mul_main(random,A_ROW,A_B,B_COL,T=False,type=element_type)
-    elif(mood == 3):    
-        matrix(A_ROW)
-    elif(mood == 4):    
-        matrix_mul_main(random,A_ROW,A_B,B_COL,T=True)
 
     hex_to_bin_main()
 

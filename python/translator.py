@@ -873,32 +873,33 @@ def process_mif(input_filename, output_filename):
         with open(input_filename, 'r') as f:
             lines = [line.strip() for line in f if line.strip()]
     except FileNotFoundError:
-        print(f"erro：file {input_filename} not find")
+        print(f"error: file {input_filename} not found")
         return
 
     # Verify the formatting of each line
     valid_lines = []
     for idx, line in enumerate(lines, 1):
         if len(line) != 128:
-            print(f"the {idx} Line length error: It should be 128 bits, but it is{len(line)}")
+            print(f"Line {idx} length error: It should be 128 bits, but it is {len(line)}")
             return
         if not all(c in {'0', '1'} for c in line):
-            print(f"in {idx} The line contains illegal characters")
+            print(f"Line {idx} contains illegal characters")
             return
         valid_lines.append(line)
 
-    # Combine binary data
+    # Combine binary data into 512-bit lines
     combined = []
-    for i in range(0, len(valid_lines), 2):
-        if i+1 < len(valid_lines):
-            # The second row is placed on the left, and the first row is placed on the right
-            combined.append(valid_lines[i+1] + valid_lines[i])
+    for i in range(0, len(valid_lines), 4):
+        if i+3 < len(valid_lines):
+            # Combine four lines: line4 + line3 + line2 + line1 (靠上的行放在右边)
+            combined_line = valid_lines[i+3] + valid_lines[i+2] + valid_lines[i+1] + valid_lines[i]
+            combined.append(combined_line)
 
     # Write to the output file
     with open(output_filename, 'w') as f:
         f.write('\n'.join(combined))
     
-    print(f"Conversion completed! Total processed {len(valid_lines)} row，generated {len(combined)} line 256 bit")
+    print(f"Conversion completed! Processed {len(valid_lines)} rows, generated {len(combined)} lines of 512 bits")
 
 def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -909,9 +910,9 @@ def main():
         {"input":"ROM",
          "output":"AROM",
         },
-        {"input":"GM1",
-         "output":"AGM1",
-        } 
+        #{"input":"GM1",
+        # "output":"AGM1",
+        #} 
     ]
 
     for name in names:
@@ -960,9 +961,9 @@ def main():
         {"input":"AROM",
          "output":"ROM",
         },
-        {"input":"AGM1",
-         "output":"GM1",
-        } 
+        #{"input":"AGM1",
+        # "output":"GM1",
+        #} 
     ]
     for n in NS:
         input_file = n["input"]  
