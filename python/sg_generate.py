@@ -599,14 +599,14 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x40010000):
         A_rows=A_ROWS,
         B_cols=B_COLS,
         block_width=16,
-        Shared_Men2_base=0x90000000,
+        Shared_Men2_base=0xC0100000,
         element_size=2
     )
     descriptors_DMA1_S2MM = generate_dma1_descriptors_for_S2MM(
         A_rows=A_ROWS,
         B_cols=B_COLS,
         block_width=16,
-        Shared_Men3_base=0x98000000,
+        Shared_Men3_base=0xC2100000,
         element_size=2
     )
     descriptors_DMA0_MM2S = generate_dma0_descriptors_for_MM2S(
@@ -614,7 +614,7 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x40010000):
         A_B = B_ROWS,
         B_cols=B_COLS,
         block_width=16,
-        Shared_Men0_base=0x40000000,
+        Shared_Men0_base=0xC0000000,
         element_size=2
     )
     descriptors_DMA1_MM2S = generate_dma1_descriptors_for_MM2S(
@@ -622,14 +622,14 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x40010000):
         A_B = B_ROWS,
         B_cols=B_COLS,
         block_width=16,
-        Shared_Men1_base=0x80000000,
+        Shared_Men1_base=0xC2000000,
         element_size=2
     )
 
     # 2) 给这两份描述符列表分别创建“内存中线性存放”布局，并将 Word0 指向下一描述符
     #    这里假设 CDMA0的描述符从 0x00000000 开始, CDMA1的描述符从 0x00100000 开始 (示例)
-    DMA0_SG_BASE = 0xF7400000
-    DMA1_SG_BASE = 0xF7600000
+    DMA0_SG_BASE = 0xF4400000
+    DMA1_SG_BASE = 0xF4800000
     CDMA0_SG_BASE = 0xF4000000
     CDMA1_SG_BASE = 0xF4200000
     cdma0_base = CDMA0_SG_BASE
@@ -637,7 +637,8 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x40010000):
     dma0_S2MM =  DMA0_SG_BASE
     dma1_S2MM =  DMA1_SG_BASE
     ADD = int(A_ROWS/16) * int(B_COLS/16) * 64
-    #print('ADD',ADD)
+    ADD= len(descriptors_DMA0_S2MM) * 64
+    print('ADD',ADD)
     dma0_MM2S =  dma0_S2MM + ADD
     dma1_MM2S =  dma1_S2MM + ADD
 
@@ -687,7 +688,9 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x40010000):
     CDMA0len = 64*len(descriptors_A)
     CDMA1len = 64*len(descriptors_B)
     DMA0_S2MMlen = 64*len(descriptors_DMA0_S2MM)
+    DMA1_S2MMlen = 64*len(descriptors_DMA1_S2MM)
     DMA0_MM2Slen = 64*len(descriptors_DMA0_MM2S)
+    DMA1_MM2Slen = 64*len(descriptors_DMA1_MM2S)
     DMA0len = 64*(len(descriptors_DMA0_MM2S)+len(descriptors_DMA0_S2MM))
     DMA1len = 64*(len(descriptors_DMA1_MM2S)+len(descriptors_DMA1_S2MM))
 
@@ -722,8 +725,8 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x40010000):
     #reg_values0 = read_reg_values(txt_file0)
     #reg_values1 = read_reg_values(txt_file1)    
     
-    DMA0_BASE = 0xFF003000
-    DMA1_BASE = 0xFF003400
+    DMA0_BASE = 0xFF000000
+    DMA1_BASE = 0xFF000400
     CDMA0_BASE = 0xFF004400
     CDMA1_BASE = 0xFF004440
     cdma0_sg_start = 0x40000000
@@ -783,14 +786,18 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x40010000):
         f1.write("; --- SEGMENT 2 ---" +"\n")
         f1.write("x1 0x" + f"{(DMA0_BASE & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x2 0x" + f"{(DMA1_BASE & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x3 0x" + f"{(DMA0_SG_BASE+DMA0_S2MMlen & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x4 0x" + f"{(DMA1_SG_BASE+DMA0_S2MMlen & 0xFFFFFFFF):08x}"+"\n")
-        sgbbt1 = len(descriptors_DMA0_MM2S) << 16
-        sgbbt1 = sgbbt1 + 0x1001
-        f1.write("x5 0x" + f"{(sgbbt1 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x3 0x" +  f"{(DMA0_SG_BASE & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x4 0x" + f"{(DMA1_SG_BASE & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x5 0x" + f"{(0x00001001 & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x6 0x" + f"{(0x00001000 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x7 0x" + f"{((DMA0_SG_BASE+DMA0_MM2Slen+DMA0_S2MMlen-64) & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x8 0x" + f"{((DMA1_SG_BASE+DMA0_MM2Slen+DMA0_S2MMlen-64) & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x7 0x" + f"{(DMA0_SG_BASE+DMA0_S2MMlen-64 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x8 0x" + f"{(DMA1_SG_BASE+DMA1_S2MMlen-64 & 0xFFFFFFFF):08x}"+"\n")
+        
+        f1.write("x9 0x" + f"{(DMA0_SG_BASE+DMA0_S2MMlen & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x10 0x" + f"{(DMA1_SG_BASE+DMA1_S2MMlen & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x11 0x" + f"{((DMA0_SG_BASE+DMA0_MM2Slen+DMA0_S2MMlen-64) & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x12 0x" + f"{((DMA1_SG_BASE+DMA0_MM2Slen+DMA0_S2MMlen-64) & 0xFFFFFFFF):08x}"+"\n")
+        
 
 def main(AROWS = 32,AB =32,BCOLS = 32):
     A_ROWS = AROWS
