@@ -698,12 +698,19 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x40010000):
     A_DATA_START = int(A_DATA_START) - int(0x40000000) 
     print(int(A_DATA_START/64))
     alllen = int(int(A_DATA_START/64) - (CDMA0len + CDMA1len + DMA0len + DMA1len)/64)
+    print(alllen)
+    if(alllen >= 0):
+        print("right")
+    elif(alllen < 0):
+        print("wrong")
     for i in range(alllen):
         A = 0
         word = make_sg_dma_descriptor(A,A,A)
         descriptorss.append(word)
     deadata = flat(descriptorss)
     AL = ALL + deadata
+
+
     write_txt_file(AL , all_file)
     #print("all:",len(descriptorss))
     print(" CDMA0 descriptors STAR:", STAR,"        Lenth:",f"{CDMA0len:08x}")
@@ -799,13 +806,13 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x40010000):
         f1.write("x12 0x" + f"{((DMA1_SG_BASE+DMA0_MM2Slen+DMA0_S2MMlen-64) & 0xFFFFFFFF):08x}"+"\n")
         
 
-def main(AROWS = 32,AB =32,BCOLS = 32):
+def main(AROWS = 32,AB =32,BCOLS = 32,A_START = 0x40001000):
     A_ROWS = AROWS
     A_B = AB
     B_COLS = BCOLS
-    A_DATA_START = 0x40001000
+    A_DATA_START = A_START
     
     op(A__ROWS = A_ROWS,A__COLS = A_B,B__ROWS = A_B,B__COLS = B_COLS,A_DATA_START = A_DATA_START)
 
 if __name__ == "__main__":
-    main(AROWS = 32,AB =32,BCOLS = 32)
+    main(AROWS = 32,AB =32,BCOLS = 32,A_START = 0x40001000)

@@ -12,8 +12,9 @@ if __name__ == "__main__":
     A_B = 64
     B_COL = 128
     random = False
+    A_START = 0x40006000
     #A_ROW,A_B,B_COL
-    sg_generate_main(A_ROW,A_B,B_COL)    
+    sg_generate_main(A_ROW,A_B,B_COL,A_START)    
     asm_generate_main()    
     translator_main()  
     print("a1") 
