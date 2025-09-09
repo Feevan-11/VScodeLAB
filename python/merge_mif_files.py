@@ -36,6 +36,33 @@ def merge_and_replace(source_file, append_file):
     except Exception as e:
         print(f"The operation failed：{str(e)}")
 
+
+def SA():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    mif_dir = os.path.join(script_dir, "mif")
+    mat_dir = os.path.join(script_dir, "mif")
+    
+    name0 = "ROM"
+    name1 = "SA"
+    mif_file0 = os.path.join(mif_dir, f"{name0}.mif")
+    mif_file1 = os.path.join(mat_dir, f"{name1}.mif")
+
+    print("The SA series is being processed...")
+    merge_and_replace(mif_file0, mif_file1)
+
+def SG():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    mif_dir = os.path.join(script_dir, "mif")
+    mat_dir = os.path.join(script_dir, "mif")
+    
+    name0 = "ROM"
+    name1 = "SG"
+    mif_file0 = os.path.join(mif_dir, f"{name0}.mif")
+    mif_file1 = os.path.join(mat_dir, f"{name1}.mif")
+
+    print("The SA series is being processed...")
+    merge_and_replace(mif_file0, mif_file1)
+
 def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     mif_dir = os.path.join(script_dir, "mif")

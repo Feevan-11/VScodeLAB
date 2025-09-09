@@ -93,14 +93,14 @@ def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     configs = [
         {
-            "asm_in": os.path.join("asm", "ROM.asm"),
-            "reg_config": os.path.join("txt", "ROMLOOP.txt"),
-            "asm_out": os.path.join("asm", "ROM.asm")
+            "asm_in": os.path.join("asm", "SG.asm"),
+            "reg_config": os.path.join("txt", "SGLOOP.txt"),
+            "asm_out": os.path.join("asm", "SG.asm")
         },
         {
-            "asm_in": os.path.join("asm", "GM1.asm"),
-            "reg_config": os.path.join("txt", "GM1LOOP.txt"),
-            "asm_out": os.path.join("asm", "GM1.asm")
+            "asm_in": os.path.join("asm", "SA.asm"),
+            "reg_config": os.path.join("txt", "SALOOP.txt"),
+            "asm_out": os.path.join("asm", "SA.asm")
         }
      ]
 

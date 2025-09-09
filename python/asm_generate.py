@@ -113,49 +113,20 @@ def generate_output(processed_segments, reg_config, output_file='output.asm'):
             f.write(segment_map[seg_id])
             f.write("\n")
 
-def main(GM1 = 2):
+def main():
 
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    if (GM1 == 3):
-        configs = [
-        {
-            "asm_in": os.path.join("asm", "ROMCODE.asm"),
-            "reg_config": os.path.join("txt", "ROM.txt"),
-            "asm_out": os.path.join("asm", "ROM.asm")
-        },
-        {
-            "asm_in": os.path.join("asm", "GM1NI.asm"),
-            "reg_config": os.path.join("txt", "GM1.txt"),
-            "asm_out": os.path.join("asm", "GM1.asm")
-        }
-     ]
-    elif(GM1 == 2):
-        configs = [
-        {
-            "asm_in": os.path.join("asm", "ROMCODE.asm"),
-            "reg_config": os.path.join("txt", "ROM.txt"),
-            "asm_out": os.path.join("asm", "ROM.asm")
-        },
-        {
-            "asm_in": os.path.join("asm", "GM1CODE.asm"),
-            "reg_config": os.path.join("txt", "GM1.txt"),
-            "asm_out": os.path.join("asm", "GM1.asm")
-        }
-        ]
-    else:
-        configs = [
-        {
-            "asm_in": os.path.join("asm", "TROMCODE.asm"),
-            "reg_config": os.path.join("txt", "ROM.txt"),
-            "asm_out": os.path.join("asm", "ROM.asm")
-        },
-        {
-            "asm_in": os.path.join("asm", "TGM1CODE.asm"),
-            "reg_config": os.path.join("txt", "GM1.txt"),
-            "asm_out": os.path.join("asm", "GM1.asm")
-        }
-     ]
-
+    configs = [
+    {
+        "asm_in": os.path.join("asm", "SGCODE.asm"),
+        "reg_config": os.path.join("txt", "SG.txt"),
+        "asm_out": os.path.join("asm", "SG.asm")
+    },
+    {
+        "asm_in": os.path.join("asm", "SACODE.asm"),
+        "reg_config": os.path.join("txt", "SA.txt"),
+        "asm_out": os.path.join("asm", "SA.asm")
+    }
+    ]
     for cfg in configs:
         reg_values = read_reg_values(cfg["reg_config"])
         
