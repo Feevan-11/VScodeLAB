@@ -448,9 +448,64 @@ def flat(descriptor_list):
     return flattened
 
 def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element_size = 2, APP0 = 0,
-       DDR0_START = 0x0,DDR1_START = 0x0,CDMA0_reg_base= 0x0,CDMA1_reg_base= 0x0,
-       data0_in   = 0x0,data1_in   = 0x0,data0_out     = 0x0,data1_out     = 0x0,DMA0_REG_base= 0x0,DMA1_REG_base= 0x0,
-       DMA0_SG    = 0x0,DMA1_SG    = 0x0):
+       DDR0_START = 0x0, DDR1_START = 0x0, CDMA0_reg_base= 0x0, CDMA1_reg_base= 0x0,  MPU_ID = 0):
+
+    if MPU_ID == 0:
+        data0_in      = Data_Mem0
+        data1_in      = Data_Mem1
+        data0_out     = Data_Mem0 + 0x100000
+        data1_out     = Data_Mem1 + 0x100000
+        DMA0_REG_base = DMA0_config
+        DMA1_REG_base = DMA1_config
+        DMA0_SG       = SGMEM_DMA0_BASE
+        DMA1_SG       = SGMEM_DMA1_BASE
+    elif MPU_ID == 1:
+        data0_in      = Data_Mem2
+        data1_in      = Data_Mem3
+        data0_out     = Data_Mem2 + 0x100000
+        data1_out     = Data_Mem3 + 0x100000
+        DMA0_REG_base = DMA2_config
+        DMA1_REG_base = DMA3_config
+        DMA0_SG       = SGMEM_DMA2_BASE
+        DMA1_SG       = SGMEM_DMA3_BASE
+    elif MPU_ID == 2:
+        data0_in      = Data_Mem4
+        data1_in      = Data_Mem5
+        data0_out     = Data_Mem4 + 0x100000
+        data1_out     = Data_Mem5 + 0x100000
+        DMA0_REG_base = DMA4_config
+        DMA1_REG_base = DMA5_config
+        DMA0_SG       = SGMEM_DMA4_BASE
+        DMA1_SG       = SGMEM_DMA5_BASE
+    elif MPU_ID == 3:
+        data0_in      = Data_Mem6
+        data1_in      = Data_Mem7
+        data0_out     = Data_Mem6 + 0x100000
+        data1_out     = Data_Mem7 + 0x100000
+        DMA0_REG_base = DMA6_config
+        DMA1_REG_base = DMA7_config
+        DMA0_SG       = SGMEM_DMA6_BASE
+        DMA1_SG       = SGMEM_DMA7_BASE
+    elif MPU_ID == 4:
+        data0_in      = Data_Mem8
+        data1_in      = Data_Mem9
+        data0_out     = Data_Mem8 + 0x100000
+        data1_out     = Data_Mem9 + 0x100000
+        DMA0_REG_base = DMA8_config
+        DMA1_REG_base = DMA9_config
+        DMA0_SG       = SGMEM_DMA8_BASE
+        DMA1_SG       = SGMEM_DMA9_BASE
+    elif MPU_ID == 5:
+        data0_in      = Data_Mem10
+        data1_in      = Data_Mem11
+        data0_out     = Data_Mem10 + 0x100000
+        data1_out     = Data_Mem11 + 0x100000
+        DMA0_REG_base = DMA10_config
+        DMA1_REG_base = DMA11_config
+        DMA0_SG       = SGMEM_DMA10_BASE
+        DMA1_SG       = SGMEM_DMA11_BASE
+    else:
+        print(f"ERRO")
 
     A_ROWS = A__ROWS
     A_COLS = A__COLS
@@ -460,7 +515,8 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
     global ALL_SG_descriptors
     global SGMEM_CDMA0_start
     global SGMEM_CDMA1_start
-    global ALL_SG_strat
+    global ALL_SG_strat_DDR
+
     #global SA_setid
 
     descriptors_A_IN = generate_cdma0_descriptors_for_matrix_A_IN(
@@ -518,37 +574,32 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
         APP0 = APP0
     )
     
-    cdma0_base = SGMEM_CDMA0_start
-    cdma1_base = SGMEM_CDMA1_start
     CDMA0_len  = 64*len(descriptors_A)
     CDMA1_len  = 64*len(descriptors_B)
 
-    dma0_S2MM =  DMA0_SG            #print(f'{SGMEM_CDMA0_start:08x}')
-    dma0_MM2S =  dma0_S2MM + len(descriptors_DMA0_S2MM) * 64
-    dma1_S2MM =  DMA1_SG
-    dma1_MM2S =  dma1_S2MM + len(descriptors_DMA1_S2MM) * 64
+    SGMEM_DMA0_start =  DMA0_SG            #print(f'{SGMEM_CDMA0_start:08x}')
+    SGMEM_DMA0_start_MM2S =  SGMEM_DMA0_start + len(descriptors_DMA0_S2MM) * 64
+    SGMEM_DMA1_start =  DMA1_SG
+    SGMEM_DMA1_start_MM2S =  SGMEM_DMA1_start + len(descriptors_DMA1_S2MM) * 64
 
-    cdma0_sg_data = link_descriptors_in_memory(descriptors_A, base_addr=cdma0_base, desc_size=64)
-    cdma1_sg_data = link_descriptors_in_memory(descriptors_B, base_addr=cdma1_base, desc_size=64)
+    cdma0_sg_data = link_descriptors_in_memory(descriptors_A, base_addr=SGMEM_CDMA0_start, desc_size=64)
+    cdma1_sg_data = link_descriptors_in_memory(descriptors_B, base_addr=SGMEM_CDMA1_start, desc_size=64)
 
-    dma0_MM2S_sg_data = link_descriptors_in_memory(descriptors_DMA0_MM2S, base_addr=dma0_MM2S, desc_size=64)
-    dma1_MM2S_sg_data = link_descriptors_in_memory(descriptors_DMA1_MM2S, base_addr=dma1_MM2S, desc_size=64)
-    dma0_S2MM_sg_data = link_descriptors_in_memory(descriptors_DMA0_S2MM, base_addr=dma0_S2MM, desc_size=64)
-    dma1_S2MM_sg_data = link_descriptors_in_memory(descriptors_DMA1_S2MM, base_addr=dma1_S2MM, desc_size=64)
+    dma0_MM2S_sg_data = link_descriptors_in_memory(descriptors_DMA0_MM2S, base_addr=SGMEM_DMA0_start_MM2S, desc_size=64)
+    dma1_MM2S_sg_data = link_descriptors_in_memory(descriptors_DMA1_MM2S, base_addr=SGMEM_DMA1_start_MM2S, desc_size=64)
+    dma0_S2MM_sg_data = link_descriptors_in_memory(descriptors_DMA0_S2MM, base_addr=SGMEM_DMA0_start, desc_size=64)
+    dma1_S2MM_sg_data = link_descriptors_in_memory(descriptors_DMA1_S2MM, base_addr=SGMEM_DMA1_start, desc_size=64)
 
     ALL_SG_descriptors = ALL_SG_descriptors + cdma0_sg_data + cdma1_sg_data + dma0_S2MM_sg_data + dma0_MM2S_sg_data + dma1_S2MM_sg_data + dma1_MM2S_sg_data
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    
     cdma0_name = 'cdma0_sg'
     cdma1_name = 'cdma1_sg'
     dma0_MM2S_name = 'dma0_MM2S_sg'
     dma1_MM2S_name = 'dma1_MM2S_sg'
     dma0_S2MM_name = 'dma0_S2MM_sg'
     dma1_S2MM_name = 'dma1_S2MM_sg'
-
     txt_dir = os.path.join(script_dir,"txt")
-
     cdma0_file = os.path.join(txt_dir, f"{cdma0_name}.txt")
     cdma1_file = os.path.join(txt_dir, f"{cdma1_name}.txt")
     dma0_MM2S_file = os.path.join(txt_dir, f"{dma0_MM2S_name}.txt")
@@ -573,18 +624,6 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
     SA_file1 = os.path.join(txt_dir, f"{name1}.txt")
     SA_LOOP_file1 = os.path.join(txt_dir, f"{name1}LOOP.txt")
 
-    def cdma(row,col):
-        cd_x1 = ((row*col*2)/60)/300 
-        cd_x1 = int(cd_x1)
-        return cd_x1
-    
-    with open(SA_LOOP_file1, 'w') as f1_L:
-        f1_L.write(f"; --- SEGMENT 1 ---" +"\n") #CDMA
-        CDMA_X1 = cdma(A_ROWS,A_COLS)
-        f1_L.write("x1 0x" + f"{(CDMA_X1 & 0xFFFFFFFF):08x}"+"\n")
-        f1_L.write(f"; --- SEGMENT 2 ---" +"\n") #CDMA
-        #CDMA_X1 = cdma(A__ROWS,A__COLS)
-        f1_L.write("x1 0x" + f"{(0 & 0xFFFFFFFF):08x}"+"\n")
 
     DMA0_S2MM_len = 64*len(descriptors_DMA0_S2MM)
     DMA0_MM2S_len = 64*len(descriptors_DMA0_MM2S)
@@ -592,65 +631,84 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
     DMA1_MM2S_len = 64*len(descriptors_DMA1_MM2S)
     DMA0_len = 64*(len(descriptors_DMA0_MM2S)+len(descriptors_DMA0_S2MM))
     DMA1_len = 64*(len(descriptors_DMA1_MM2S)+len(descriptors_DMA1_S2MM))
+    
+    CDMA0_START_DDR = ALL_SG_strat_DDR
+    CDMA1_START_DDR = CDMA0_START_DDR + CDMA0_len
+    DMA0_START_DDR  = CDMA1_START_DDR + CDMA1_len
+    DMA1_START_DDR  = DMA0_START_DDR  + DMA0_len
+    
+    with open(SG_file0, 'w') as f0:
+        f0.write("; --- SEGMENT 1 ---" +"\n")
+        f0.write("x1 0x"  + f"{(CDMA0_reg_base     & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x2 0x"  + f"{(CDMA1_reg_base     & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x3 0x"  + f"{(0x00001000         & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x4 0x"  + f"{(0x00001000         & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x5 0x"  + f"{(CDMA0_START_DDR    & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x6 0x"  + f"{(SGMEM_CDMA0_start  & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x7 0x"  + f"{(CDMA0_len          & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x8 0x"  + f"{(CDMA1_START_DDR    & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x9 0x"  + f"{(SGMEM_CDMA0_start  & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x10 0x" + f"{(CDMA1_len          & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x11 0x" + f"{(DMA0_START_DDR     & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x12 0x" + f"{(DMA0_SG            & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x13 0x" + f"{(DMA0_len           & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x14 0x" + f"{(DMA1_START_DDR     & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x15 0x" + f"{(DMA1_SG            & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x16 0x" + f"{(DMA1_len           & 0xFFFFFFFF):08x}"+"\n")
 
     def descriptors(len):
         ds_x1 = (len/45) 
         ds_x1 = int(ds_x1)
         return ds_x1
-    
-    
-    with open(SG_file0, 'w') as f0:
-        f0.write("; --- SEGMENT 1 ---" +"\n")
-        f0.write("x1 0x" + f"{(0xFF004400  & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x2 0x" + f"{(0xFF004440  & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x3 0x" + f"{(0x00001000  & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x4 0x" + f"{(0x00001000  & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x5 0x" + f"{(0x00000000  & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x6 0x" + f"{(0xA0000000  & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x7 0x" + f"{(0x40000000  & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x8 0x" + f"{(0xB0001000  & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x9 0x" + f"{(0xB0001000  & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x10 0x" + f"{(0x00001000 & 0xFFFFFFFF):08x}"+"\n")
-
+    def cdma(row,col):
+        cd_x1 = ((row*col*2)/60)/300 
+        cd_x1 = int(cd_x1)
+        return cd_x1
 
     with open(SG_LOOP_file0, 'w') as f0_L:
         f0_L.write("; --- SEGMENT 1 ---" +"\n")
         ds_x1 = descriptors(CDMA0_len)
         f0_L.write("x1 0x" + f"{(ds_x1+10 & 0xFFFFFFFF):08x}"+"\n")
+    
+    with open(SA_LOOP_file1, 'w') as f1_L:
+        f1_L.write(f"; --- SEGMENT 1 ---" +"\n") #CDMA
+        CDMA_X1 = cdma(A_ROWS,A_COLS)
+        f1_L.write("x1 0x" + f"{(CDMA_X1 & 0xFFFFFFFF):08x}"+"\n")
+        f1_L.write(f"; --- SEGMENT 2 ---" +"\n") #DMA
+        f1_L.write("x1 0x" + f"{(0 & 0xFFFFFFFF):08x}"+"\n")
+
+    DMA0_MM2S_START = DMA0_SG + DMA0_S2MM_len
+    DMA1_MM2S_START = DMA1_SG + DMA1_S2MM_len
 
     with open(SA_file1, 'w') as f1:
-        DMA0_S2MM_START =  SGMEM_CDMA0_start
-        DMA0_MM2S_START =  DMA0_S2MM_START + DMA0_S2MM_len
-        DMA1_S2MM_START =  DMA0_MM2S_START + DMA0_MM2S_len
-        DMA1_MM2S_START =  DMA1_S2MM_START + DMA1_S2MM_len
-        CDMA0_START = SGMEM_CDMA0_start
-        CDMA1_START = CDMA0_START + CDMA0_len
         f1.write(f"; --- SEGMENT 1 ---" +"\n")
-        f1.write("x1 0x" + f"{(CDMA0_reg_base                & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x2 0x" + f"{(CDMA1_reg_base                & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x3 0x" + f"{(0x00001008                    & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x4 0x" + f"{(0x00001000                    & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x5 0x" + f"{(CDMA0_START                   & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x6 0x" + f"{(CDMA1_START                   & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x7 0x" + f"{((CDMA1_START-64)              & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x8 0x" + f"{((CDMA1_START + CDMA1_len -64) & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x1 0x" + f"{(CDMA0_reg_base          & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x2 0x" + f"{(CDMA1_reg_base          & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x3 0x" + f"{(0x00001008              & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x4 0x" + f"{(0x00001000              & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x5 0x" + f"{(SGMEM_CDMA0_start       & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x6 0x" + f"{(SGMEM_CDMA1_start       & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x7 0x" + f"{((SGMEM_CDMA0_start + CDMA0_len -64) & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x8 0x" + f"{((SGMEM_CDMA1_start + CDMA1_len -64) & 0xFFFFFFFF):08x}"+"\n")
         f1.write(f"; --- SEGMENT 2 ---" +"\n")
-        f1.write("x1 0x" + f"{(DMA0_REG_base & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x2 0x" + f"{(DMA1_REG_base & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x3 0x" + f"{(DMA0_S2MM_START & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x4 0x" + f"{(DMA1_S2MM_START & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x1 0x" + f"{(DMA0_REG_base   & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x2 0x" + f"{(DMA1_REG_base   & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x3 0x" + f"{(DMA0_SG & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x4 0x" + f"{(DMA1_SG & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x5 0x" + f"{(0x1001 & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x6 0x" + f"{(0x00001000 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x7 0x" + f"{(DMA0_MM2S_START & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x8 0x" + f"{(DMA1_MM2S_START & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x9 0x" +  f"{((DMA0_MM2S_START-64) & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x10 0x" + f"{((DMA1_MM2S_START-64) & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x7 0x" + f"{(DMA0_MM2S_START -64 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x8 0x" + f"{(DMA1_MM2S_START -64 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x9 0x" +  f"{((DMA0_MM2S_START) & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x10 0x" + f"{((DMA1_MM2S_START) & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x11 0x" + f"{((DMA0_MM2S_START+DMA0_MM2S_len-64) & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x12 0x" + f"{((DMA1_MM2S_START+DMA1_MM2S_len-64) & 0xFFFFFFFF):08x}"+"\n")
 
     asm_generate.main()
     loop.main()
-    translator.main()
+    print("1")
+    translator.SA()
+    print("2")
     merge_mif_files.SG()
     merge_mif_files.SA()
     SGMEM_CDMA0_start =   SGMEM_CDMA0_start + CDMA0_len 
@@ -659,18 +717,18 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
 
 SGMEM_CDMA0_start     = 0xF4000000
 SGMEM_CDMA1_start     = 0xF4200000
-SGMEM_DMA0_start      = 0xF4400000
-SGMEM_DMA1_start      = 0xF4800000
-SGMEM_DMA2_start      = 0xF4C00000
-SGMEM_DMA3_start      = 0xF5000000
-SGMEM_DMA4_start      = 0xF5400000
-SGMEM_DMA5_start      = 0xF5800000
-SGMEM_DMA6_start      = 0xF5C00000
-SGMEM_DMA7_start      = 0xF6000000
-SGMEM_DMA8_start      = 0xF6400000
-SGMEM_DMA9_start      = 0xF6800000
-SGMEM_DMA10_start     = 0xF6C00000
-SGMEM_DMA11_start     = 0xF7000000
+SGMEM_DMA0_BASE      = 0xF4400000
+SGMEM_DMA1_BASE      = 0xF4800000
+SGMEM_DMA2_BASE      = 0xF4C00000
+SGMEM_DMA3_BASE      = 0xF5000000
+SGMEM_DMA4_BASE      = 0xF5400000
+SGMEM_DMA5_BASE      = 0xF5800000
+SGMEM_DMA6_BASE      = 0xF5C00000
+SGMEM_DMA7_BASE      = 0xF6000000
+SGMEM_DMA8_BASE      = 0xF6400000
+SGMEM_DMA9_BASE      = 0xF6800000
+SGMEM_DMA10_BASE     = 0xF6C00000
+SGMEM_DMA11_BASE     = 0xF7000000
 
 CDMA0_config     = 0xFF004400
 CDMA1_config     = 0xFF004440
@@ -687,25 +745,32 @@ DMA9_config      = 0xFF002400
 DMA10_config     = 0xFF002800
 DMA11_config     = 0xFF002C00
 
-#SA_setid           = 1
-ALL_SG_descriptors = []
-ALL_SG_strat       = 0x0
-DMA_ID             = 1
+DDR0_START       = 0x40000000
+DDR1_START       = 0x80000000
+Data_Mem0        = 0xC0000000
+Data_Mem1        = 0xC2000000
+Data_Mem2        = 0xC4000000
+Data_Mem3        = 0xC6000000
+Data_Mem4        = 0xC8000000
+Data_Mem5        = 0xCA000000
+Data_Mem6        = 0xCC000000
+Data_Mem7        = 0xCE000000
+Data_Mem8        = 0xD0000000
+Data_Mem9        = 0xD2000000
+Data_Mem10       = 0xD4000000
+Data_Mem11       = 0xD6000000
 
-def main(AROWS = 32,AB =32,BCOLS = 32,START = 0x00000100, block_width = 16, element_size = 2, APP0 = 0):
-    A_ROWS = AROWS
-    A_B = AB
-    B_COLS = BCOLS
-    A_DATA_START = START
+ALL_SG_descriptors = []
+ALL_SG_strat_DDR   = 0x0
+
+def main(AROWS = 64,AB =32,BCOLS = 64,START = 0x00004000, block_width = 16, element_size = 2, APP0 = 0):
+
+    ALL_SG_LENTH = START
     global ALL_SG_descriptors
     global SGMEM_CDMA0_start
+    global SGMEM_CDMA1_start
+    global ALL_SG_strat_DDR
     
-    print("Number of SG descriptors: ",int(A_DATA_START/64))
-    
-    op_SA(A__ROWS = A_ROWS,A__COLS = A_B,B__ROWS = A_B,B__COLS = B_COLS,
-       block_width = block_width, element_size = element_size, APP0 = APP0)
-    
-    sg_lenth = int(SGMEM_CDMA0_start-int(0xA0000000))
     script_dir = os.path.dirname(os.path.abspath(__file__))
     name0 = "ROM"
     mif_dir = os.path.join(script_dir,"mif")
@@ -715,7 +780,16 @@ def main(AROWS = 32,AB =32,BCOLS = 32,START = 0x00000100, block_width = 16, elem
     txt_dir = os.path.join(script_dir,"txt")
     all_file = os.path.join(txt_dir, f"allsg.txt")
 
-    allSGdescriptors = int(A_DATA_START/64)
+    print("Number of SG descriptors: ",int(ALL_SG_LENTH/64))
+    
+    op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
+       DDR0_START = DDR0_START, DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config, MPU_ID = 0)
+    
+    sg_lenth = int(ALL_SG_strat_DDR)
+
+    
+
+    allSGdescriptors = int(ALL_SG_LENTH/64)
     if(allSGdescriptors >= int(sg_lenth/64)):
         print("There is no need to add space to the SG descriptor")
     else:
@@ -723,7 +797,7 @@ def main(AROWS = 32,AB =32,BCOLS = 32,START = 0x00000100, block_width = 16, elem
 
     #print(f'{sg_start:08x}')
     descriptorss = []
-    alllen = int(int(A_DATA_START/64) - int(sg_lenth/64))
+    alllen = int(int(ALL_SG_LENTH/64) - int(sg_lenth/64))
     #print(int(A_DATA_START/64))
     #print(int(sg_lenth/64))
     for i in range(alllen):
