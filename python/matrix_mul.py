@@ -97,7 +97,7 @@ def main(random = False, A_row = 32, A__B = 16, B_col = 32,T = True, type = 0 ):
     if T:
         B_custom = np.eye(A__B, dtype=fp)
     else:
-        B_custom = np.array([[2.0] + [1.0]*(B_col-1)for _ in range(A_B)], dtype=fp)
+        B_custom = np.array([[1.0] + [1.0]*(B_col-1)for _ in range(A_B)], dtype=fp)
     
 
     # 生成矩阵

@@ -146,7 +146,7 @@ lp.setup  x3,  100
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0
-lp.setup  x2,  1
+lp.setup  x2,  2
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 

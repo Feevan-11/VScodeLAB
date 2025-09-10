@@ -647,7 +647,7 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
         f0.write("x6 0x"  + f"{(SGMEM_CDMA0_start  & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x7 0x"  + f"{(CDMA0_len          & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x8 0x"  + f"{(CDMA1_START_DDR    & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x9 0x"  + f"{(SGMEM_CDMA0_start  & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x9 0x"  + f"{(SGMEM_CDMA1_start  & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x10 0x" + f"{(CDMA1_len          & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x11 0x" + f"{(DMA0_START_DDR     & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x12 0x" + f"{(DMA0_SG            & 0xFFFFFFFF):08x}"+"\n")
@@ -668,14 +668,14 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
     with open(SG_LOOP_file0, 'w') as f0_L:
         f0_L.write("; --- SEGMENT 1 ---" +"\n")
         ds_x1 = descriptors(CDMA0_len)
-        f0_L.write("x1 0x" + f"{(ds_x1+10 & 0xFFFFFFFF):08x}"+"\n")
+        f0_L.write("x1 0x" + f"{(ds_x1+100 & 0xFFFFFFFF):08x}"+"\n")
     
     with open(SA_LOOP_file1, 'w') as f1_L:
         f1_L.write(f"; --- SEGMENT 1 ---" +"\n") #CDMA
         CDMA_X1 = cdma(A_ROWS,A_COLS)
-        f1_L.write("x1 0x" + f"{(CDMA_X1 & 0xFFFFFFFF):08x}"+"\n")
+        f1_L.write("x1 0x" + f"{(100 & 0xFFFFFFFF):08x}"+"\n")
         f1_L.write(f"; --- SEGMENT 2 ---" +"\n") #DMA
-        f1_L.write("x1 0x" + f"{(0 & 0xFFFFFFFF):08x}"+"\n")
+        f1_L.write("x1 0x" + f"{(100 & 0xFFFFFFFF):08x}"+"\n")
 
     DMA0_MM2S_START = DMA0_SG + DMA0_S2MM_len
     DMA1_MM2S_START = DMA1_SG + DMA1_S2MM_len
@@ -713,6 +713,7 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
     merge_mif_files.SA()
     SGMEM_CDMA0_start =   SGMEM_CDMA0_start + CDMA0_len 
     SGMEM_CDMA1_start =   SGMEM_CDMA1_start + CDMA1_len 
+    ALL_SG_strat_DDR  =   ALL_SG_strat_DDR  + CDMA0_len + CDMA1_len + DMA0_len + DMA1_len
 
 
 SGMEM_CDMA0_start     = 0xF4000000
@@ -761,21 +762,29 @@ Data_Mem10       = 0xD4000000
 Data_Mem11       = 0xD6000000
 
 ALL_SG_descriptors = []
-ALL_SG_strat_DDR   = 0x0
+ALL_SG_strat_DDR   = 0x40000000
 
-def main(AROWS = 64,AB =32,BCOLS = 64,START = 0x00004000, block_width = 16, element_size = 2, APP0 = 0):
+def main(AROWS = 16,AB =16,BCOLS = 16,START = 0x00000800, block_width = 16, element_size = 2, APP0 = 0):
 
     ALL_SG_LENTH = START
     global ALL_SG_descriptors
     global SGMEM_CDMA0_start
     global SGMEM_CDMA1_start
     global ALL_SG_strat_DDR
-    
+
     script_dir = os.path.dirname(os.path.abspath(__file__))
     name0 = "ROM"
+    name1 = "GM0"
+    name2 = "GM1"
     mif_dir = os.path.join(script_dir,"mif")
     rom_file0 = os.path.join(mif_dir, f"{name0}.mif")
+    rom_file1 = os.path.join(mif_dir, f"{name1}.mif")
+    rom_file2 = os.path.join(mif_dir, f"{name2}.mif")
     with open(rom_file0, 'w') as f:
+        f.write("")
+    with open(rom_file1, 'w') as f:
+        f.write("")
+    with open(rom_file2, 'w') as f:
         f.write("")
     txt_dir = os.path.join(script_dir,"txt")
     all_file = os.path.join(txt_dir, f"allsg.txt")
@@ -783,12 +792,36 @@ def main(AROWS = 64,AB =32,BCOLS = 64,START = 0x00004000, block_width = 16, elem
     print("Number of SG descriptors: ",int(ALL_SG_LENTH/64))
     
     op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
-       DDR0_START = DDR0_START, DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config, MPU_ID = 0)
+       DDR0_START = DDR0_START + START, DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config, MPU_ID = 0)
+    print("\n") 
+    print("ALL_SG_strat_DDR0:"f'{ALL_SG_strat_DDR:08x}')
     
-    sg_lenth = int(ALL_SG_strat_DDR)
+    op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
+       DDR0_START = DDR0_START + START, DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config, MPU_ID = 1)
+    print("\n") 
+    print("ALL_SG_strat_DDR1:"f'{ALL_SG_strat_DDR:08x}')
 
+    op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
+       DDR0_START = DDR0_START + START, DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config, MPU_ID = 2)
+    print("\n") 
+    print("ALL_SG_strat_DDR2:"f'{ALL_SG_strat_DDR:08x}')
+
+    op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
+       DDR0_START = DDR0_START + START, DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config, MPU_ID = 3)
+    print("\n") 
+    print("ALL_SG_strat_DDR3:"f'{ALL_SG_strat_DDR:08x}')
+
+    op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
+       DDR0_START = DDR0_START + START, DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config, MPU_ID = 4)
+    print("\n") 
+    print("ALL_SG_strat_DDR4:"f'{ALL_SG_strat_DDR:08x}')
+
+    op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
+       DDR0_START = DDR0_START + START, DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config, MPU_ID = 5)
+    print("\n") 
+    print("ALL_SG_strat_DDR5:"f'{ALL_SG_strat_DDR:08x}')
     
-
+    sg_lenth = int(ALL_SG_strat_DDR) - int(0x40000000)
     allSGdescriptors = int(ALL_SG_LENTH/64)
     if(allSGdescriptors >= int(sg_lenth/64)):
         print("There is no need to add space to the SG descriptor")
@@ -811,7 +844,7 @@ def main(AROWS = 64,AB =32,BCOLS = 64,START = 0x00004000, block_width = 16, elem
     
 
 if __name__ == "__main__":
-    main(AROWS = 16,AB =16,BCOLS = 16, block_width = 16, element_size = 2, APP0 = 0 )
+    main(AROWS = 16,AB =16,BCOLS = 16,START = 0x00004000 , block_width = 16, element_size = 2, APP0 = 0 )
 
 
 

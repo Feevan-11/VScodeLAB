@@ -11,14 +11,14 @@ from loop import main as loop_main
 
 
 if __name__ == "__main__":
-    A_ROW = 64
-    A_B = 64
-    B_COL = 64
-    descriptors = 0x00008000
+    A_ROW = 16
+    A_B = 16
+    B_COL = 16
+    descriptors = 0x00000A00
     random = False
     block_width = 16
     element_size = 2
-    APP0 = 3
+    APP0 = 0
 
     element_type = 0 # FP16 0, FP32 1, FP64 2, BF16 3, 
 
@@ -45,13 +45,6 @@ if __name__ == "__main__":
         sg_add_main(A_ROW,B_COL,descriptors)
     elif(mood == 2): 
         sg_mul_main(A_ROW,A_B,B_COL,descriptors,block_width = block_width, element_size = element_size, APP0 = APP0)  
-
-
-    print("\n") 
-    asm_generate_main(GM1 = mood)  
-    loop_main()
- 
-    translator_main() 
 
     print("\n")  
     if(mood == 1):
