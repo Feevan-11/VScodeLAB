@@ -94,7 +94,27 @@ addi x18, x18, 0x000
 addi x0, x0, 0        
 addi x0, x0, 0 
 addi x0, x0, 0 
+addi x0, x0, 0
 addi x0, x0, 0 
+addi x0, x0, 0 
+sw x3,  0x0(x1)
+addi x0, x0, 0
+addi x0, x0, 0 
+addi x0, x0, 0 
+sw x4, 0x4(x1)
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0   
+sw x11, 0x18(x1)  
+addi x0, x0, 0
+addi x0, x0, 0 
+addi x0, x0, 0 
+sw x12, 0x20(x1)
+addi x0, x0, 0  
+addi x0, x0, 0 
+addi x0, x0, 0 
+sw x13, 0x28(x1)    
+addi x0, x0, 0  
 addi x0, x0, 0
 addi x0, x0, 0 
 addi x0, x0, 0 
