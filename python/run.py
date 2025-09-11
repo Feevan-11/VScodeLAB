@@ -11,10 +11,10 @@ from loop import main as loop_main
 
 
 if __name__ == "__main__":
-    A_ROW = 16
-    A_B = 16
-    B_COL = 16
-    descriptors = 0x00000A00
+    A_ROW = 64
+    A_B = 64
+    B_COL = 64
+    descriptors = 0x00002000
     random = False
     block_width = 16
     element_size = 2
@@ -25,7 +25,7 @@ if __name__ == "__main__":
     if(element_type == 0):
         element_size = 2
         block_width = 16
-        APP0 = 3
+        APP0 = 0
     elif(element_type == 1): 
         element_size = 4
         block_width = 8
@@ -33,11 +33,11 @@ if __name__ == "__main__":
     elif(element_type == 2): 
         element_size = 8
         block_width = 4
-        APP0 = 0
+        APP0 = 2
     elif(element_type == 3): 
         element_size = 2
         block_width = 16
-        APP0 = 2
+        APP0 = 3
 
     mood = 2 #1+,2*
 
@@ -50,7 +50,7 @@ if __name__ == "__main__":
     if(mood == 1):
         matrix_add_main(random,A_ROW,B_COL)   
     elif(mood == 2):    
-        matrix_mul_main(random,A_ROW,A_B,B_COL,T=False,type=element_type)
+        matrix_mul_main(random,A_ROW,A_B,B_COL,APP0=APP0)
 
     hex_to_bin_main()
 

@@ -1,9 +1,31 @@
 import numpy as np
 import os
+import struct
 
 def matrix_to_mif(matrix, filename, split_by, block_size, internal_order, HER=True):
-    """生成符合要求的MIF文件，支持分块存储"""
-    matrix = matrix.astype('>f2')  # 大端序FP16
+    """生成符合要求的MIF文件，支持多种数据类型"""
+    # 确定数据类型和字节大小
+    dtype_map = {
+        np.float16: ('>f2', 2),
+        np.float32: ('>f4', 4),
+        np.float64: ('>f8', 8),
+        'bf16': ('>u2', 2)  # BF16使用uint16表示
+    }
+    
+    if matrix.dtype == np.float16:
+        dtype_str, element_size = dtype_map[np.float16]
+        matrix = matrix.astype(dtype_str)
+    elif matrix.dtype == np.float32:
+        dtype_str, element_size = dtype_map[np.float32]
+        matrix = matrix.astype(dtype_str)
+    elif matrix.dtype == np.float64:
+        dtype_str, element_size = dtype_map[np.float64]
+        matrix = matrix.astype(dtype_str)
+    else:
+        # 默认使用FP16
+        dtype_str, element_size = dtype_map[np.float16]
+        matrix = matrix.astype(dtype_str)
+    
     elements = []
     
     # 分块处理
@@ -27,17 +49,20 @@ def matrix_to_mif(matrix, filename, split_by, block_size, internal_order, HER=Tr
     all_bytes = b''.join(elements)
     
     # 转换为元素列表
-    elements_list = [all_bytes[i:i+2] for i in range(0, len(all_bytes), 2)]
+    elements_list = [all_bytes[i:i+element_size] for i in range(0, len(all_bytes), element_size)]
     
-    # 补零到32的倍数（因为每行512位，每个元素16位，所以每行32个元素）
-    pad_count = (32 - (len(elements_list) % 32)) % 32
-    elements_list += [b'\x00\x00'] * pad_count
+    # 计算每行元素数量（512位/元素大小）
+    elements_per_line = 512 // (element_size * 8)
+    
+    # 补零到elements_per_line的倍数
+    pad_count = (elements_per_line - (len(elements_list) % elements_per_line)) % elements_per_line
+    elements_list += [b'\x00' * element_size] * pad_count
     
     # 生成MIF内容
     mif_content = []
     if HER:
         mif_content = [
-            "DEPTH = {};".format(len(elements_list)//32),
+            f"DEPTH = {len(elements_list)//elements_per_line};",
             "WIDTH = 512;",
             "ADDRESS_RADIX = HEX;",
             "DATA_RADIX = HEX;",
@@ -45,14 +70,16 @@ def matrix_to_mif(matrix, filename, split_by, block_size, internal_order, HER=Tr
             "BEGIN"
         ]
     
-    # 处理每个32元素的块（512位）
-    for block_idx in range(len(elements_list) // 32):
-        block = elements_list[block_idx*32 : (block_idx+1)*32]
-        # 将块分成两个16元素的子块
-        subblock1 = block[16:32]  # 高地址部分（左边）
-        subblock2 = block[0:16]   # 低地址部分（右边）
+    # 处理每个块（512位）
+    for block_idx in range(len(elements_list) // elements_per_line):
+        block = elements_list[block_idx*elements_per_line : (block_idx+1)*elements_per_line]
         
-        # 分别反转每个子块（小端序调整）
+        # 将块分成两个子块
+        subblock_size = elements_per_line // 2
+        subblock1 = block[subblock_size:elements_per_line]  # 高地址部分
+        subblock2 = block[0:subblock_size]   # 低地址部分
+        
+        # 分别反转每个子块
         reversed_subblock1 = subblock1[::-1]
         reversed_subblock2 = subblock2[::-1]
         
@@ -62,7 +89,7 @@ def matrix_to_mif(matrix, filename, split_by, block_size, internal_order, HER=Tr
         hex_str = block_bytes.hex().upper()
         
         if HER:
-            mif_content.append("{} : {};".format(format(block_idx, '04X'), hex_str))
+            mif_content.append(f"{format(block_idx, '04X')} : {hex_str};")
         else:
             # 对于二进制模式，转换为512位二进制字符串
             binary_str = format(int(hex_str, 16), '0512b')
@@ -75,78 +102,130 @@ def matrix_to_mif(matrix, filename, split_by, block_size, internal_order, HER=Tr
     with open(filename, 'w') as f:
         f.write('\n'.join(mif_content))
 
-def main(random = False, A_row = 32, A__B = 16, B_col = 32,T = True, type = 0 ):
+def float32_to_bfloat16(arr):
+    """将float32数组转换为bfloat16格式（存储为uint16）"""
+    bf16_arr = np.empty(arr.shape, dtype=np.uint16)
+    for i in range(arr.size):
+        # 将float32转换为bytes，然后取前2字节作为bfloat16
+        bf16_arr.flat[i] = struct.unpack('<H', struct.pack('<e', arr.flat[i]))[0]
+    return bf16_arr
 
+def main(random=False, A_row=32, A__B=16, B_col=32, APP0 = 0):
     # 配置参数
     random_mode = random  # True=随机矩阵，False=自定义矩阵
+    datatype = "fp16"
+    if (APP0 == 0): 
+        datatype = "fp16"
+        
+    elif (APP0 == 1):
+        datatype = "fp32"
+        
+    elif (APP0 == 2):
+        datatype = "fp64"
+        
+    elif (APP0 == 3):
+        datatype = "bf16"
+        
 
-    #    自定义矩阵 (random_mode=False时生效)
-
-    Arow = A_row
-    A_B = A__B
-    Bcol = B_col
-    if type ==0:
-        fp=np.float16
-    elif type ==1:
-        fp=np.float32
-    elif type ==2:
-        fp=np.float64
-    elif type ==3:
-        fp=np.float16
-    A_custom = np.array([[1.0] + [1.0]*(A_B-1) for _ in range(Arow)], dtype=fp)
-    if T:
-        B_custom = np.eye(A__B, dtype=fp)
-    else:
-        B_custom = np.array([[1.0] + [1.0]*(B_col-1)for _ in range(A_B)], dtype=fp)
+    # 根据数据类型选择对应的numpy类型和块大小
+    dtype_map = {
+        "fp16": (np.float16, 16),
+        "fp32": (np.float32, 8),
+        "fp64": (np.float64, 4),
+        "bf16": (np.float32, 16)  # 处理时使用float32，存储时转换为bfloat16
+    }
     
-
+    np_type, block_size = dtype_map.get(datatype, (np.float16, 16))
+    print(f"Using data type: {datatype}, block size: {block_size}")
+    
+    # 自定义矩阵 (random_mode=False时生效)
+    A_custom = np.array([[1.0] + [1.0]*(A__B-1) for _ in range(A_row)], dtype=np_type)
+    B_custom = np.array([[1.0] + [1.0]*(B_col-1) for _ in range(A__B)], dtype=np_type)
+    
     # 生成矩阵
     if random_mode:
-       A = np.random.uniform(-1, 1, (Arow, A_B)).astype(np.float16)
-       B = np.random.uniform(-1, 1, (A_B, Bcol)).astype(np.float16)
+        A = np.random.uniform(-1, 1, (A_row, A__B)).astype(np_type)
+        B = np.random.uniform(-1, 1, (A__B, B_col)).astype(np_type)
     else:
         A = A_custom
         B = B_custom
-
+    
     script_dir = os.path.dirname(os.path.abspath(__file__))
     matrix_dir = os.path.join(script_dir, "matrix")
     os.makedirs(matrix_dir, exist_ok=True)
-
+    
+    # 特殊处理BF16类型
+    if datatype == "bf16":
+        # 转换为bfloat16格式（存储为uint16）
+        A_bf16 = float32_to_bfloat16(A)
+        B_bf16 = float32_to_bfloat16(B)
+    else:
+        A_bf16 = None
+        B_bf16 = None
+    
     # 生成文件路径
     hex_files = (
-        os.path.join(matrix_dir, 'a_16.mif'),
-        os.path.join(matrix_dir, 'b_16.mif')
+        os.path.join(matrix_dir, f'a_16.mif'),
+        os.path.join(matrix_dir, f'b_16.mif')
     )
     bin_files = (
-        os.path.join(matrix_dir, 'a_2.mif'),
-        os.path.join(matrix_dir, 'b_2.mif')
+        os.path.join(matrix_dir, f'a_2.mif'),
+        os.path.join(matrix_dir, f'b_2.mif')
     )
-
+    
     # 生成矩阵文件
-    matrix_to_mif(A, hex_files[0], 'rows', 16, 'F', HER=True)
-    matrix_to_mif(B, hex_files[1], 'cols', 16, 'C', HER=True)
-    matrix_to_mif(A, bin_files[0], 'rows', 16, 'F', HER=False)
-    matrix_to_mif(B, bin_files[1], 'cols', 16, 'C', HER=False)
-
+    if datatype == "bf16":
+        matrix_to_mif(A_bf16, hex_files[0], 'rows', block_size, 'F', HER=True)
+        matrix_to_mif(B_bf16, hex_files[1], 'cols', block_size, 'C', HER=True)
+        matrix_to_mif(A_bf16, bin_files[0], 'rows', block_size, 'F', HER=False)
+        matrix_to_mif(B_bf16, bin_files[1], 'cols', block_size, 'C', HER=False)
+    else:
+        matrix_to_mif(A, hex_files[0], 'rows', block_size, 'F', HER=True)
+        matrix_to_mif(B, hex_files[1], 'cols', block_size, 'C', HER=True)
+        matrix_to_mif(A, bin_files[0], 'rows', block_size, 'F', HER=False)
+        matrix_to_mif(B, bin_files[1], 'cols', block_size, 'C', HER=False)
+    
     # 计算并保存结果矩阵
-    C = np.matmul(A.astype(np.float32), B.astype(np.float32)).astype(np.float16)
+    # 使用更高精度计算（float64）避免精度损失
+    C = np.matmul(A.astype(np.float64), B.astype(np.float64))
     
     # 保存十进制结果
-    np.savetxt(os.path.join(matrix_dir, 'c_10.txt'), C, fmt='%.7g')
+    np.savetxt(os.path.join(matrix_dir, f'c_{datatype}.txt'), C, fmt='%.7g')
     
-    # 将结果转换为小端序字节流
-    c_bytes = C.astype('<f2').tobytes()
-    # 生成十六进制字符串列表（每2字节反转后转大写）
+    # 根据数据类型保存结果
+    if datatype == "fp16":
+        C_result = C.astype(np.float16)
+        c_bytes = C_result.astype('<f2').tobytes()
+        suffix = "FP16"
+    elif datatype == "fp32":
+        C_result = C.astype(np.float32)
+        c_bytes = C_result.astype('<f4').tobytes()
+        suffix = "FP32"
+    elif datatype == "fp64":
+        C_result = C.astype(np.float64)
+        c_bytes = C_result.astype('<f8').tobytes()
+        suffix = "FP64"
+    elif datatype == "bf16":
+        C_result = C.astype(np.float32)
+        # 转换为bfloat16
+        c_bytes = b''.join(struct.pack('<e', x) for x in C_result.flat)
+        suffix = "BF16"
+    
+    # 生成十六进制字符串列表
     hex_list = []
-    for i in range(0, len(c_bytes), 2):
+    element_size = 2 if datatype in ["fp16", "bf16"] else 4 if datatype == "fp32" else 8
+    for i in range(0, len(c_bytes), element_size):
         # 反转字节顺序得到正确的十六进制表示
-        reversed_bytes = c_bytes[i:i+2][::-1]
+        element_bytes = c_bytes[i:i+element_size]
+        reversed_bytes = element_bytes[::-1]
         hex_str = reversed_bytes.hex().upper()
         hex_list.append(hex_str)
-    with open(os.path.join(matrix_dir, 'c_FP16.txt'), 'w') as f:
+    
+    with open(os.path.join(matrix_dir, f'c_{suffix}.txt'), 'w') as f:
         for i in range(0, len(hex_list), 16):
             line = ' '.join(hex_list[i:i+16])
             f.write(line + '\n')
 
 if __name__ == "__main__":
-    main(random = False, A_row = 32, A__B = 32, B_col = 32)
+    # 支持的数据类型: 0:"fp16", 1:"fp32", 2:"fp64", 3:"bf16"
+    main(random=False, A_row=32, A__B=32, B_col=32, APP0=0)

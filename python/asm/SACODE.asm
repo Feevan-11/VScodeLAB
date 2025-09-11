@@ -15,8 +15,8 @@ addi x5, x5, 0x000
 addi x6, x6, 0x000      
 addi x7, x7, 0x180      
 addi x8, x8, 0x180  
-addi x0, x0, 0 
-addi x0, x0, 0 
+lui  x29, 0xAC000
+lui  x30, 0xAC000 
 sw x3,  0x0(x2)
 addi x0, x0, 0 
 addi x0, x0, 0 
@@ -31,8 +31,8 @@ addi x0, x0, 0
 addi x0, x0, 0 
 sw x4, 0x4(x1)
 addi x0, x0, 0
-addi x0, x0, 0
-addi x0, x0, 0 
+addi x29, x29, 0
+addi x30, x30, 0 
 sw x6, 0x8(x2)
 addi x0, x0, 0 
 addi x0, x0, 0 
@@ -88,6 +88,10 @@ addi x9, x9, 0x001
 addi x10, x10, 0x000      
 addi x11, x11, 0xFC0      
 addi x12, x12, 0xFC0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+sw x29, 0x0(x30)
+addi x0, x0, 0
 addi x0, x0, 0 
 sw x6, 0x34(x2)
 addi x0, x0, 0
@@ -252,7 +256,3 @@ addi x0, x0, 0
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
-addi x0, x0, 0 
-addi x0, x0, 0 
-addi x0, x0, 0 
-addi x0, x0, 0

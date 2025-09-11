@@ -668,12 +668,14 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
     with open(SG_LOOP_file0, 'w') as f0_L:
         f0_L.write("; --- SEGMENT 1 ---" +"\n")
         ds_x1 = descriptors(CDMA0_len)
+        ds_x2 = descriptors(DMA0_len)
         f0_L.write("x1 0x" + f"{(ds_x1+100 & 0xFFFFFFFF):08x}"+"\n")
+        f0_L.write("x2 0x" + f"{(ds_x2+100 & 0xFFFFFFFF):08x}"+"\n")
     
     with open(SA_LOOP_file1, 'w') as f1_L:
         f1_L.write(f"; --- SEGMENT 1 ---" +"\n") #CDMA
         CDMA_X1 = cdma(A_ROWS,A_COLS)
-        f1_L.write("x1 0x" + f"{(100 & 0xFFFFFFFF):08x}"+"\n")
+        f1_L.write("x1 0x" + f"{(3000 & 0xFFFFFFFF):08x}"+"\n")
         f1_L.write(f"; --- SEGMENT 2 ---" +"\n") #DMA
         f1_L.write("x1 0x" + f"{(100 & 0xFFFFFFFF):08x}"+"\n")
 
@@ -690,6 +692,8 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
         f1.write("x6 0x" + f"{(SGMEM_CDMA1_start       & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x7 0x" + f"{((SGMEM_CDMA0_start + CDMA0_len -64) & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x8 0x" + f"{((SGMEM_CDMA1_start + CDMA1_len -64) & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x29 0x" + f"{(0x00000000             & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x30 0x" + f"{(0xFF005001             & 0xFFFFFFFF):08x}"+"\n")
         f1.write(f"; --- SEGMENT 2 ---" +"\n")
         f1.write("x1 0x" + f"{(DMA0_REG_base   & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x2 0x" + f"{(DMA1_REG_base   & 0xFFFFFFFF):08x}"+"\n")
@@ -791,35 +795,35 @@ def main(AROWS = 16,AB =16,BCOLS = 16,START = 0x00000800, block_width = 16, elem
 
     print("Number of SG descriptors: ",int(ALL_SG_LENTH/64))
     
-    op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
-       DDR0_START = DDR0_START + START, DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config, MPU_ID = 0)
-    print("\n") 
-    print("ALL_SG_strat_DDR0:"f'{ALL_SG_strat_DDR:08x}')
-    
-    op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
-       DDR0_START = DDR0_START + START, DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config, MPU_ID = 1)
-    print("\n") 
-    print("ALL_SG_strat_DDR1:"f'{ALL_SG_strat_DDR:08x}')
-
-    op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
-       DDR0_START = DDR0_START + START, DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config, MPU_ID = 2)
-    print("\n") 
-    print("ALL_SG_strat_DDR2:"f'{ALL_SG_strat_DDR:08x}')
-
-    op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
-       DDR0_START = DDR0_START + START, DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config, MPU_ID = 3)
-    print("\n") 
-    print("ALL_SG_strat_DDR3:"f'{ALL_SG_strat_DDR:08x}')
+    #op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
+    #   DDR0_START = DDR0_START + START, DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config, MPU_ID = 0)
+    #print("\n") 
+    #print("ALL_SG_strat_DDR0:"f'{ALL_SG_strat_DDR:08x}')
+    #
+    #op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
+    #   DDR0_START = DDR0_START + START, DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config, MPU_ID = 1)
+    #print("\n") 
+    #print("ALL_SG_strat_DDR1:"f'{ALL_SG_strat_DDR:08x}')
+#
+    #op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
+    #   DDR0_START = DDR0_START + START, DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config, MPU_ID = 2)
+    #print("\n") 
+    #print("ALL_SG_strat_DDR2:"f'{ALL_SG_strat_DDR:08x}')
+#
+    #op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
+    #   DDR0_START = DDR0_START + START, DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config, MPU_ID = 3)
+    #print("\n") 
+    #print("ALL_SG_strat_DDR3:"f'{ALL_SG_strat_DDR:08x}')
 
     op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
        DDR0_START = DDR0_START + START, DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config, MPU_ID = 4)
     print("\n") 
     print("ALL_SG_strat_DDR4:"f'{ALL_SG_strat_DDR:08x}')
 
-    op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
-       DDR0_START = DDR0_START + START, DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config, MPU_ID = 5)
-    print("\n") 
-    print("ALL_SG_strat_DDR5:"f'{ALL_SG_strat_DDR:08x}')
+    #op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
+    #   DDR0_START = DDR0_START + START, DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config, MPU_ID = 5)
+    #print("\n") 
+    #print("ALL_SG_strat_DDR5:"f'{ALL_SG_strat_DDR:08x}')
     
     sg_lenth = int(ALL_SG_strat_DDR) - int(0x40000000)
     allSGdescriptors = int(ALL_SG_LENTH/64)
