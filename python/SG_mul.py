@@ -670,12 +670,12 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
         ds_x1 = descriptors(CDMA0_len)
         ds_x2 = descriptors(DMA0_len)
         f0_L.write("x1 0x" + f"{(ds_x1+100 & 0xFFFFFFFF):08x}"+"\n")
-        f0_L.write("x2 0x" + f"{(ds_x2+100 & 0xFFFFFFFF):08x}"+"\n")
+        f0_L.write("x2 0x" + f"{(9 & 0xFFFFFFFF):08x}"+"\n")
     
     with open(SA_LOOP_file1, 'w') as f1_L:
         f1_L.write(f"; --- SEGMENT 1 ---" +"\n") #CDMA
         CDMA_X1 = cdma(A_ROWS,A_COLS)
-        f1_L.write("x1 0x" + f"{(3000 & 0xFFFFFFFF):08x}"+"\n")
+        f1_L.write("x1 0x" + f"{(200 & 0xFFFFFFFF):08x}"+"\n")
         f1_L.write(f"; --- SEGMENT 2 ---" +"\n") #DMA
         f1_L.write("x1 0x" + f"{(100 & 0xFFFFFFFF):08x}"+"\n")
 

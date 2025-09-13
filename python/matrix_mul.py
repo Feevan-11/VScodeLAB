@@ -9,7 +9,7 @@ def matrix_to_mif(matrix, filename, split_by, block_size, internal_order, HER=Tr
         np.float16: ('>f2', 2),
         np.float32: ('>f4', 4),
         np.float64: ('>f8', 8),
-        'bf16': ('>u2', 2)  # BF16使用uint16表示
+        np.uint16 : ('>u2', 2)  # BF16使用uint16表示
     }
     
     if matrix.dtype == np.float16:
@@ -21,6 +21,10 @@ def matrix_to_mif(matrix, filename, split_by, block_size, internal_order, HER=Tr
     elif matrix.dtype == np.float64:
         dtype_str, element_size = dtype_map[np.float64]
         matrix = matrix.astype(dtype_str)
+    elif matrix.dtype == np.uint16:  # BF16
+        dtype_str, element_size = dtype_map[np.uint16]
+        # 确保是大端序
+        matrix = matrix.astype('>u2')
     else:
         # 默认使用FP16
         dtype_str, element_size = dtype_map[np.float16]
@@ -102,15 +106,29 @@ def matrix_to_mif(matrix, filename, split_by, block_size, internal_order, HER=Tr
     with open(filename, 'w') as f:
         f.write('\n'.join(mif_content))
 
+#def float32_to_bfloat16(arr):
+#    """将float32数组转换为bfloat16格式（存储为uint16）"""
+#    bf16_arr = np.empty(arr.shape, dtype=np.uint16)
+#    for i in range(arr.size):
+#       #将float32转换为bytes，然后取前2字节作为bfloat16
+#        bf16_arr.flat[i] = struct.unpack('<H', struct.pack('<e', arr.flat[i]))[0]
+#    return bf16_arr
+
 def float32_to_bfloat16(arr):
     """将float32数组转换为bfloat16格式（存储为uint16）"""
-    bf16_arr = np.empty(arr.shape, dtype=np.uint16)
-    for i in range(arr.size):
-        # 将float32转换为bytes，然后取前2字节作为bfloat16
-        bf16_arr.flat[i] = struct.unpack('<H', struct.pack('<e', arr.flat[i]))[0]
-    return bf16_arr
+    # 确保输入是float32类型
+    if arr.dtype != np.float32:
+        arr = arr.astype(np.float32)
+    
+    # 将float32数组视为uint32数组
+    data = arr.view(np.uint32)
+    
+    # 保留高16位（BF16 = float32的高16位）
+    bf16_data = (data >> 16).astype(np.uint16)
+    
+    return bf16_data
 
-def main(random=False, A_row=32, A__B=16, B_col=32, APP0 = 0):
+def main(random=False, A_row=32, A__B=32, B_col=32, APP0 = 0):
     # 配置参数
     random_mode = random  # True=随机矩阵，False=自定义矩阵
     datatype = "fp16"
@@ -228,4 +246,4 @@ def main(random=False, A_row=32, A__B=16, B_col=32, APP0 = 0):
 
 if __name__ == "__main__":
     # 支持的数据类型: 0:"fp16", 1:"fp32", 2:"fp64", 3:"bf16"
-    main(random=False, A_row=32, A__B=32, B_col=32, APP0=0)
+    main(random=False, A_row=32, A__B=32, B_col=32, APP0=3)

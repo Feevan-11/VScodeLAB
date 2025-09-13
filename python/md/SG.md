@@ -36,7 +36,7 @@
 | `0x0210` | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `sw x16, 0x28(x2)`     | `addi x0, x0, 0`       |
 | `0x0220` | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `addi x0, x0, 0`       |
 | `0x0230` | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `lp.setup  x3,  100`   |
-| `0x0240` | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `lp.setup x2, 0x91`    |
+| `0x0240` | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `lp.setup x2, 0x9`     |
 | `0x0250` | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `addi x0, x0, 0`       |
 | `0x0260` | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `lp.goto x2, -0x10`    |
 | `0x0270` | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `addi x0, x0, 0`       |

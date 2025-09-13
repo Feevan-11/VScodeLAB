@@ -49,7 +49,7 @@ addi x0, x0, 0
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
-lp.setup x1, 0xBB8
+lp.setup x1, 0xC8
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 

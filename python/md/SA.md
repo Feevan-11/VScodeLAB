@@ -12,7 +12,7 @@
 | `0x0090` | `addi x0, x0, 0`     | `addi x0, x0, 0`       | `sw x5, 0x8(x1)`       | `addi x0, x0, 0`       |
 | `0x00A0` | `addi x0, x0, 0`     | `addi x0, x0, 0`       | `sw x8, 0x10(x2)`      | `addi x0, x0, 0`       |
 | `0x00B0` | `addi x0, x0, 0`     | `addi x0, x0, 0`       | `sw x7, 0x10(x1)`      | `addi x0, x0, 0`       |
-| `0x00C0` | `addi x0, x0, 0`     | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `lp.setup x1, 0xBB8`   |
+| `0x00C0` | `addi x0, x0, 0`     | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `lp.setup x1, 0xC8`    |
 | `0x00D0` | `addi x0, x0, 0`     | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `addi x0, x0, 0`       |
 | `0x00E0` | `addi x0, x0, 0`     | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `lp.goto x1, -0x10`    |
 | `0x00F0` | `addi x0, x0, 0`     | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `addi x0, x0, 0`       |
