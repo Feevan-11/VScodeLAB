@@ -707,6 +707,10 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
         f1.write("x10 0x" + f"{((DMA1_MM2S_START) & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x11 0x" + f"{((DMA0_MM2S_START+DMA0_MM2S_len-64) & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x12 0x" + f"{((DMA1_MM2S_START+DMA1_MM2S_len-64) & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x29 0x" +  f"{(0xfff0fff0 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x30 0x" +  f"{(0xfff0fff0 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x31 0x" +  f"{(0xfff0fff0 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x28 0x" +  f"{(0xfff0fff0 & 0xFFFFFFFF):08x}"+"\n")
 
     asm_generate.main()
     loop.main()
@@ -775,55 +779,66 @@ def main(AROWS = 16,AB =16,BCOLS = 16,START = 0x00000800, block_width = 16, elem
     global SGMEM_CDMA0_start
     global SGMEM_CDMA1_start
     global ALL_SG_strat_DDR
+    global DDR0_START
+    global DDR1_START
+
+    MUP_select = 0b111111
+    bin_str = bin(MUP_select)[2:].zfill(6)
+
+    DDR0_START = DDR0_START + START
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     name0 = "ROM"
     name1 = "GM0"
     name2 = "GM1"
+    name3 = "A_GM0"
+    name4 = "B_GM1"
     mif_dir = os.path.join(script_dir,"mif")
+    matrix_dir = os.path.join(script_dir,"matrix")
     rom_file0 = os.path.join(mif_dir, f"{name0}.mif")
     rom_file1 = os.path.join(mif_dir, f"{name1}.mif")
     rom_file2 = os.path.join(mif_dir, f"{name2}.mif")
+    matrix_file0 = os.path.join(mif_dir, f"{name3}.mif")
+    matrix_file1 = os.path.join(mif_dir, f"{name4}.mif")
     with open(rom_file0, 'w') as f:
         f.write("")
     with open(rom_file1, 'w') as f:
         f.write("")
     with open(rom_file2, 'w') as f:
         f.write("")
+    with open(matrix_file0, 'w') as f:
+        f.write("")
+    with open(matrix_file1, 'w') as f:
+        f.write("")
     txt_dir = os.path.join(script_dir,"txt")
     all_file = os.path.join(txt_dir, f"allsg.txt")
 
     print("Number of SG descriptors: ",int(ALL_SG_LENTH/64))
     
-    #op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
-    #   DDR0_START = DDR0_START + START, DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config, MPU_ID = 0)
-    #print("\n") 
-    #print("ALL_SG_strat_DDR0:"f'{ALL_SG_strat_DDR:08x}')
-    #
-    #op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
-    #   DDR0_START = DDR0_START + START, DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config, MPU_ID = 1)
-    #print("\n") 
-    #print("ALL_SG_strat_DDR1:"f'{ALL_SG_strat_DDR:08x}')
-#
-    #op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
-    #   DDR0_START = DDR0_START + START, DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config, MPU_ID = 2)
-    #print("\n") 
-    #print("ALL_SG_strat_DDR2:"f'{ALL_SG_strat_DDR:08x}')
-#
-    #op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
-    #   DDR0_START = DDR0_START + START, DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config, MPU_ID = 3)
-    #print("\n") 
-    #print("ALL_SG_strat_DDR3:"f'{ALL_SG_strat_DDR:08x}')
+    if bin_str[0] == '1':
+        op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
+        DDR0_START = DDR0_START , DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config,MPU_ID = 0)
+    
+    if bin_str[1] == '1':
+        op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
+        DDR0_START = DDR0_START , DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config,MPU_ID = 1)
+  
+    if bin_str[2] == '1':
+        op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
+        DDR0_START = DDR0_START , DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config,MPU_ID = 2)
+    
+    if bin_str[3] == '1':
+        op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
+        DDR0_START = DDR0_START , DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config, MPU_ID = 3)
+   
+    if bin_str[4] == '1':
+        op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
+        DDR0_START = DDR0_START , DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config,MPU_ID = 4)
 
-    op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
-       DDR0_START = DDR0_START + START, DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config, MPU_ID = 4)
-    print("\n") 
-    print("ALL_SG_strat_DDR4:"f'{ALL_SG_strat_DDR:08x}')
+    if bin_str[5] == '1':
+        op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
+        DDR0_START = DDR0_START , DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config,MPU_ID = 5)
 
-    #op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
-    #   DDR0_START = DDR0_START + START, DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config, MPU_ID = 5)
-    #print("\n") 
-    #print("ALL_SG_strat_DDR5:"f'{ALL_SG_strat_DDR:08x}')
     
     sg_lenth = int(ALL_SG_strat_DDR) - int(0x40000000)
     allSGdescriptors = int(ALL_SG_LENTH/64)

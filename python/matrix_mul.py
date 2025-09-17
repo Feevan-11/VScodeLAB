@@ -128,23 +128,34 @@ def float32_to_bfloat16(arr):
     
     return bf16_data
 
-def main(random=False, A_row=32, A__B=32, B_col=32, APP0 = 0):
+def main(random=False, A_row=32, A__B=32, B_col=32, A_type = 3,B_type = 0,COUNT = 0):
     # 配置参数
     random_mode = random  # True=随机矩阵，False=自定义矩阵
-    datatype = "fp16"
-    if (APP0 == 0): 
-        datatype = "fp16"
+    A_datatype = "fp16"
+    if (A_type == 0): 
+        A_datatype = "fp16"
         
-    elif (APP0 == 1):
-        datatype = "fp32"
+    elif (A_type == 1):
+        A_datatype = "fp32"
         
-    elif (APP0 == 2):
-        datatype = "fp64"
+    elif (A_type == 2):
+        A_datatype = "fp64"
         
-    elif (APP0 == 3):
-        datatype = "bf16"
+    elif (A_type == 3):
+        A_datatype = "bf16"
         
-
+    B_datatype = "fp16"
+    if (B_type == 0): 
+        B_datatype = "fp16"
+        
+    elif (B_type == 1):
+        B_datatype = "fp32"
+        
+    elif (B_type == 2):
+        B_datatype = "fp64"
+        
+    elif (B_type == 3):
+        B_datatype = "bf16"
     # 根据数据类型选择对应的numpy类型和块大小
     dtype_map = {
         "fp16": (np.float16, 16),
@@ -153,17 +164,19 @@ def main(random=False, A_row=32, A__B=32, B_col=32, APP0 = 0):
         "bf16": (np.float32, 16)  # 处理时使用float32，存储时转换为bfloat16
     }
     
-    np_type, block_size = dtype_map.get(datatype, (np.float16, 16))
-    print(f"Using data type: {datatype}, block size: {block_size}")
+    A_np_type, A_block_size = dtype_map.get(A_datatype, (np.float16, 16))
+    print(f"Using data type: {A_datatype}, block size: {A_block_size}")
     
-    # 自定义矩阵 (random_mode=False时生效)
-    A_custom = np.array([[1.0] + [1.0]*(A__B-1) for _ in range(A_row)], dtype=np_type)
-    B_custom = np.array([[1.0] + [1.0]*(B_col-1) for _ in range(A__B)], dtype=np_type)
+    B_np_type, B_block_size = dtype_map.get(B_datatype, (np.float16, 16))
+    print(f"Using data type: {B_datatype}, block size: {B_block_size}")
+
+    A_custom = np.array([[1.0] + [1.0]*(A__B-1) for _ in range(A_row)], dtype=A_np_type)
+    B_custom = np.array([[1.0] + [1.0]*(B_col-1) for _ in range(A__B)], dtype=B_np_type)
     
     # 生成矩阵
     if random_mode:
-        A = np.random.uniform(-1, 1, (A_row, A__B)).astype(np_type)
-        B = np.random.uniform(-1, 1, (A__B, B_col)).astype(np_type)
+        A = np.random.uniform(-1, 1, (A_row, A__B)).astype(A_np_type)
+        B = np.random.uniform(-1, 1, (A__B, B_col)).astype(A_np_type)
     else:
         A = A_custom
         B = B_custom
@@ -173,12 +186,15 @@ def main(random=False, A_row=32, A__B=32, B_col=32, APP0 = 0):
     os.makedirs(matrix_dir, exist_ok=True)
     
     # 特殊处理BF16类型
-    if datatype == "bf16":
+    if A_datatype == "bf16":
         # 转换为bfloat16格式（存储为uint16）
         A_bf16 = float32_to_bfloat16(A)
-        B_bf16 = float32_to_bfloat16(B)
     else:
         A_bf16 = None
+
+    if B_datatype == "bf16":
+        B_bf16 = float32_to_bfloat16(B)
+    else:
         B_bf16 = None
     
     # 生成文件路径
@@ -192,38 +208,38 @@ def main(random=False, A_row=32, A__B=32, B_col=32, APP0 = 0):
     )
     
     # 生成矩阵文件
-    if datatype == "bf16":
-        matrix_to_mif(A_bf16, hex_files[0], 'rows', block_size, 'F', HER=True)
-        matrix_to_mif(B_bf16, hex_files[1], 'cols', block_size, 'C', HER=True)
-        matrix_to_mif(A_bf16, bin_files[0], 'rows', block_size, 'F', HER=False)
-        matrix_to_mif(B_bf16, bin_files[1], 'cols', block_size, 'C', HER=False)
+    if A_datatype == "bf16":
+        matrix_to_mif(A_bf16, hex_files[0], 'rows', A_block_size, 'F', HER=True)
+        matrix_to_mif(A_bf16, bin_files[0], 'rows', A_block_size, 'F', HER=False)
     else:
-        matrix_to_mif(A, hex_files[0], 'rows', block_size, 'F', HER=True)
-        matrix_to_mif(B, hex_files[1], 'cols', block_size, 'C', HER=True)
-        matrix_to_mif(A, bin_files[0], 'rows', block_size, 'F', HER=False)
-        matrix_to_mif(B, bin_files[1], 'cols', block_size, 'C', HER=False)
+        matrix_to_mif(A, hex_files[0], 'rows', A_block_size, 'F', HER=True)
+        matrix_to_mif(A, bin_files[0], 'rows', A_block_size, 'F', HER=False)
+    if B_datatype == "bf16":
+        matrix_to_mif(B_bf16, hex_files[1], 'cols', B_block_size, 'C', HER=True)
+        matrix_to_mif(B_bf16, bin_files[1], 'cols', B_block_size, 'C', HER=False)
+    else:
+        matrix_to_mif(B, hex_files[1], 'cols', B_block_size, 'C', HER=True)
+        matrix_to_mif(B, bin_files[1], 'cols', B_block_size, 'C', HER=False)
     
-    # 计算并保存结果矩阵
-    # 使用更高精度计算（float64）避免精度损失
     C = np.matmul(A.astype(np.float64), B.astype(np.float64))
     
     # 保存十进制结果
-    np.savetxt(os.path.join(matrix_dir, f'c_{datatype}.txt'), C, fmt='%.7g')
+    np.savetxt(os.path.join(matrix_dir, f'c_{COUNT}.txt'), C, fmt='%.7g')
     
     # 根据数据类型保存结果
-    if datatype == "fp16":
+    if A_datatype == "fp16":
         C_result = C.astype(np.float16)
         c_bytes = C_result.astype('<f2').tobytes()
         suffix = "FP16"
-    elif datatype == "fp32":
+    elif A_datatype == "fp32":
         C_result = C.astype(np.float32)
         c_bytes = C_result.astype('<f4').tobytes()
         suffix = "FP32"
-    elif datatype == "fp64":
+    elif A_datatype == "fp64":
         C_result = C.astype(np.float64)
         c_bytes = C_result.astype('<f8').tobytes()
         suffix = "FP64"
-    elif datatype == "bf16":
+    elif A_datatype == "bf16":
         C_result = C.astype(np.float32)
         # 转换为bfloat16
         c_bytes = b''.join(struct.pack('<e', x) for x in C_result.flat)
@@ -231,7 +247,7 @@ def main(random=False, A_row=32, A__B=32, B_col=32, APP0 = 0):
     
     # 生成十六进制字符串列表
     hex_list = []
-    element_size = 2 if datatype in ["fp16", "bf16"] else 4 if datatype == "fp32" else 8
+    element_size = 2 if A_datatype in ["fp16", "bf16"] else 4 if A_datatype == "fp32" else 8
     for i in range(0, len(c_bytes), element_size):
         # 反转字节顺序得到正确的十六进制表示
         element_bytes = c_bytes[i:i+element_size]
@@ -246,4 +262,4 @@ def main(random=False, A_row=32, A__B=32, B_col=32, APP0 = 0):
 
 if __name__ == "__main__":
     # 支持的数据类型: 0:"fp16", 1:"fp32", 2:"fp64", 3:"bf16"
-    main(random=False, A_row=32, A__B=32, B_col=32, APP0=3)
+    main(random=False, A_row=32, A__B=32, B_col=32, A_type = 0,B_type = 0)

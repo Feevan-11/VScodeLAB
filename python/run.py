@@ -14,7 +14,7 @@ if __name__ == "__main__":
     A_ROW = 64
     A_B = 64
     B_COL = 64
-    descriptors = 0x00002000
+    descriptors = 0x00010000
     random = False
     block_width = 16
     element_size = 2
@@ -50,7 +50,7 @@ if __name__ == "__main__":
     if(mood == 1):
         matrix_add_main(random,A_ROW,B_COL)   
     elif(mood == 2):    
-        matrix_mul_main(random,A_ROW,A_B,B_COL,APP0=APP0)
+        matrix_mul_main(random,A_ROW,A_B,B_COL, A_type = 0,B_type = 0)
 
     hex_to_bin_main()
 
