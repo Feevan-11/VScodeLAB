@@ -599,14 +599,14 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x40010000):
         A_rows=A_ROWS,
         B_cols=B_COLS,
         block_width=16,
-        Shared_Men2_base=0x90000000,
+        Shared_Men2_base=0x40005000,
         element_size=2
     )
     descriptors_DMA1_S2MM = generate_dma1_descriptors_for_S2MM(
         A_rows=A_ROWS,
         B_cols=B_COLS,
         block_width=16,
-        Shared_Men3_base=0x98000000,
+        Shared_Men3_base=0x80005000,
         element_size=2
     )
     descriptors_DMA0_MM2S = generate_dma0_descriptors_for_MM2S(
@@ -614,7 +614,7 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x40010000):
         A_B = B_ROWS,
         B_cols=B_COLS,
         block_width=16,
-        Shared_Men0_base=0x40000000,
+        Shared_Men0_base=0x40001000,
         element_size=2
     )
     descriptors_DMA1_MM2S = generate_dma1_descriptors_for_MM2S(
@@ -622,7 +622,7 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x40010000):
         A_B = B_ROWS,
         B_cols=B_COLS,
         block_width=16,
-        Shared_Men1_base=0x80000000,
+        Shared_Men1_base=0x80000880,
         element_size=2
     )
 
@@ -791,7 +791,10 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x40010000):
         f1.write("x6 0x" + f"{(0x00001000 & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x7 0x" + f"{((DMA0_SG_BASE+DMA0_MM2Slen+DMA0_S2MMlen-64) & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x8 0x" + f"{((DMA1_SG_BASE+DMA0_MM2Slen+DMA0_S2MMlen-64) & 0xFFFFFFFF):08x}"+"\n")
-
+        f1.write("x11 0x" + f"{(DMA0_SG_BASE & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x12 0x" + f"{(DMA1_SG_BASE & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x13 0x" + f"{(DMA0_SG_BASE & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x14 0x" + f"{(DMA1_SG_BASE & 0xFFFFFFFF):08x}"+"\n")
 def main(AROWS = 32,AB =32,BCOLS = 32):
     A_ROWS = AROWS
     A_B = AB
