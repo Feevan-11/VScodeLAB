@@ -559,7 +559,7 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x40010000):
         A_cols=A_COLS,
         block_width=16,
         Global_0_base=A_DATA_START,
-        Shared_Men0_base=0xC0000000,
+        Shared_Men0_base=0x80008000,
         element_size=2
     )
     descriptors_B_IN = generate_cdma1_descriptors_for_matrix_B_IN(
@@ -567,7 +567,7 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x40010000):
         B_cols=B_COLS,
         block_width=16,
         Global_1_base=0x80000800,
-        Shared_Men1_base=0xC2000000,
+        Shared_Men1_base=0x40008000,
         element_size=2
     )
     #descriptors_A_OUT = generate_cdma0_descriptors_for_matrix_A_OUT(
