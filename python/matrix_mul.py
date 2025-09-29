@@ -176,7 +176,7 @@ def main(random=False, A_row=32, A__B=32, B_col=32, A_type = 3,B_type = 0,COUNT 
     # 生成矩阵
     if random_mode:
         A = np.random.uniform(-1, 1, (A_row, A__B)).astype(A_np_type)
-        B = np.random.uniform(-1, 1, (A__B, B_col)).astype(A_np_type)
+        B = np.random.uniform(-1, 1, (A__B, B_col)).astype(B_np_type)
     else:
         A = A_custom
         B = B_custom
@@ -262,4 +262,4 @@ def main(random=False, A_row=32, A__B=32, B_col=32, A_type = 3,B_type = 0,COUNT 
 
 if __name__ == "__main__":
     # 支持的数据类型: 0:"fp16", 1:"fp32", 2:"fp64", 3:"bf16"
-    main(random=False, A_row=32, A__B=32, B_col=32, A_type = 0,B_type = 0)
+    main(random=False, A_row=32, A__B=32, B_col=32, A_type = 1,B_type = 0)
