@@ -1,4 +1,40 @@
 ; --- SEGMENT 1 ---
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0
+lp.setup  x1,  200
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0
+addi x0, x0, 0 
+addi x0, x0, 0
+addi x0, x0, 0 
+addi x0, x0, 0
+lp.setup  x2,  100
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+lp.goto x2, -0x10
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+lp.goto x1, -0x50
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
 lui  x1, 0xC0001
 lui  x2, 0xC0001
 lui  x3, 0x00001
@@ -118,6 +154,30 @@ addi x0, x0, 0
 addi x0, x0, 0
 addi x0, x0, 0 
 addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0
+addi x0, x0, 0
+sw x3,  0x0(x2)
+addi x0, x0, 0 
+addi x0, x0, 0        
+addi x0, x0, 0
+addi x0, x0, 0        
+addi x0, x0, 0
+addi x0, x0, 0
+addi x0, x0, 0
+sw x4, 0x4(x2)
+addi x0, x0, 0 
+addi x0, x0, 0
+addi x0, x0, 0 
+sw x14, 0x18(x2)
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+sw x17, 0x20(x2)
+addi x0, x0, 0 
+addi x0, x0, 0   
+addi x0, x0, 0        
+sw x18, 0x28(x2)
 addi x0, x0, 0 
 addi x0, x0, 0
 addi x0, x0, 0 
