@@ -155,5 +155,46 @@ def main():
         except ValueError as e:
             print(f"erro：{str(e)}")
 
+def check():
+
+    configs = [
+    {
+        "asm_in": os.path.join("asm", "CHECK.asm"),
+        "reg_config": os.path.join("txt", "check.txt"),
+        "asm_out": os.path.join("asm", "CHECK_.asm")
+    },
+    #{
+    #    "asm_in": os.path.join("asm", "SACODE.asm"),
+    #    "reg_config": os.path.join("txt", "SA.txt"),
+    #    "asm_out": os.path.join("asm", "SA.asm")
+    #}
+    ]
+    for cfg in configs:
+        reg_values = read_reg_values(cfg["reg_config"])
+        
+        with open(cfg["asm_in"], 'r') as f:
+            original_asm = f.read()
+        
+        raw_segments = split_into_segments(original_asm)
+        
+        processed_segments = []
+        for seg_content, seg_id in raw_segments:  
+            # Gets the register configuration for the current segment
+            seg_reg_values = reg_values.get(seg_id, {})
+            
+            # Handling code content (seg_content is a string)
+            processed = process_segment(seg_content, seg_reg_values)
+            processed_segments.append((processed, seg_id))
+        
+        # Generate an output file
+        try:
+            generate_output(
+                processed_segments=processed_segments,
+                reg_config=reg_values,
+                output_file=cfg["asm_out"]
+            )
+            print(f"Successfully generated：{cfg['asm_out']}")
+        except ValueError as e:
+            print(f"erro：{str(e)}")
 if __name__ == "__main__":
     main()

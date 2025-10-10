@@ -931,6 +931,8 @@ def main():
                 line = line.strip()
                 if not line or line.startswith('#'):
                     continue
+                if line.startswith(';'):
+                    continue
                 all_lines.append(line)
 
         groups = []
@@ -1007,6 +1009,8 @@ def SA():
                 line = line.strip()
                 if not line or line.startswith('#'):
                     continue
+                if line.startswith(';'):
+                    continue
                 all_lines.append(line)
 
         groups = []
@@ -1040,6 +1044,84 @@ def SA():
         {"input":"ASA",
          "output":"SA",
         } 
+    ]
+    for n in NS:
+        input_file = n["input"]  
+        output_file = n["output"]
+
+        mif_dir = os.path.join(script_dir,"mif")
+
+        input_filename = os.path.join(mif_dir, f"{input_file}.mif")
+        output_filename = os.path.join(mif_dir, f"{output_file}.mif")
+    
+        process_mif(input_filename, output_filename)
+
+def check():    
+    
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    mif_dir = os.path.join(script_dir, "mif")
+    asm_dir = os.path.join(script_dir, "asm")
+
+    names = [
+        {"input":"CHECK_",
+         "output":"_CHECK_",
+        },
+        #{"input":"SA",
+        # "output":"ASA",
+        #} 
+    ]
+
+    for name in names:
+        input_n = name["input"]
+        output_n = name["output"]
+        asm_file = os.path.join(asm_dir, f"{input_n}.asm")
+        mif_file = os.path.join(mif_dir, f"{output_n}.mif")
+
+        if not os.path.exists(asm_file):
+            print(f"[Error] Cannot find: {asm_file}")
+            continue  
+
+        with open(asm_file, 'r') as f:
+            all_lines = []
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue
+                if line.startswith(';'):
+                    continue
+                all_lines.append(line)
+
+        groups = []
+        ins = 4
+        for i in range(0, len(all_lines), ins):
+            chunk = all_lines[i:i+ins]
+            if len(chunk) < ins:
+                chunk += [""] * (ins - len(chunk))
+            groups.append(chunk)
+
+        # write MIF 
+        with open(mif_file, 'w') as f_mif:
+            for chunk_index, chunk in enumerate(groups):
+                instr_mif_list = []
+                for line in chunk:
+                    machine_int = parse_one_instruction(line)  
+                    machine_bin = format(machine_int, '032b')   
+                    instr_mif_list.append(machine_bin)
+                
+                all_128_bits = "".join(instr_mif_list)
+                f_mif.write(all_128_bits + "\n")
+
+        print(f"Successfully Generated :{mif_file}")
+
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    NS = [
+        {"input":"_CHECK_",
+         "output":"CHECK",
+        },
+        #{"input":"ASA",
+        # "output":"SA",
+        #} 
     ]
     for n in NS:
         input_file = n["input"]  
