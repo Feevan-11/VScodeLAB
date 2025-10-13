@@ -31,7 +31,7 @@ def process_asm_file(filename):
 def main():
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    names = ['SA','SG','CHECK_']
+    names = ['SA','SG','CHECK_','test']
     md_dir = os.path.join(script_dir,"md")
     asm_dir = os.path.join(script_dir,"asm")
     for name in names:

@@ -8,8 +8,8 @@ def make_sg_dma_descriptor(addr):
 
     word0 = 0  
     word1 = 0
-    word2 = 0
-    word3 = 0
+    word2 = (addr+1)
+    word3 = (addr & 0xFFFFFFFF)
     word4 = 0
     word5 = 0
     word6 = 0
@@ -19,7 +19,7 @@ def make_sg_dma_descriptor(addr):
     word10 = 0
     word11 = 0
     word12 = 0
-    word13 = addr
+    word13 = 0
     word14 = 0
     word15 = 0
 
@@ -32,7 +32,7 @@ def int_to_bin8(value):
     """
     Convert a 8-bit int to a binary string of length 8 (big-endian: bit31 on the left, bit0 on the right).
     """
-    return format(value & 0xFFFFFFFF, '08b')
+    return format(value & 0xFFFFFFFF, '32b')
 
 
 
@@ -77,19 +77,19 @@ def main():
     
     descriptorss = []
 
-    for i in range(8):
+    for i in range(100):
         if(i%2 == 0):
-            A = 1
+            A = 0x1
             word = make_sg_dma_descriptor(A)
             descriptorss.append(word)
         if(i%2 == 1):
-            A = 2
+            A = 0x2
             word = make_sg_dma_descriptor(A)
             descriptorss.append(word)
-        for j in range(31):
-            A = 0
-            word = make_sg_dma_descriptor(A)
-            descriptorss.append(word)
+        #for j in range(31):
+        #    A = 0
+        #    word = make_sg_dma_descriptor(A)
+        #    descriptorss.append(word)
     deadata = flat(descriptorss)
     AL =  deadata
     write_txt_file(AL , all_file)

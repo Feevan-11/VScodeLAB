@@ -8,9 +8,10 @@ import tablemd
 
 if __name__ == "__main__":
     macT.main()
+    ethsg.main()
     asm_generate.check()
     translator.check()
-    ethsg.main()
+    
     hex_to_bin.MAC()
     hex_to_bin.ETHSG()
     mif_coe.ETHSG()

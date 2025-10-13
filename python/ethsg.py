@@ -167,7 +167,7 @@ def main():
     with open(ethdma_TXT_file, 'w') as f0:
         f0.write("; --- SEGMENT 1 ---" +"\n")
         f0.write("x1 0x"  + f"{(0x40000000     & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x2 0x"  + f"{(0x00000200     & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x2 0x"  + f"{(0x00000040     & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x3 0x"  + f"{(0x00000001     & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x4 0x"  + f"{(0x00000002     & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x5 0x"  + f"{(0x00000000     & 0xFFFFFFFF):08x}"+"\n")
