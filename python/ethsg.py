@@ -86,13 +86,14 @@ def write_txt_file_A(words, filename):
 
 
 def generate_ethdma_descriptors_for_S2MM(
-    Shared_Men3_base=0x98000000
+    Shared_Men3_base=0x98000000,
+    MAC_LENTH = 64
 ):
 
     descriptors = []
 
 
-    block_size_bytes =  0x0C000000 + 512
+    block_size_bytes =  0x0C000000 + MAC_LENTH
     addr = 0
 
     for j in range(100):
@@ -100,7 +101,7 @@ def generate_ethdma_descriptors_for_S2MM(
       next_desc_addr = 0
      
       desc_words = make_sg_dma_descriptor(next_desc_addr, BUFFER_addr, block_size_bytes)
-      addr = addr + 512
+      addr = addr + MAC_LENTH
       descriptors.append(desc_words)
 
     return descriptors
@@ -126,22 +127,40 @@ def link_descriptors_in_memory(descriptor_list, base_addr=0x00000000, desc_size=
 
     return flattened
 
-def flat(descriptor_list):
+def link(descriptor_list, base_addr=0x00000000, desc_size=64):
+
     flattened = []  # Stores the final sequentially expanded 32-bit word
 
     for i in range(len(descriptor_list)):
+
+        next_desc_addr = base_addr
+
         words = descriptor_list[i]
+        words[0] = next_desc_addr
+
+        # Flatten the updated 16 word into flattened
         flattened.extend(words)
 
     return flattened
 
+#def flat(descriptor_list):
+#    flattened = []  # Stores the final sequentially expanded 32-bit word
+#
+#    for i in range(len(descriptor_list)):
+#        words = descriptor_list[i]
+#        flattened.extend(words)
+#
+#    return flattened
 
-SGMEM_ethdma0_BASE     = 0xF6C00000
-SGMEM_ethdma1_BASE     = 0xF7000000
 
+ethdma0_CONFIG_BASE    = 0xFF003000
+SGMEM_ethdma0_BASE     = 0xF7400000
+
+ethdma1_CONFIG_BASE    = 0xFF003400
+SGMEM_ethdma1_BASE     = 0xF7600000
 
 DDR0_START       = 0x40000000
-
+DDR1_START       = 0x80000000
 
 def main():
 
@@ -149,33 +168,67 @@ def main():
 
     descriptors_ethdma_S2MM = generate_ethdma_descriptors_for_S2MM(
         
-        Shared_Men3_base=DDR0_START
+        Shared_Men3_base=DDR0_START,
+        MAC_LENTH = 64
     )
-    
 
-    ethdma_S2MM_sg_data = link_descriptors_in_memory(descriptors_ethdma_S2MM, base_addr=SGMEM_ethdma0_BASE, desc_size=64)
+
+    next_desc_addr=0
+    BUFFER_addr= DDR1_START
+    block_size_bytes= 0x00000080
+
+    descriptors_ethdma_MM2S = make_sg_dma_descriptor(next_desc_addr, BUFFER_addr, block_size_bytes)
+    
+    ETH0_S2MM_len = 64*len(descriptors_ethdma_S2MM)
+
+    ethdma0_S2MM_sg_data = link_descriptors_in_memory(descriptors_ethdma_S2MM, base_addr=SGMEM_ethdma0_BASE, desc_size=64)
+    #ethdma1_MM2S_sg_data = link(descriptors_ethdma_MM2S, base_addr=SGMEM_ethdma1_BASE, desc_size=64)
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
-    ethdma_S2MM_name = 'ethdma_S2MM_sg'
+    ethdma0_S2MM_name = 'ethdma0_S2MM_sg'
+    ethdma1_MM2S_name = 'ethdma1_MM2S_sg'
     ethdma_TXT_name = 'check'
     txt_dir = os.path.join(script_dir,"txt")
 
-    ethdma_S2MM_file = os.path.join(txt_dir, f"{ethdma_S2MM_name}.txt")
+    ethdma0_S2MM_file = os.path.join(txt_dir, f"{ethdma0_S2MM_name}.txt")
+    ethdma1_MM2S_file = os.path.join(txt_dir, f"{ethdma1_MM2S_name}.txt")
     ethdma_TXT_file = os.path.join(txt_dir, f"{ethdma_TXT_name}.txt")
 
     with open(ethdma_TXT_file, 'w') as f0:
         f0.write("; --- SEGMENT 1 ---" +"\n")
+        f0.write("x1 0x"  + f"{(ethdma0_CONFIG_BASE     & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x2 0x"  + f"{(ethdma0_CONFIG_BASE     & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x3 0x"  + f"{(0x1001    & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x4 0x"  + f"{(0x000001000     & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x5 0x"  + f"{(SGMEM_ethdma0_BASE         & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x6 0x"  + f"{((SGMEM_ethdma0_BASE + ETH0_S2MM_len - 64)    & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x7 0x"  + f"{(0x00000000     & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x8 0x"  + f"{((SGMEM_ethdma0_BASE + ETH0_S2MM_len - 64)     & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("; --- SEGMENT 2 ---" +"\n")
         f0.write("x1 0x"  + f"{(0x40000000     & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x2 0x"  + f"{(0x00000040     & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x3 0x"  + f"{(0x00000001     & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x4 0x"  + f"{(0x00000002     & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x5 0x"  + f"{(0x00000000     & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x6 0x"  + f"{(0x00000000     & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x7 0x"  + f"{(0x00000000     & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x7 0x"  + f"{(0x40001695     & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x8 0x"  + f"{(0x00000000     & 0xFFFFFFFF):08x}"+"\n")
-    write_txt_file(ethdma_S2MM_sg_data, ethdma_S2MM_file)
-
+        f0.write("x15 0x"  + f"{(0x80000000     & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x16 0x"  + f"{(0x21C68450     & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x17 0x"  + f"{(0x001B     & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x18 0x"  + f"{(0x00000000     & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("; --- SEGMENT 3 ---" +"\n")
+        f0.write("x1 0x"  + f"{(ethdma1_CONFIG_BASE     & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x2 0x"  + f"{(ethdma1_CONFIG_BASE     & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x3 0x"  + f"{(0x1001    & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x4 0x"  + f"{(0x000001000     & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x5 0x"  + f"{(SGMEM_ethdma1_BASE      & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x6 0x"  + f"{(SGMEM_ethdma1_BASE      & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x7 0x"  + f"{(0x00000000     & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x8 0x"  + f"{((SGMEM_ethdma0_BASE + ETH0_S2MM_len - 64)     & 0xFFFFFFFF):08x}"+"\n")
+    write_txt_file(ethdma0_S2MM_sg_data, ethdma0_S2MM_file)
+    write_txt_file(descriptors_ethdma_MM2S, ethdma1_MM2S_file)
 
 
 if __name__ == "__main__":

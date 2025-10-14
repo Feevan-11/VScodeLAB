@@ -85,7 +85,7 @@ def MAC():
 
 def ETHSG():
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    name = 'ethdma_S2MM_sg'
+    name = 'ethdma0_S2MM_sg'
     name1 = 'sg_MAC'
     mif_dir = os.path.join(script_dir, "mif")
     txt_dir = os.path.join(script_dir, "txt")
@@ -95,6 +95,20 @@ def ETHSG():
 
     convert_hex_to_bin(input_txt, output_mif)
     print(f"转换完成！生成的MIF文件: {output_mif}")
+
+def ETHSG1():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    name = 'ethdma1_MM2S_sg'
+    name1 = 'sg_MM2S_MAC'
+    mif_dir = os.path.join(script_dir, "mif")
+    txt_dir = os.path.join(script_dir, "txt")
+
+    input_txt = os.path.join(txt_dir, f"{name}.txt")
+    output_mif = os.path.join(mif_dir, f"{name1}.mif")
+
+    convert_hex_to_bin(input_txt, output_mif)
+    print(f"转换完成！生成的MIF文件: {output_mif}")
+
 
 if __name__ == "__main__":
     main()
