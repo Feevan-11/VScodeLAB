@@ -201,7 +201,19 @@ addi x0, x0, 0
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0
-addi x0, x0, 0
+lp.setup x1, 0x100
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+lp.goto x1, -0x10
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0
@@ -222,6 +234,26 @@ addi x0, x0, 0
 addi x0, x0, 0 
 addi x0, x0, 0
 addi x0, x0, 0
+addi x0, x0, 0 
+addi x0, x0, 0 
+addi x0, x0, 0
+addi x0, x0, 0
+lui x31, 0xFFF0F
+lui x30, 0xFFF0f
+lui x29, 0xFFF0f
+lui x4, 0x0
+lui x5, 0x0
+lui x6, 0x0
+lui x7, 0x0
+lui x8, 0x0
+addi x31, x31, 0xFF0
+addi x29, x29, 0xfF0
+addi x30, x30, 0xFF0
+addi x4, x4, 0x1
+addi x5, x5, 0x1
+addi x6, x6, 0x1
+addi x7, x7, 0x1
+addi x8, x8, 0x1
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0

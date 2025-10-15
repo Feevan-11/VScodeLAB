@@ -56,7 +56,7 @@ def ETHSG():
     mif_dir = os.path.join(script_dir, "mif")
     coe_dir = os.path.join(script_dir, "coe")
 
-    names = ["sg_MAC"]
+    names = ["ETH_SG0","CHECK","ETH_SG1"]
     for name in names:
         mif_file = os.path.join(mif_dir, f"{name}.mif")
         coe_file = os.path.join(coe_dir, f"{name}.coe")

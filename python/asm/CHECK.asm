@@ -343,7 +343,7 @@ addi x0, x0, 0
 
 
 
-; --- SEGMENT 1 ---
+; --- SEGMENT 3 ---
 lui  x1, 0xC0000
 lui  x2, 0xC0000
 lui  x3, 0xA0001

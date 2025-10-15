@@ -86,7 +86,7 @@ def MAC():
 def ETHSG():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     name = 'ethdma0_S2MM_sg'
-    name1 = 'sg_MAC'
+    name1 = 'ETH_SG0'
     mif_dir = os.path.join(script_dir, "mif")
     txt_dir = os.path.join(script_dir, "txt")
 
@@ -99,7 +99,7 @@ def ETHSG():
 def ETHSG1():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     name = 'ethdma1_MM2S_sg'
-    name1 = 'sg_MM2S_MAC'
+    name1 = 'ETH_SG1'
     mif_dir = os.path.join(script_dir, "mif")
     txt_dir = os.path.join(script_dir, "txt")
 

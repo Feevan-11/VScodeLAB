@@ -213,7 +213,7 @@ def main():
         f0.write("x5 0x"  + f"{(0x00000000     & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x6 0x"  + f"{(0x00000000     & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x7 0x"  + f"{(0x40001695     & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x8 0x"  + f"{(0x00000000     & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x8 0x"  + f"{(0xFFFFFFFF     & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x15 0x"  + f"{(0x80000000     & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x16 0x"  + f"{(0x21C68450     & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x17 0x"  + f"{(0x001B     & 0xFFFFFFFF):08x}"+"\n")
