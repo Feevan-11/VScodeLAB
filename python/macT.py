@@ -27,6 +27,30 @@ def make_sg_dma_descriptor(addr):
     return [word0, word1, word2,  word3,  word4,  word5,  word6,  word7,
             word8, word9, word10, word11, word12, word13, word14, word15]
 
+def make_F(FF):
+
+    word0 = FF
+    word1 = FF
+    word2 = FF
+    word3 = FF
+    word4 = FF
+    word5 = FF
+    word6 = FF
+    word7 = FF
+    word8 = FF
+    word9 = FF
+    word10 = FF
+    word11 = FF
+    word12 = FF
+    word13 = FF
+    word14 = FF
+    word15 = FF
+
+
+    return [word0, word1, word2,  word3,  word4,  word5,  word6,  word7,
+            word8, word9, word10, word11, word12, word13, word14, word15]
+
+
 
 def int_to_bin8(value):
     """
@@ -77,7 +101,7 @@ def main():
     
     descriptorss = []
 
-    for i in range(100):
+    for i in range(90):
         if(i%2 == 0):
             A = 0x1
             word = make_sg_dma_descriptor(A)
@@ -90,6 +114,11 @@ def main():
         #    A = 0
         #    word = make_sg_dma_descriptor(A)
         #    descriptorss.append(word)
+    for i in range(10):
+        
+        A = 0xFFFFFFFF
+        word = make_F(A)
+        descriptorss.append(word)
     deadata = flat(descriptorss)
     AL =  deadata
     write_txt_file(AL , all_file)

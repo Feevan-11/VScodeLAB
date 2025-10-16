@@ -152,6 +152,7 @@ def link(descriptor_list, base_addr=0x00000000, desc_size=64):
 #
 #    return flattened
 
+SG_MEM0 = 0xFF000000
 
 ethdma0_CONFIG_BASE    = 0xFF003000
 SGMEM_ethdma0_BASE     = 0xF7400000
@@ -172,17 +173,20 @@ def main():
         MAC_LENTH = 64
     )
 
+    descriptors_ethdma_MM2S = generate_ethdma_descriptors_for_S2MM(
+        
+        Shared_Men3_base=SG_MEM0,
+        MAC_LENTH = 64
+    )
 
-    next_desc_addr=0
-    BUFFER_addr= DDR1_START
-    block_size_bytes= 0x00000080
-
-    descriptors_ethdma_MM2S = make_sg_dma_descriptor(next_desc_addr, BUFFER_addr, block_size_bytes)
+    
     
     ETH0_S2MM_len = 64*len(descriptors_ethdma_S2MM)
 
+    ETH1_MM2S_len = 64*len(descriptors_ethdma_MM2S)
+
     ethdma0_S2MM_sg_data = link_descriptors_in_memory(descriptors_ethdma_S2MM, base_addr=SGMEM_ethdma0_BASE, desc_size=64)
-    #ethdma1_MM2S_sg_data = link(descriptors_ethdma_MM2S, base_addr=SGMEM_ethdma1_BASE, desc_size=64)
+    ethdma1_MM2S_sg_data = link_descriptors_in_memory(descriptors_ethdma_MM2S, base_addr=SGMEM_ethdma1_BASE + ETH0_S2MM_len, desc_size=64)
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -198,13 +202,13 @@ def main():
     with open(ethdma_TXT_file, 'w') as f0:
         f0.write("; --- SEGMENT 1 ---" +"\n")
         f0.write("x1 0x"  + f"{(ethdma0_CONFIG_BASE     & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x2 0x"  + f"{(ethdma0_CONFIG_BASE     & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x2 0x"  + f"{(ethdma1_CONFIG_BASE     & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x3 0x"  + f"{(0x1001    & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x4 0x"  + f"{(0x000001000     & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x5 0x"  + f"{(SGMEM_ethdma0_BASE         & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x6 0x"  + f"{((SGMEM_ethdma0_BASE + ETH0_S2MM_len - 64)    & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x7 0x"  + f"{(0x00000000     & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x8 0x"  + f"{((SGMEM_ethdma0_BASE + ETH0_S2MM_len - 64)     & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x7 0x"  + f"{((SGMEM_ethdma1_BASE + ETH0_S2MM_len)     & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x8 0x"  + f"{((SGMEM_ethdma1_BASE + ETH0_S2MM_len + ETH1_MM2S_len - 64)      & 0xFFFFFFFF):08x}"+"\n")
         f0.write("; --- SEGMENT 2 ---" +"\n")
         f0.write("x1 0x"  + f"{(0x40000000     & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x2 0x"  + f"{(0x00000040     & 0xFFFFFFFF):08x}"+"\n")
@@ -218,17 +222,18 @@ def main():
         f0.write("x16 0x"  + f"{(0x21C68450     & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x17 0x"  + f"{(0x001B     & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x18 0x"  + f"{(0x00000000     & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("; --- SEGMENT 3 ---" +"\n")
-        f0.write("x1 0x"  + f"{(ethdma1_CONFIG_BASE     & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x2 0x"  + f"{(ethdma1_CONFIG_BASE     & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x3 0x"  + f"{(0x1001    & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x4 0x"  + f"{(0x000001000     & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x5 0x"  + f"{(SGMEM_ethdma1_BASE      & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x6 0x"  + f"{(SGMEM_ethdma1_BASE      & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x7 0x"  + f"{(0x00000000     & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x8 0x"  + f"{((SGMEM_ethdma0_BASE + ETH0_S2MM_len - 64)     & 0xFFFFFFFF):08x}"+"\n")
-    write_txt_file(ethdma0_S2MM_sg_data, ethdma0_S2MM_file)
-    write_txt_file(descriptors_ethdma_MM2S, ethdma1_MM2S_file)
+       #f0.write("; --- SEGMENT 3 ---" +"\n")
+       #f0.write("x1 0x"  + f"{(0     & 0xFFFFFFFF):08x}"+"\n")
+       #f0.write("x2 0x"  + f"{(0     & 0xFFFFFFFF):08x}"+"\n")
+       #f0.write("x3 0x"  + f"{(0     & 0xFFFFFFFF):08x}"+"\n")
+       #f0.write("x4 0x"  + f"{(0     & 0xFFFFFFFF):08x}"+"\n")
+       #f0.write("x5 0x"  + f"{(0     & 0xFFFFFFFF):08x}"+"\n")
+       #f0.write("x6 0x"  + f"{(0     & 0xFFFFFFFF):08x}"+"\n")
+       #f0.write("x7 0x"  + f"{(0x00000000     & 0xFFFFFFFF):08x}"+"\n")
+       #f0.write("x8 0x"  + f"{((SGMEM_ethdma0_BASE + ETH0_S2MM_len - 64)     & 0xFFFFFFFF):08x}"+"\n")
+    all_da = ethdma0_S2MM_sg_data + ethdma1_MM2S_sg_data
+    write_txt_file(all_da, ethdma0_S2MM_file)
+    write_txt_file(ethdma1_MM2S_sg_data, ethdma1_MM2S_file)
 
 
 if __name__ == "__main__":
