@@ -70,5 +70,18 @@ def main():
     convert_hex_to_bin(input_txt, output_mif)
     print(f"转换完成！生成的MIF文件: {output_mif}")
 
+def MAC():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    name = 'MACT'
+    name1 = 'MAC'
+    mif_dir = os.path.join(script_dir, "mif")
+    txt_dir = os.path.join(script_dir, "txt")
+
+    input_txt = os.path.join(txt_dir, f"{name}.txt")
+    output_mif = os.path.join(mif_dir, f"{name1}.mif")
+
+    convert_hex_to_bin(input_txt, output_mif)
+    print(f"转换完成！生成的MIF文件: {output_mif}")
+
 if __name__ == "__main__":
     main()

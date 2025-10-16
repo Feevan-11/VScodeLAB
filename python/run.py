@@ -4,6 +4,7 @@ from translator import main as translator_main
 from merge import main as merge_main
 from matrix import main as matrix_main
 from btoh import main as btoh_main
+from btoh import MAC as MAC_main
 from tablemd import main as ta_main
 from merge_mif_files import main as merge_mif_files_main
 
@@ -25,3 +26,4 @@ if __name__ == "__main__":
     print("aaa")
     merge_mif_files_main()
     ta_main()
+    MAC_main()
