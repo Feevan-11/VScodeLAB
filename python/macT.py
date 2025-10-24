@@ -6,22 +6,22 @@ import  merge_mif_files
 
 def make_sg_dma_descriptor(addr):
 
-    word0 = 0  
-    word1 = 0
-    word2 = (addr+1)
-    word3 = (addr & 0xFFFFFFFF)
-    word4 = 0
-    word5 = 0
-    word6 = 0
-    word7 = 0
-    word8 = 0 
-    word9 = 0
-    word10 = 0
-    word11 = 0
-    word12 = 0
-    word13 = 0
-    word14 = 0
-    word15 = 0
+    word0 = (addr & 0xFFFFFFFF) 
+    word1 = (0x419 & 0xFFFFFFFF)
+    word2 = ((addr+1) & 0xFFFFFFFF) 
+    word3 = (0x419 & 0xFFFFFFFF)
+    word4 = ((addr+2) & 0xFFFFFFFF) 
+    word5 = (0x419 & 0xFFFFFFFF)
+    word6 = ((addr+3) & 0xFFFFFFFF) 
+    word7 = (0x419 & 0xFFFFFFFF)
+    word8 = ((addr+4) & 0xFFFFFFFF) 
+    word9 = (0x419 & 0xFFFFFFFF)
+    word10 = ((addr+5) & 0xFFFFFFFF) 
+    word11 = (0x419 & 0xFFFFFFFF)
+    word12 = ((addr+6) & 0xFFFFFFFF) 
+    word13 = (0x419 & 0xFFFFFFFF)
+    word14 = ((addr+7) & 0xFFFFFFFF) 
+    word15 = (0x419 & 0xFFFFFFFF)
 
 
     return [word0, word1, word2,  word3,  word4,  word5,  word6,  word7,
@@ -101,19 +101,27 @@ def main():
     
     descriptorss = []
 
-    for i in range(90):
-        if(i%2 == 0):
-            A = 0x1
-            word = make_sg_dma_descriptor(A)
-            descriptorss.append(word)
-        if(i%2 == 1):
-            A = 0x2
-            word = make_sg_dma_descriptor(A)
-            descriptorss.append(word)
-        #for j in range(31):
-        #    A = 0
-        #    word = make_sg_dma_descriptor(A)
-        #    descriptorss.append(word)
+    # for i in range(90):
+    #     if(i%2 == 0):
+    #         A = 0
+    #         word = make_sg_dma_descriptor(A)
+    #         descriptorss.append(word)
+    #     if(i%2 == 1):
+    #         A = 0x2
+    #         word = make_sg_dma_descriptor(A)
+    #         descriptorss.append(word)
+    #     #for j in range(31):
+    #     #    A = 0
+    #     #    word = make_sg_dma_descriptor(A)
+    #     #    descriptorss.append(word)
+    A = 0
+    for i in range(10):
+        
+        word = make_sg_dma_descriptor(A)
+        descriptorss.append(word)
+        A=A+8
+
+
     for i in range(10):
         
         A = 0xFFFFFFFF

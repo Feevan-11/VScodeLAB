@@ -73,7 +73,7 @@ def main():
 def MAC():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     name = 'MACT'
-    name1 = 'MAC'
+    name1 = 'MAC_GM1'
     mif_dir = os.path.join(script_dir, "mif")
     txt_dir = os.path.join(script_dir, "txt")
 
@@ -87,19 +87,6 @@ def ETHSG():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     name = 'ethdma0_S2MM_sg'
     name1 = 'ETH_SG0'
-    mif_dir = os.path.join(script_dir, "mif")
-    txt_dir = os.path.join(script_dir, "txt")
-
-    input_txt = os.path.join(txt_dir, f"{name}.txt")
-    output_mif = os.path.join(mif_dir, f"{name1}.mif")
-
-    convert_hex_to_bin(input_txt, output_mif)
-    print(f"转换完成！生成的MIF文件: {output_mif}")
-
-def ETHSG1():
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    name = 'ethdma1_MM2S_sg'
-    name1 = 'ETH_SG1'
     mif_dir = os.path.join(script_dir, "mif")
     txt_dir = os.path.join(script_dir, "txt")
 

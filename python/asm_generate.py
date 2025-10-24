@@ -116,15 +116,20 @@ def generate_output(processed_segments, reg_config, output_file='output.asm'):
 def main():
 
     configs = [
+    # {
+    #     "asm_in": os.path.join("asm", "SGCODE.asm"),
+    #     "reg_config": os.path.join("txt", "SG.txt"),
+    #     "asm_out": os.path.join("asm", "SG.asm")
+    # },
+    # {
+    #     "asm_in": os.path.join("asm", "SACODE.asm"),
+    #     "reg_config": os.path.join("txt", "SA.txt"),
+    #     "asm_out": os.path.join("asm", "SA.asm")
+    # },
     {
-        "asm_in": os.path.join("asm", "SGCODE.asm"),
-        "reg_config": os.path.join("txt", "SG.txt"),
-        "asm_out": os.path.join("asm", "SG.asm")
-    },
-    {
-        "asm_in": os.path.join("asm", "SACODE.asm"),
-        "reg_config": os.path.join("txt", "SA.txt"),
-        "asm_out": os.path.join("asm", "SA.asm")
+        "asm_in": os.path.join("asm", "main_code.asm"),
+        "reg_config": os.path.join("txt", "main.txt"),
+        "asm_out": os.path.join("asm", "main.asm")
     }
     ]
     for cfg in configs:
@@ -155,19 +160,19 @@ def main():
         except ValueError as e:
             print(f"erro：{str(e)}")
 
-def check():
+def ETH_TEST():
 
     configs = [
     {
-        "asm_in": os.path.join("asm", "CHECK.asm"),
-        "reg_config": os.path.join("txt", "check.txt"),
-        "asm_out": os.path.join("asm", "CHECK_.asm")
+        "asm_in": os.path.join("asm", "ETH_TEST.asm"),
+        "reg_config": os.path.join("txt", "ETH_TEST.txt"),
+        "asm_out": os.path.join("asm", "ETH_TEST_.asm")
     },
-    #{
-    #    "asm_in": os.path.join("asm", "SACODE.asm"),
-    #    "reg_config": os.path.join("txt", "SA.txt"),
-    #    "asm_out": os.path.join("asm", "SA.asm")
-    #}
+    {
+        "asm_in": os.path.join("asm", "testCODE.asm"),
+        "reg_config": os.path.join("txt", "test.txt"),
+        "asm_out": os.path.join("asm", "test.asm")
+    }
     ]
     for cfg in configs:
         reg_values = read_reg_values(cfg["reg_config"])
@@ -196,5 +201,6 @@ def check():
             print(f"Successfully generated：{cfg['asm_out']}")
         except ValueError as e:
             print(f"erro：{str(e)}")
+
 if __name__ == "__main__":
     main()

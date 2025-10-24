@@ -10,22 +10,22 @@ addi x0, x0, 0
 addi x0, x0, 0 
 addi x0, x0, 0
 
-lui x1, 0xFF005
-lui x2, 0xFF010
-lui x3, 0xFF020
-lui x4, 0xFF030
-lui x5, 0xFF040
-lui x6, 0xF4000
-lui x7, 0x0
-lui x8, 0x40006
-addi x1, x1, 0x0
-addi x2, x2, 0x101
-addi x3, x3, 0x202
-addi x4, x4, 0x303
-addi x5, x5, 0x404
-addi x6, x6, 0x500
-addi x7, x7, 0x100
-addi x8, x8, 0xB00
+lui  x1, 0xC0001
+lui  x2, 0xC0001
+lui  x3, 0x00001
+lui  x4, 0x00001
+lui  x5, 0xA8000
+lui  x6, 0xAC000
+lui  x7, 0xA8000
+lui  x8, 0xAC000
+addi x1, x1, 0x800      
+addi x2, x2, 0x840     
+addi x3, x3, 0x008     
+addi x4, x4, 0x000 
+addi x5, x5, 0x000     
+addi x6, x6, 0x000      
+addi x7, x7, 0x180      
+addi x8, x8, 0x180  
 
 addi x0, x0, 0 
 addi x0, x0, 0 

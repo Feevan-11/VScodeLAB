@@ -45,7 +45,7 @@ def main():
     mif_dir = os.path.join(script_dir, "mif")
     coe_dir = os.path.join(script_dir, "coe")
 
-    names = ["ROM","GM0","GM1"]
+    names = ["MAIN_ROM","MAC_GM1"]
     for name in names:
         mif_file = os.path.join(mif_dir, f"{name}.mif")
         coe_file = os.path.join(coe_dir, f"{name}.coe")
@@ -56,7 +56,7 @@ def ETHSG():
     mif_dir = os.path.join(script_dir, "mif")
     coe_dir = os.path.join(script_dir, "coe")
 
-    names = ["ETH_SG0","CHECK","ETH_SG1","MAC"]
+    names = ["ETH_SG0","ETH_TEST","test","MAC_GM1"]
     for name in names:
         mif_file = os.path.join(mif_dir, f"{name}.mif")
         coe_file = os.path.join(coe_dir, f"{name}.coe")
