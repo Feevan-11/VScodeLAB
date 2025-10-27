@@ -95,8 +95,8 @@ MPU_REG          = 0xFF005000
 URAT             = 0xFF006000
 
 MAC_START  = DDR0_START
-MAC_LENTH  = 1000
-MAC_END    = DDR0_START + (MAC_LENTH * 100)
+MAC_LENTH  = 640
+MAC_END    = DDR0_START + (MAC_LENTH * 9) +64
 DATA_START = MAC_START + 64
 
 
@@ -114,13 +114,13 @@ def main():
         f0.write("; --- SEGMENT 1 ---" +"\n")   
         f0.write("x1 0x"  + f"{(ethdma0_config          & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x2 0x"  + f"{(ethdma1_config          & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x3 0x"  + f"{(0x00001008              & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x4 0x"  + f"{(0x00001000              & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x5 0x"  + f"{(DDR0_START              & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x6 0x"  + f"{(SGMEM_ETHDMA0_BASE      & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x3 0x"  + f"{(0x00000000              & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x4 0x"  + f"{(0x00000000              & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x5 0x"  + f"{(0                       & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x6 0x"  + f"{(0                       & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x7 0x"  + f"{(0                       & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x8 0x"  + f"{(0x40000100              & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x9 0x"  + f"{(SGMEM_ETHDMA1_BASE      & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x8 0x"  + f"{(0                       & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x9 0x"  + f"{(0                       & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x10 0x" + f"{(0                       & 0xFFFFFFFF):08x}"+"\n")
 
         f0.write("; --- SEGMENT 2 ---" +"\n")
@@ -185,9 +185,9 @@ def main():
 
         f0.write("; --- SEGMENT 7 ---" +"\n")
         f0.write("x9  0x"  + f"{(0     & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x16 0x"  + f"{(0     & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x17 0x"  + f"{(0     & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x18 0x"  + f"{(0     & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x16 0x"  + f"{(1     & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x17 0x"  + f"{(2     & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x18 0x"  + f"{(3     & 0xFFFFFFFF):08x}"+"\n")
 
         f0.write("; --- SEGMENT 8 ---" +"\n")
         f0.write("x1 0x"  + f"{(CDMA0_config    & 0xFFFFFFFF):08x}"+"\n")

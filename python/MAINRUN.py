@@ -1,4 +1,4 @@
-import macT
+import MAC
 import asm_generate
 import main_txt
 import hex_to_bin 
@@ -7,7 +7,7 @@ import translator
 import tablemd
 
 if __name__ == "__main__":
-    macT.main()
+    MAC.main()
     main_txt.main()
     asm_generate.main()
     translator.main()
