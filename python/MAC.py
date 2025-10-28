@@ -118,7 +118,7 @@ def main():
     A = 0
     for i in range(9):
         MAC_DA   =   0x80000000
-        MAC_SA   =   0xFFFFFFFF
+        MAC_SA   =   0x80000000
         STYE     =   0x1
         DATA_DA  =   0xC4000000
         DATA_BBT =   576
