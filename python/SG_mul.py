@@ -1,7 +1,7 @@
 import  os
 import  config
 import  asm_generate
-import  loop
+#import  loop
 import  translator
 import  merge_mif_files
 
@@ -486,24 +486,24 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
         DMA1_REG_base = DMA7_config
         DMA0_SG       = SGMEM_DMA6_BASE
         DMA1_SG       = SGMEM_DMA7_BASE
-    elif MPU_ID == 4:
-        data0_in      = Data_Mem8
-        data1_in      = Data_Mem9
-        data0_out     = Data_Mem8 + 0x100000
-        data1_out     = Data_Mem9 + 0x100000
-        DMA0_REG_base = DMA8_config
-        DMA1_REG_base = DMA9_config
-        DMA0_SG       = SGMEM_DMA8_BASE
-        DMA1_SG       = SGMEM_DMA9_BASE
-    elif MPU_ID == 5:
-        data0_in      = Data_Mem10
-        data1_in      = Data_Mem11
-        data0_out     = Data_Mem10 + 0x100000
-        data1_out     = Data_Mem11 + 0x100000
-        DMA0_REG_base = DMA10_config
-        DMA1_REG_base = DMA11_config
-        DMA0_SG       = SGMEM_DMA10_BASE
-        DMA1_SG       = SGMEM_DMA11_BASE
+    # elif MPU_ID == 4:
+        # data0_in      = Data_Mem8
+        # data1_in      = Data_Mem9
+        # data0_out     = Data_Mem8 + 0x100000
+        # data1_out     = Data_Mem9 + 0x100000
+        # DMA0_REG_base = DMA8_config
+        # DMA1_REG_base = DMA9_config
+        # DMA0_SG       = SGMEM_DMA8_BASE
+        # DMA1_SG       = SGMEM_DMA9_BASE
+    # elif MPU_ID == 5:
+        # data0_in      = Data_Mem10
+        # data1_in      = Data_Mem11
+        # data0_out     = Data_Mem10 + 0x100000
+        # data1_out     = Data_Mem11 + 0x100000
+        # DMA0_REG_base = DMA10_config
+        # DMA1_REG_base = DMA11_config
+        # DMA0_SG       = SGMEM_DMA10_BASE
+        # DMA1_SG       = SGMEM_DMA11_BASE
     else:
         print(f"ERRO")
 
@@ -619,10 +619,10 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
     name0 = "SG"
     txt_dir = os.path.join(script_dir,"txt")
     SG_file0 = os.path.join(txt_dir, f"{name0}.txt")
-    SG_LOOP_file0 = os.path.join(txt_dir, f"{name0}LOOP.txt")
+    #SG_LOOP_file0 = os.path.join(txt_dir, f"{name0}LOOP.txt")
     name1 = "SA"   
     SA_file1 = os.path.join(txt_dir, f"{name1}.txt")
-    SA_LOOP_file1 = os.path.join(txt_dir, f"{name1}LOOP.txt")
+    #SA_LOOP_file1 = os.path.join(txt_dir, f"{name1}LOOP.txt")
 
 
     DMA0_S2MM_len = 64*len(descriptors_DMA0_S2MM)
@@ -656,6 +656,7 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
         f0.write("x15 0x" + f"{(DMA1_SG            & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x16 0x" + f"{(DMA1_len           & 0xFFFFFFFF):08x}"+"\n")
 
+
     def descriptors(len):
         ds_x1 = (len/45) 
         ds_x1 = int(ds_x1)
@@ -665,19 +666,19 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
         cd_x1 = int(cd_x1)
         return cd_x1
 
-    with open(SG_LOOP_file0, 'w') as f0_L:
-        f0_L.write("; --- SEGMENT 1 ---" +"\n")
-        ds_x1 = descriptors(CDMA0_len)
-        ds_x2 = descriptors(DMA0_len)
-        f0_L.write("x1 0x" + f"{(ds_x1+100 & 0xFFFFFFFF):08x}"+"\n")
-        f0_L.write("x2 0x" + f"{(9 & 0xFFFFFFFF):08x}"+"\n")
+    # with open(SG_LOOP_file0, 'w') as f0_L:
+        # f0_L.write("; --- SEGMENT 1 ---" +"\n")
+        # ds_x1 = descriptors(CDMA0_len)
+        # ds_x2 = descriptors(DMA0_len)
+        # f0_L.write("x1 0x" + f"{(ds_x1+100 & 0xFFFFFFFF):08x}"+"\n")
+        # f0_L.write("x2 0x" + f"{(9 & 0xFFFFFFFF):08x}"+"\n")
     
-    with open(SA_LOOP_file1, 'w') as f1_L:
-        f1_L.write(f"; --- SEGMENT 1 ---" +"\n") #CDMA
-        CDMA_X1 = cdma(A_ROWS,A_COLS)
-        f1_L.write("x1 0x" + f"{(200 & 0xFFFFFFFF):08x}"+"\n")
-        f1_L.write(f"; --- SEGMENT 2 ---" +"\n") #DMA
-        f1_L.write("x1 0x" + f"{(100 & 0xFFFFFFFF):08x}"+"\n")
+    # with open(SA_LOOP_file1, 'w') as f1_L:
+        # f1_L.write(f"; --- SEGMENT 1 ---" +"\n") #CDMA
+        # CDMA_X1 = cdma(A_ROWS,A_COLS)
+        # f1_L.write("x1 0x" + f"{(200 & 0xFFFFFFFF):08x}"+"\n")
+        # f1_L.write(f"; --- SEGMENT 2 ---" +"\n") #DMA
+        # f1_L.write("x1 0x" + f"{(100 & 0xFFFFFFFF):08x}"+"\n")
 
     DMA0_MM2S_START = DMA0_SG + DMA0_S2MM_len
     DMA1_MM2S_START = DMA1_SG + DMA1_S2MM_len
@@ -712,8 +713,8 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
         f1.write("x31 0x" +  f"{(0xfff0fff0 & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x28 0x" +  f"{(0xfff0fff0 & 0xFFFFFFFF):08x}"+"\n")
 
-    asm_generate.main()
-    loop.main()
+    asm_generate.main_S()
+    #loop.main()
     print("1")
     translator.SA()
     print("2")
@@ -727,17 +728,18 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
 SGMEM_CDMA0_start     = 0xF4000000
 SGMEM_CDMA1_start     = 0xF4200000
 SGMEM_DMA0_BASE      = 0xF4400000
-SGMEM_DMA1_BASE      = 0xF4800000
-SGMEM_DMA2_BASE      = 0xF4C00000
-SGMEM_DMA3_BASE      = 0xF5000000
-SGMEM_DMA4_BASE      = 0xF5400000
-SGMEM_DMA5_BASE      = 0xF5800000
-SGMEM_DMA6_BASE      = 0xF5C00000
-SGMEM_DMA7_BASE      = 0xF6000000
-SGMEM_DMA8_BASE      = 0xF6400000
-SGMEM_DMA9_BASE      = 0xF6800000
-SGMEM_DMA10_BASE     = 0xF6C00000
-SGMEM_DMA11_BASE     = 0xF7000000
+SGMEM_DMA1_BASE      = 0xF4600000
+SGMEM_DMA2_BASE      = 0xF4800000
+SGMEM_DMA3_BASE      = 0xF4A00000
+SGMEM_DMA4_BASE      = 0xF4C00000
+SGMEM_DMA5_BASE      = 0xF4E00000
+SGMEM_DMA6_BASE      = 0xF5000000
+SGMEM_DMA7_BASE      = 0xF5200000
+SGMEM_ETH_DMA0       = 0xF5400000
+SGMEM_ETH_DMA1       = 0xF5600000
+SGMEM_ETH_DMA2       = 0xF5800000
+SGMEM_ETH_DMA3       = 0xF5A00000
+SGMEM_ETH_DMA4       = 0xF5C00000
 
 CDMA0_config     = 0xFF004400
 CDMA1_config     = 0xFF004440
@@ -782,7 +784,7 @@ def main(AROWS = 16,AB =16,BCOLS = 16,START = 0x00000800, block_width = 16, elem
     global DDR0_START
     global DDR1_START
 
-    MUP_select = 0b111111
+    MUP_select = 0b100000
     bin_str = bin(MUP_select)[2:].zfill(6)
 
     DDR0_START = DDR0_START + START

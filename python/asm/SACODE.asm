@@ -50,7 +50,7 @@ addi x0, x0, 0
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
-lp.setup  x1, 100
+lp.setup  x1, 1000
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
