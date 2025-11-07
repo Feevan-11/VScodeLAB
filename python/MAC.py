@@ -265,6 +265,7 @@ def main_auto(
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     MIF_DIR = os.path.join(script_dir, "mif")
+    MIF_TEST_DIR = os.path.join(script_dir, "mif_test")
     TXT_DIR = os.path.join(script_dir, "txt")
     mif_file = os.path.join(MIF_DIR, f"{MAC_NAME}.mif")
 
@@ -303,7 +304,7 @@ def main_auto(
         f.write("\n")
     print(f"[OK] 头部16进制已写出：{headers_txt_path}")
 
-    out_mif_path = os.path.join(MIF_DIR, f"{MAC_NAME}_with_headers.mif")
+    out_mif_path = os.path.join(MIF_TEST_DIR, f"{MAC_NAME}_with_headers.mif")
     with open(out_mif_path, "w", encoding="utf-8") as f:
         for line in new_mif_lines:
             f.write(line + "\n")

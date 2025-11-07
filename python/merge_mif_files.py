@@ -69,7 +69,7 @@ def main():
     mat_dir = os.path.join(script_dir, "matrix")
     
     name0 = "GM0"
-    name1 = "a_2"
+    name1 = "MATRIX_A"
     mif_file0 = os.path.join(mif_dir, f"{name0}.mif")
     mif_file1 = os.path.join(mat_dir, f"{name1}.mif")
 
@@ -78,7 +78,7 @@ def main():
     merge_and_replace(mif_file0, mif_file1)
     
     name2 = "GM1"
-    name3 = "b_2"
+    name3 = "MATRIX_B"
     mif_file2 = os.path.join(mif_dir, f"{name2}.mif")
     mif_file3 = os.path.join(mat_dir, f"{name3}.mif")
     # The second group：GM11.mif + b_2.mif

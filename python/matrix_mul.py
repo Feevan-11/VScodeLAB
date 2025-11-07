@@ -1,6 +1,7 @@
 import numpy as np
 import os
 import struct
+import MAC
 
 def matrix_to_mif(matrix, filename, split_by, block_size, internal_order, HER=True):
     """生成符合要求的MIF文件，支持多种数据类型"""
@@ -128,6 +129,15 @@ def float32_to_bfloat16(arr):
     
     return bf16_data
 
+Data_Mem0        = 0xC0000000
+Data_Mem1        = 0xC2000000
+Data_Mem2        = 0xC4000000
+Data_Mem3        = 0xC6000000
+Data_Mem4        = 0xC8000000
+Data_Mem5        = 0xCA000000
+Data_Mem6        = 0xCC000000
+Data_Mem7        = 0xCE000000
+
 def main(random=False, A_row=32, A__B=32, B_col=32, A_type = 3,B_type = 0,COUNT = 0):
     # 配置参数
     random_mode = random  # True=随机矩阵，False=自定义矩阵
@@ -183,6 +193,7 @@ def main(random=False, A_row=32, A__B=32, B_col=32, A_type = 3,B_type = 0,COUNT 
     
     script_dir = os.path.dirname(os.path.abspath(__file__))
     matrix_dir = os.path.join(script_dir, "matrix")
+    mif_dir = os.path.join(script_dir, "mif")
     os.makedirs(matrix_dir, exist_ok=True)
     
     # 特殊处理BF16类型
@@ -203,8 +214,8 @@ def main(random=False, A_row=32, A__B=32, B_col=32, A_type = 3,B_type = 0,COUNT 
         os.path.join(matrix_dir, f'b_16.mif')
     )
     bin_files = (
-        os.path.join(matrix_dir, f'a_2.mif'),
-        os.path.join(matrix_dir, f'b_2.mif')
+        os.path.join(matrix_dir, f'MATRIX_A.mif'),
+        os.path.join(matrix_dir, f'MATRIX_B.mif')
     )
     
     # 生成矩阵文件
@@ -223,6 +234,9 @@ def main(random=False, A_row=32, A__B=32, B_col=32, A_type = 3,B_type = 0,COUNT 
     
     C = np.matmul(A.astype(np.float64), B.astype(np.float64))
     
+    MAC.main_auto(Data_Mem0,Data_Mem0,1,"MATRIX_A",10,Data_Mem0)
+    MAC.main_auto(Data_Mem0,Data_Mem0,1,"MATRIX_B",10,Data_Mem1)
+
     # 保存十进制结果
     np.savetxt(os.path.join(matrix_dir, f'c_{COUNT}.txt'), C, fmt='%.7g')
     
