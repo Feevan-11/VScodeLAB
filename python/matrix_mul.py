@@ -1,7 +1,7 @@
 import numpy as np
 import os
 import struct
-import MAC
+
 
 def matrix_to_mif(matrix, filename, split_by, block_size, internal_order, HER=True):
     """生成符合要求的MIF文件，支持多种数据类型"""
@@ -168,10 +168,10 @@ def main(random=False, A_row=32, A__B=32, B_col=32, A_type = 3,B_type = 0,COUNT 
         B_datatype = "bf16"
     # 根据数据类型选择对应的numpy类型和块大小
     dtype_map = {
-        "fp16": (np.float16, 16),
-        "fp32": (np.float32, 8),
-        "fp64": (np.float64, 4),
-        "bf16": (np.float32, 16)  # 处理时使用float32，存储时转换为bfloat16
+        "fp16": (np.float16, 32),
+        "fp32": (np.float32, 16),
+        "fp64": (np.float64, 8),
+        "bf16": (np.float32, 32)  # 处理时使用float32，存储时转换为bfloat16
     }
     
     A_np_type, A_block_size = dtype_map.get(A_datatype, (np.float16, 16))
@@ -214,8 +214,8 @@ def main(random=False, A_row=32, A__B=32, B_col=32, A_type = 3,B_type = 0,COUNT 
         os.path.join(matrix_dir, f'b_16.mif')
     )
     bin_files = (
-        os.path.join(matrix_dir, f'MATRIX_A.mif'),
-        os.path.join(matrix_dir, f'MATRIX_B.mif')
+        os.path.join(mif_dir, 'MATRIX_A.mif'),
+        os.path.join(mif_dir, 'MATRIX_B.mif')
     )
     
     # 生成矩阵文件
@@ -234,8 +234,6 @@ def main(random=False, A_row=32, A__B=32, B_col=32, A_type = 3,B_type = 0,COUNT 
     
     C = np.matmul(A.astype(np.float64), B.astype(np.float64))
     
-    MAC.main_auto(Data_Mem0,Data_Mem0,1,"MATRIX_A",10,Data_Mem0)
-    MAC.main_auto(Data_Mem0,Data_Mem0,1,"MATRIX_B",10,Data_Mem1)
 
     # 保存十进制结果
     np.savetxt(os.path.join(matrix_dir, f'c_{COUNT}.txt'), C, fmt='%.7g')
@@ -276,4 +274,4 @@ def main(random=False, A_row=32, A__B=32, B_col=32, A_type = 3,B_type = 0,COUNT 
 
 if __name__ == "__main__":
     # 支持的数据类型: 0:"fp16", 1:"fp32", 2:"fp64", 3:"bf16"
-    main(random=False, A_row=32, A__B=32, B_col=32, A_type = 1,B_type = 0)
+    main(random=False, A_row=32, A__B=32, B_col=32, A_type = 1,B_type = 0,COUNT = 0)

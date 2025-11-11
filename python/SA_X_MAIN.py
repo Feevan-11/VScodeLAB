@@ -5,6 +5,8 @@ import  translator
 import  merge_mif_files
 import  MAC
 import  hex_to_bin
+import  matrix_mul
+
 
 def make_sg_cdma_descriptor(
     next_desc_addr,
@@ -448,14 +450,16 @@ def flat(descriptor_list):
 
     return flattened
 
-def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element_size = 2, APP0 = 0,
-       DDR0_START = 0x0, DDR1_START = 0x0, CDMA0_reg_base= 0x0, CDMA1_reg_base= 0x0,  MPU_ID = 0):
+WRITE_BACK = 0x10000
+
+def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A_TYPE = 0,B_TYPE = 0, MPU_ID = 0,
+          mac_da = 0xF0000000 , flag = 0x419):
 
     if MPU_ID == 0:
         data0_in      = Data_Mem0
         data1_in      = Data_Mem1
-        data0_out     = Data_Mem0 + 0x100000
-        data1_out     = Data_Mem1 + 0x100000
+        data0_out     = Data_Mem0 + WRITE_BACK
+        data1_out     = Data_Mem1 + WRITE_BACK
         DMA0_REG_base = DMA0_config
         DMA1_REG_base = DMA1_config
         DMA0_SG       = SGMEM_DMA0_BASE
@@ -463,8 +467,8 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
     elif MPU_ID == 1:
         data0_in      = Data_Mem2
         data1_in      = Data_Mem3
-        data0_out     = Data_Mem2 + 0x100000
-        data1_out     = Data_Mem3 + 0x100000
+        data0_out     = Data_Mem2 + WRITE_BACK
+        data1_out     = Data_Mem3 + WRITE_BACK
         DMA0_REG_base = DMA2_config
         DMA1_REG_base = DMA3_config
         DMA0_SG       = SGMEM_DMA2_BASE
@@ -472,8 +476,8 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
     elif MPU_ID == 2:
         data0_in      = Data_Mem4
         data1_in      = Data_Mem5
-        data0_out     = Data_Mem4 + 0x100000
-        data1_out     = Data_Mem5 + 0x100000
+        data0_out     = Data_Mem4 + WRITE_BACK
+        data1_out     = Data_Mem5 + WRITE_BACK
         DMA0_REG_base = DMA4_config
         DMA1_REG_base = DMA5_config
         DMA0_SG       = SGMEM_DMA4_BASE
@@ -481,35 +485,17 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
     elif MPU_ID == 3:
         data0_in      = Data_Mem6
         data1_in      = Data_Mem7
-        data0_out     = Data_Mem6 + 0x100000
-        data1_out     = Data_Mem7 + 0x100000
+        data0_out     = Data_Mem6 + WRITE_BACK
+        data1_out     = Data_Mem7 + WRITE_BACK
         DMA0_REG_base = DMA6_config
         DMA1_REG_base = DMA7_config
         DMA0_SG       = SGMEM_DMA6_BASE
         DMA1_SG       = SGMEM_DMA7_BASE
-    # elif MPU_ID == 4:
-        # data0_in      = Data_Mem8
-        # data1_in      = Data_Mem9
-        # data0_out     = Data_Mem8 + 0x100000
-        # data1_out     = Data_Mem9 + 0x100000
-        # DMA0_REG_base = DMA8_config
-        # DMA1_REG_base = DMA9_config
-        # DMA0_SG       = SGMEM_DMA8_BASE
-        # DMA1_SG       = SGMEM_DMA9_BASE
-    # elif MPU_ID == 5:
-        # data0_in      = Data_Mem10
-        # data1_in      = Data_Mem11
-        # data0_out     = Data_Mem10 + 0x100000
-        # data1_out     = Data_Mem11 + 0x100000
-        # DMA0_REG_base = DMA10_config
-        # DMA1_REG_base = DMA11_config
-        # DMA0_SG       = SGMEM_DMA10_BASE
-        # DMA1_SG       = SGMEM_DMA11_BASE
+
     else:
         print(f"ERRO")
 
     A_ROWS = A__ROWS
-    A_COLS = A__COLS
     B_ROWS = B__ROWS
     B_COLS = B__COLS
 
@@ -522,7 +508,7 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
         block_width=block_width,
         Shared_Men2_base=data0_out,
         element_size=element_size,
-        APP0 = APP0
+        APP0 = 0
     )
     descriptors_DMA1_S2MM = generate_dma1_descriptors_for_S2MM(
         A_rows=A_ROWS,
@@ -530,7 +516,7 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
         block_width=block_width,
         Shared_Men3_base=data1_out,
         element_size=element_size,
-        APP0 = APP0
+        APP0 = 0
     )
     descriptors_DMA0_MM2S = generate_dma0_descriptors_for_MM2S(
         A_rows=A_ROWS,
@@ -539,7 +525,7 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
         block_width=block_width,
         Shared_Men0_base=data0_in,
         element_size=element_size,
-        APP0 = APP0
+        APP0 = 0
     )
     descriptors_DMA1_MM2S = generate_dma1_descriptors_for_MM2S(
         A_rows=A_ROWS,
@@ -548,7 +534,7 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
         block_width=block_width,
         Shared_Men1_base=data1_in,
         element_size=element_size,
-        APP0 = APP0
+        APP0 = 0
     )
     
 
@@ -643,12 +629,19 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
     translator.SA_ID() 
 
     hex_to_bin.dmasg()
+
+    matrix_mul.main(False ,A__ROWS,B__COLS,B__COLS, A_TYPE, A_TYPE , MPU_ID)
     
     global ROM_START
 
-    MAC.main_auto(ROM_START,ROM_START,1,"SA",10,ROM_START)
-    MAC.main_auto(ROM_START,ROM_START,1,"DMA0",10,DMA0_SG)
-    MAC.main_auto(ROM_START,ROM_START,1,"DMA1",10,DMA1_SG)
+    'MATRIX_A.mif'
+    'MATRIX_B.mif'
+
+    MAC.main_auto(flag,mac_da,1,"SA",16,ROM_START)
+    MAC.main_auto(flag,mac_da,1,"DMA0",16,DMA0_SG)
+    MAC.main_auto(flag,mac_da,1,"DMA1",16,DMA1_SG)
+    MAC.main_auto(flag,mac_da,1,'MATRIX_A',16,data0_in)
+    MAC.main_auto(flag,mac_da,1,'MATRIX_B',16,data1_in)
     #merge_mif_files.SA()
 
     ROM_START = ROM_START + 64*10
@@ -664,11 +657,6 @@ SGMEM_DMA4_BASE      = 0xF4C00000
 SGMEM_DMA5_BASE      = 0xF4E00000
 SGMEM_DMA6_BASE      = 0xF5000000
 SGMEM_DMA7_BASE      = 0xF5200000
-SGMEM_ETH_DMA0       = 0xF5400000
-SGMEM_ETH_DMA1       = 0xF5600000
-SGMEM_ETH_DMA2       = 0xF5800000
-SGMEM_ETH_DMA3       = 0xF5A00000
-SGMEM_ETH_DMA4       = 0xF5C00000
 
 CDMA0_config     = 0xFF004400
 CDMA1_config     = 0xFF004440
@@ -680,10 +668,7 @@ DMA4_config      = 0xFF001000
 DMA5_config      = 0xFF001400
 DMA6_config      = 0xFF001800
 DMA7_config      = 0xFF001C00
-DMA8_config      = 0xFF002000
-DMA9_config      = 0xFF002400
-DMA10_config     = 0xFF002800
-DMA11_config     = 0xFF002C00
+
 
 DDR0_START       = 0x40000000
 DDR1_START       = 0x80000000
@@ -695,28 +680,14 @@ Data_Mem4        = 0xC8000000
 Data_Mem5        = 0xCA000000
 Data_Mem6        = 0xCC000000
 Data_Mem7        = 0xCE000000
-Data_Mem8        = 0xD0000000
-Data_Mem9        = 0xD2000000
-Data_Mem10       = 0xD4000000
-Data_Mem11       = 0xD6000000
 
-ALL_SG_descriptors = []
 ROM_START   = 0xF0001600
 
-def main(AROWS = 16,AB =16,BCOLS = 16,START = 0x00000800, block_width = 16, element_size = 2, APP0 = 0):
+def main(matrix_List= [[16,16,16,32,2,0,0],[16,16,16,32,2,0,0],[16,16,16,32,2,0,0],[16,16,16,32,2,0,0]], MPU_ID = '1000',
+         mac_da = 0xF0000000 , flag = 0x419):
 
 
-    global ALL_SG_descriptors
-    global SGMEM_CDMA0_start
-    global SGMEM_CDMA1_start
-    global ALL_SG_strat_DDR
-    global DDR0_START
-    global DDR1_START
-
-    MUP_select = 0b1000
-    bin_str = bin(MUP_select)[2:].zfill(4)
-
-    DDR0_START = DDR0_START + START
+    bin_str = MPU_ID
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     MIF_DIR = os.path.join(script_dir, "mif")
@@ -733,33 +704,34 @@ def main(AROWS = 16,AB =16,BCOLS = 16,START = 0x00000800, block_width = 16, elem
 
     
     if bin_str[0] == '1':
-        op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
-        DDR0_START = DDR0_START , DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config,MPU_ID = 0)
+        op_SA(A__ROWS=matrix_List[0][0],B__ROWS=matrix_List[0][1],B__COLS=matrix_List[0][2], block_width = matrix_List[0][3], 
+              element_size = matrix_List[0][4],A_TYPE = matrix_List[0][5],B_TYPE = matrix_List[0][6], MPU_ID = 0,mac_da = mac_da , flag = flag)
     
     if bin_str[1] == '1':
-        op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
-        DDR0_START = DDR0_START , DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config,MPU_ID = 1)
+        op_SA(A__ROWS=matrix_List[1][0],B__ROWS=matrix_List[1][1],B__COLS=matrix_List[1][2], block_width = matrix_List[1][3], 
+                element_size = matrix_List[1][4],A_TYPE = matrix_List[1][5],B_TYPE = matrix_List[1][6], MPU_ID = 1,mac_da = mac_da ,flag = flag)
   
     if bin_str[2] == '1':
-        op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
-        DDR0_START = DDR0_START , DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config,MPU_ID = 2)
+        op_SA(A__ROWS=matrix_List[2][0],B__ROWS=matrix_List[2][1],B__COLS=matrix_List[2][2], block_width = matrix_List[2][3], 
+              element_size = matrix_List[2][4],A_TYPE = matrix_List[2][5],B_TYPE = matrix_List[2][6], MPU_ID = 2,mac_da = mac_da ,flag = flag)
     
     if bin_str[3] == '1':
-        op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
-        DDR0_START = DDR0_START , DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config, MPU_ID = 3)
+        op_SA(A__ROWS=matrix_List[3][0],B__ROWS=matrix_List[3][1],B__COLS=matrix_List[3][2], block_width = matrix_List[3][3], 
+              element_size = matrix_List[3][4],A_TYPE = matrix_List[3][5],B_TYPE = matrix_List[3][6], MPU_ID = 3,mac_da = mac_da ,flag = flag)
    
     #if bin_str[4] == '1':
-    #    op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
+    #    op_SA(A__ROWS=matrix_List[0][0],A__COLS=matrix_List[0][0],B__ROWS=matrix_List[0][0],B__COLS=matrix_List[0][0], block_width = block_width, element_size = element_size, APP0 = APP0,
     #    DDR0_START = DDR0_START , DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config,MPU_ID = 4)
     #
     #if bin_str[5] == '1':
-    #    op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
+    #    op_SA(A__ROWS=matrix_List[0][0],A__COLS=matrix_List[0][0],B__ROWS=matrix_List[0][0],B__COLS=matrix_List[0][0], block_width = block_width, element_size = element_size, APP0 = APP0,
     #    DDR0_START = DDR0_START , DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config,MPU_ID = 5)
 
     
 
 if __name__ == "__main__":
-    main(AROWS = 16,AB =16,BCOLS = 16,START = 0x00004000 , block_width = 16, element_size = 2, APP0 = 0 )
+    main(matrix_List = [[16,16,16,32,2,0,0],[16,16,16,32,2,0,0],[16,16,16,32,2,0,0],[16,16,16,32,2,0,0]] , MPU_ID = '1000',
+         mac_da = 0xF0000000 , flag = 0x419)
 
 
 

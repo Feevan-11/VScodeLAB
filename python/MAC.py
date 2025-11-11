@@ -27,11 +27,11 @@ def u32(x: int) -> int:
 
 # ===================== 题主给出的帧头生成函数 =====================
 
-def make_mac_head(mac_da: int, mac_sa: int, stye: int, data_da: int, data_bbt: int) -> List[int]:
+def make_mac_head(mac_flag: int, mac_da: int, stye: int, data_da: int, data_bbt: int) -> List[int]:
     """生成 16×32bit 的 MAC 头部（前 5 项有效，其余补 0）。"""
     words = [0] * 16
-    words[0] = u32(mac_da)
-    words[1] = u32(mac_sa)
+    words[0] = u32(mac_flag)
+    words[1] = u32(mac_da)
     words[2] = u32(stye)
     words[3] = u32(data_da)
     words[4] = u32(data_bbt)
@@ -122,8 +122,8 @@ def segment_indices(total: int, seg_list: List[int]) -> List[Tuple[int, int]]:
 def build_outputs(
     mif_lines: List[str],
     seg_list: List[int],
+    flag: int,
     mac_da: int,
-    mac_sa: int,
     stye: int,
     base_addr: int,
     data_bbt_fixed: int = None
@@ -153,7 +153,7 @@ def build_outputs(
         data_bbt = data_bbt_fixed if data_bbt_fixed is not None else data_bytes
 
         # 生成帧头 words
-        words = make_mac_head(mac_da=mac_da, mac_sa=mac_sa, stye=stye,
+        words = make_mac_head(mac_flag=flag, mac_da=mac_da, stye=stye,
                               data_da=data_da, data_bbt=data_bbt)
 
         # 写入十六进制头（每个word一行）
@@ -191,14 +191,15 @@ def main():
 
     BASE_ADDR = 0x10000000
 
-    MAC_DA = 0x11223344   
-    MAC_SA = 0xAABBCCDD   
+    flag = 0x11223344   
+    MAC_DA = 0xAABBCCDD   
     STYE   = 0x00000001   
 
     DATA_BBT_FIXED = None
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     MIF_DIR = os.path.join(script_dir, "mif")
+    MIF_O_DIR = os.path.join(script_dir, "mif_test")
     TXT_DIR = os.path.join(script_dir, "txt")
     mif_file = os.path.join(MIF_DIR, f"{MAC_NAME}.mif")
 
@@ -218,8 +219,8 @@ def main():
     headers_hex_lines, new_mif_lines = build_outputs(
         mif_lines=mif_lines,
         seg_list=segments_to_use,
+        flag=flag,
         mac_da=MAC_DA,
-        mac_sa=MAC_SA,
         stye=STYE,
         base_addr=BASE_ADDR,
         data_bbt_fixed=DATA_BBT_FIXED,
@@ -241,8 +242,8 @@ def main():
     print(f"[INFO] 总帧数：{len(segments_to_use)}，总行数：{len(new_mif_lines)}")
 
 def main_auto(
-        MAC_DA = 0x11223344,
-        MAC_SA = 0xAABBCCDD,
+        flag = 0x11223344,
+        MAC_DA = 0xAABBCCDD,
         STYE   = 0x00000001,
         MAC_NAME = "MAC",
         MAX_LINES_PER_FRAME = 30,
@@ -257,8 +258,8 @@ def main_auto(
 
     BASE_ADDR = BASE_ADDR
 
+    flag = flag   
     MAC_DA = MAC_DA   
-    MAC_SA = MAC_SA   
     STYE   = STYE   
 
     DATA_BBT_FIXED = None
@@ -284,8 +285,8 @@ def main_auto(
     headers_hex_lines, new_mif_lines = build_outputs(
         mif_lines=mif_lines,
         seg_list=segments_to_use,
+        flag=flag,
         mac_da=MAC_DA,
-        mac_sa=MAC_SA,
         stye=STYE,
         base_addr=BASE_ADDR,
         data_bbt_fixed=DATA_BBT_FIXED

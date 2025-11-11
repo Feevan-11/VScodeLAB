@@ -1,9 +1,9 @@
 import  os
-import  config
 import  asm_generate
 import  loop
 import  translator
-import  merge_mif_files
+import  tablemd
+import  mif_coe
 
 
 
@@ -204,6 +204,10 @@ def main():
 
 if __name__ == "__main__":
     main()
+    asm_generate.main()
+    translator.main()
+    mif_coe.main()
+    tablemd.main()
 
 
 
