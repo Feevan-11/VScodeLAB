@@ -242,7 +242,7 @@ def main():
     print(f"[INFO] 总帧数：{len(segments_to_use)}，总行数：{len(new_mif_lines)}")
 
 def main_auto(
-        flag = 0x11223344,
+        flag = 0xCCA41704,
         MAC_DA = 0xAABBCCDD,
         STYE   = 0x00000001,
         MAC_NAME = "MAC",

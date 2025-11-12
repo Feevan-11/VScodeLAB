@@ -5,20 +5,32 @@ from typing import Tuple, List
 
 class SparseMatrixCompressor:
     def __init__(self):
+        # 数据类型映射
+        self.dtype_map = {
+            'FP16': 0,  # 2字节
+            'BF16': 1,  # 2字节  
+            'FP32': 2,  # 4字节
+            'FP64': 3   # 8字节
+        }
+        self.dtype_sizes = {'FP16': 2, 'BF16': 2, 'FP32': 4, 'FP64': 8}
+        
         # 计算粒度（每次处理32行）
         self.granularity = 32
         
-    def generate_random_matrix(self, rows: int, cols: int, sparsity: float) -> np.ndarray:
-        """生成随机稀疏矩阵（直接使用FP16格式）"""
-        # 直接创建FP16格式的矩阵
-        matrix = np.zeros((rows, cols), dtype=np.float16)
+    def generate_random_matrix(self, rows: int, cols: int, sparsity: float, 
+                              dtype: str = 'FP16') -> np.ndarray:
+        """生成随机稀疏矩阵"""
+        matrix = np.zeros((rows, cols), dtype=np.float32)
         
         # 根据稀疏度生成非零元素
         nnz_total = int(rows * cols * (1 - sparsity))
         indices = np.random.choice(rows * cols, nnz_total, replace=False)
         
-        # 生成FP16格式的随机值
-        values = np.random.uniform(-1.0, 1.0, nnz_total).astype(np.float16)
+        # 生成随机值（根据不同精度范围）
+        if dtype in ['FP16', 'BF16']:
+            values = np.random.uniform(-1.0, 1.0, nnz_total).astype(np.float32)
+        else:
+            values = np.random.uniform(-100.0, 100.0, nnz_total).astype(np.float32)
             
         # 填充非零元素
         for idx in indices:
@@ -27,9 +39,11 @@ class SparseMatrixCompressor:
             
         return matrix
     
-    def compress_matrix(self, matrix: np.ndarray, is_matrix_b: bool = False) -> List[bytes]:
+    def compress_matrix(self, matrix: np.ndarray, dtype: str, is_matrix_b: bool = False) -> List[bytes]:
         """压缩稀疏矩阵为数据包格式"""
         rows, cols = matrix.shape
+        dtype_code = self.dtype_map[dtype]
+        value_size = self.dtype_sizes[dtype]
         
         packets = []
         
@@ -60,7 +74,7 @@ class SparseMatrixCompressor:
                     total_nnz += nnz_count
             
             # 构建包头
-            header = self._build_header(row_end == rows, 
+            header = self._build_header(dtype_code, row_end == rows, 
                                       is_matrix_b and row_end == rows, 
                                       cols, total_nnz)
             packet_data.extend(header)
@@ -95,12 +109,22 @@ class SparseMatrixCompressor:
             
             packet_data.extend(col_mask_data)
             
-            # 构建非零值序列（FP16）
+            # 构建非零值序列
             value_data = bytearray()
             for info in all_nnz_info[:16]:
                 for val in info['values']:
-                    # FP16转换 - 使用自然顺序（小端序）
-                    value_data.extend(struct.pack('<e', val))  # 直接使用FP16值
+                    if dtype == 'FP16':
+                        # FP16转换 - 使用自然顺序（小端序）
+                        value_data.extend(struct.pack('<e', np.float16(val)))
+                    elif dtype == 'BF16':
+                        # BF16转换 - 取FP32的后2字节（小端序）
+                        val_f32 = np.float32(val)
+                        val_bytes = struct.pack('<f', val_f32)
+                        value_data.extend(val_bytes[2:])  # 取后2字节
+                    elif dtype == 'FP32':
+                        value_data.extend(struct.pack('<f', val))
+                    elif dtype == 'FP64':
+                        value_data.extend(struct.pack('<d', val))
             
             packet_data.extend(value_data)
             
@@ -108,14 +132,14 @@ class SparseMatrixCompressor:
         
         return packets
     
-    def _build_header(self, rlast: bool, clast: bool, 
+    def _build_header(self, dtype: int, rlast: bool, clast: bool, 
                      total_cols: int, nnz_count: int) -> bytes:
         """构建包头（5字节）"""
-        # 类型(2bit)固定为0（FP16） + RLast(1bit) + CLast(1bit) + 列掩码(12bit) + 值数量(16bit)
+        # 类型(2bit) + RLast(1bit) + CLast(1bit) + 列掩码(12bit) + 值数量(16bit)
         header = bytearray(5)
         
-        # 第一个字节：类型(2bit)=0 + RLast(1bit) + CLast(1bit) + 列掩码高4bit
-        first_byte = 0  # FP16类型
+        # 第一个字节：类型(2bit) + RLast(1bit) + CLast(1bit) + 列掩码高4bit
+        first_byte = (dtype & 0x03) << 6
         first_byte |= (1 if rlast else 0) << 5
         first_byte |= (1 if clast else 0) << 4
         first_byte |= (total_cols >> 8) & 0x0F
@@ -181,23 +205,22 @@ def main():
     # 矩阵参数
     matrix_size = 32  # 32×32矩阵
     sparsity = 0.9    # 90%稀疏度
+    dtype = 'FP16'     # 使用FP16精度
     
     print("生成随机稀疏矩阵...")
-    # 生成矩阵A和B（直接使用FP16格式）
-    matrix_a = compressor.generate_random_matrix(matrix_size, matrix_size, sparsity)
-    matrix_b = compressor.generate_random_matrix(matrix_size, matrix_size, sparsity)
+    # 生成矩阵A和B
+    matrix_a = compressor.generate_random_matrix(matrix_size, matrix_size, sparsity, dtype)
+    matrix_b = compressor.generate_random_matrix(matrix_size, matrix_size, sparsity, dtype)
     
     print(f"矩阵A非零元素: {np.count_nonzero(matrix_a)}")
     print(f"矩阵B非零元素: {np.count_nonzero(matrix_b)}")
-    print(f"矩阵A数据类型: {matrix_a.dtype}")
-    print(f"矩阵B数据类型: {matrix_b.dtype}")
     
     # 压缩矩阵
     print("压缩矩阵A...")
-    packets_a = compressor.compress_matrix(matrix_a, is_matrix_b=False)
+    packets_a = compressor.compress_matrix(matrix_a, dtype, is_matrix_b=False)
     
     print("压缩矩阵B...")
-    packets_b = compressor.compress_matrix(matrix_b, is_matrix_b=True)
+    packets_b = compressor.compress_matrix(matrix_b, dtype, is_matrix_b=True)
     
     # 写入数据包文件
     print("写入数据包文件...")

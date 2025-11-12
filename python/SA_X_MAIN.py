@@ -453,7 +453,7 @@ def flat(descriptor_list):
 WRITE_BACK = 0x10000
 
 def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A_TYPE = 0,B_TYPE = 0, MPU_ID = 0,
-          mac_da = 0xF0000000 , flag = 0x419):
+          mac_da = 0xF0000000 , flag = 0xCCA41704):
 
     if MPU_ID == 0:
         data0_in      = Data_Mem0
@@ -634,9 +634,6 @@ def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A
     
     global ROM_START
 
-    'MATRIX_A.mif'
-    'MATRIX_B.mif'
-
     MAC.main_auto(flag,mac_da,1,"SA",16,ROM_START)
     MAC.main_auto(flag,mac_da,1,"DMA0",16,DMA0_SG)
     MAC.main_auto(flag,mac_da,1,"DMA1",16,DMA1_SG)
@@ -681,10 +678,10 @@ Data_Mem5        = 0xCA000000
 Data_Mem6        = 0xCC000000
 Data_Mem7        = 0xCE000000
 
-ROM_START   = 0xF0001600
+ROM_START   = 0xF0001300
 
 def main(matrix_List= [[16,16,16,32,2,0,0],[16,16,16,32,2,0,0],[16,16,16,32,2,0,0],[16,16,16,32,2,0,0]], MPU_ID = '1000',
-         mac_da = 0xF0000000 , flag = 0x419):
+         mac_da = 0xF0000000 , flag = 0xCCA41704):
 
 
     bin_str = MPU_ID
@@ -731,7 +728,7 @@ def main(matrix_List= [[16,16,16,32,2,0,0],[16,16,16,32,2,0,0],[16,16,16,32,2,0,
 
 if __name__ == "__main__":
     main(matrix_List = [[16,16,16,32,2,0,0],[16,16,16,32,2,0,0],[16,16,16,32,2,0,0],[16,16,16,32,2,0,0]] , MPU_ID = '1000',
-         mac_da = 0xF0000000 , flag = 0x419)
+         mac_da = 0x80000000 , flag = 0xCCA41704)
 
 
 

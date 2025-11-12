@@ -450,11 +450,12 @@ def flat(descriptor_list):
 def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element_size = 2, APP0 = 0,
        DDR0_START = 0x0, DDR1_START = 0x0, CDMA0_reg_base= 0x0, CDMA1_reg_base= 0x0,  MPU_ID = 0):
 
+    out = 0x10000
     if MPU_ID == 0:
         data0_in      = Data_Mem0
         data1_in      = Data_Mem1
-        data0_out     = Data_Mem0 + 0x100000
-        data1_out     = Data_Mem1 + 0x100000
+        data0_out     = Data_Mem0 + out
+        data1_out     = Data_Mem1 + out
         DMA0_REG_base = DMA0_config
         DMA1_REG_base = DMA1_config
         DMA0_SG       = SGMEM_DMA0_BASE
@@ -462,8 +463,8 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
     elif MPU_ID == 1:
         data0_in      = Data_Mem2
         data1_in      = Data_Mem3
-        data0_out     = Data_Mem2 + 0x100000
-        data1_out     = Data_Mem3 + 0x100000
+        data0_out     = Data_Mem2 + out
+        data1_out     = Data_Mem3 + out
         DMA0_REG_base = DMA2_config
         DMA1_REG_base = DMA3_config
         DMA0_SG       = SGMEM_DMA2_BASE
@@ -471,8 +472,8 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
     elif MPU_ID == 2:
         data0_in      = Data_Mem4
         data1_in      = Data_Mem5
-        data0_out     = Data_Mem4 + 0x100000
-        data1_out     = Data_Mem5 + 0x100000
+        data0_out     = Data_Mem4 + out
+        data1_out     = Data_Mem5 + out
         DMA0_REG_base = DMA4_config
         DMA1_REG_base = DMA5_config
         DMA0_SG       = SGMEM_DMA4_BASE
@@ -480,8 +481,8 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
     elif MPU_ID == 3:
         data0_in      = Data_Mem6
         data1_in      = Data_Mem7
-        data0_out     = Data_Mem6 + 0x100000
-        data1_out     = Data_Mem7 + 0x100000
+        data0_out     = Data_Mem6 + out
+        data1_out     = Data_Mem7 + out
         DMA0_REG_base = DMA6_config
         DMA1_REG_base = DMA7_config
         DMA0_SG       = SGMEM_DMA6_BASE

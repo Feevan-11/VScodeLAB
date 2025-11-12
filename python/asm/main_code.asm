@@ -191,7 +191,7 @@ addi x0, x0, 0
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
-lp.setup x1, 0x10
+lp.setup x1, 0x100
 
 lw x2, 0x0(x20)
 addi x0, x0, 0
@@ -1049,7 +1049,7 @@ addi x0, x0, 0
 addi x0, x0, 0
 addi x0, x0, 0 
 addi x0, x0, 0
-beq x17, x9, 0x100
+beq x17, x9, 0x320
 
 addi x0, x0, 0
 addi x0, x0, 0 
@@ -1154,7 +1154,7 @@ addi x6, x6, 0x000
 addi x7, x7, 0xFC0
 addi x8, x8, 0xFC
 
-addi x0, x0, 0        
+addi x26, x26, 1       
 addi x0, x0, 0
 addi x0, x0, 0        
 addi x0, x0, 0
@@ -1323,7 +1323,7 @@ addi x0, x0, 0
 addi x0, x0, 0 
 addi x0, x0, 0
 addi x0, x0, 0
-lp.goto x2, -0x2E0
+lp.goto x2, 0x210
 
 addi x0, x0, 0 
 addi x0, x0, 0 

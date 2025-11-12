@@ -11,12 +11,12 @@ from loop import main as loop_main
 
 
 if __name__ == "__main__":
-    A_ROW = 128
-    A_B = 128
-    B_COL = 128
-    descriptors = 0x00005000
+    A_ROW = 288
+    A_B = 288
+    B_COL = 288
+    descriptors = 0x0012800
     random = False
-    block_width = 16
+    block_width = 32
     element_size = 2
     APP0 = 0
 
@@ -24,7 +24,7 @@ if __name__ == "__main__":
 
     if(element_type == 0):
         element_size = 2
-        block_width = 16
+        block_width = 32
         APP0 = 0
     elif(element_type == 1): 
         element_size = 4

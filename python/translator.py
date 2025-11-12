@@ -972,9 +972,9 @@ def main():
         output_file = n["output"]
 
         mif_dir = os.path.join(script_dir,"mif")
-
+        mif_dir1 = os.path.join(script_dir,"mif_test")
         input_filename = os.path.join(mif_dir, f"{input_file}.mif")
-        output_filename = os.path.join(mif_dir, f"{output_file}.mif")
+        output_filename = os.path.join(mif_dir1, f"{output_file}.mif")
     
         process_mif(input_filename, output_filename)
 

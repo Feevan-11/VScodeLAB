@@ -95,12 +95,12 @@ MPU_REG          = 0xFF005000
 URAT             = 0xFF006000
 
 MAC_START  = DDR0_START
-MAC_LENTH  = 640
-MAC_END    = DDR0_START + (MAC_LENTH * 9) +64
+MAC_LENTH  = 64 * 17
+MAC_END    = DDR0_START + 0x48880 - 64
 DATA_START = MAC_START + 64
 
 
-def main():
+def main00():
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -137,7 +137,7 @@ def main():
         f0.write("x12 0x"  + f"{(0xF2                   & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x13 0x"  + f"{(0xF3                   & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x14 0x"  + f"{(0xF4                   & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x15 0x"  + f"{(0xFFFFFFFF             & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x15 0x"  + f"{(0xCCA41704             & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x20 0x"  + f"{(DDR0_START             & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x21 0x"  + f"{(DATA_START             & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x22 0x"  + f"{(MAC_LENTH              & 0xFFFFFFFF):08x}"+"\n")
@@ -200,14 +200,16 @@ def main():
         f0.write("x8 0x"  + f"{(0               & 0xFFFFFFFF):08x}"+"\n")
 
         
-
-
-if __name__ == "__main__":
-    main()
+def main():
+    main00()
     asm_generate.main()
     translator.main()
     mif_coe.main()
     tablemd.main()
+
+if __name__ == "__main__":
+    main()
+    
 
 
 

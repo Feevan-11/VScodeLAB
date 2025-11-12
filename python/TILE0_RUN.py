@@ -1,8 +1,8 @@
 import SA_X_MAIN
 import asm_generate
 import main_rom_generate
-import mif_coe
-import translator
+import merge_mif_files
+import macT
 import tablemd
 
 def main():
@@ -12,11 +12,15 @@ def main():
     martix_List = [[256,256,256,32,2,0,0],[16,16,16,32,2,0,0],[16,16,16,32,2,0,0],[16,16,16,32,2,0,0]]
     MPU_ID = '1000'
     mac_da = 0x80000000  
-    flag = 0x419
+    flag = 0xCCA41704
 
     main_rom_generate.main()
-    
+    print('1')
     SA_X_MAIN.main(martix_List , MPU_ID , mac_da , flag)
+
+    macT.main()
+
+    merge_mif_files.merge_all()
 
 
 

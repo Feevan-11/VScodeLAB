@@ -95,26 +95,26 @@ lui x11, 0x0
 lui x12, 0x0
 lui x13, 0x0
 lui x14, 0x0
-lui x15, 0x0
+lui x15, 0xCCA41
 lui x10, 0x0
 lui x7, 0x0
 lui x8, 0x0
 lui x20, 0x40000
 lui x21, 0x40000
 lui x22, 0x0
-lui x23, 0x40001
+lui x23, 0x40049
 addi x11, x11, 0xF1
 addi x12, x12, 0xF2
 addi x13, x13, 0xF3
 addi x14, x14, 0xF4
-addi x15, x15, 0xFFF
+addi x15, x15, 0x704
 addi x10, x10, 0xFF
 addi x7, x7, 0x0
 addi x8, x8, 0x0
 addi x20, x20, 0x0
 addi x21, x21, 0x40
-addi x22, x22, 0x280
-addi x23, x23, 0x6C0
+addi x22, x22, 0x440
+addi x23, x23, 0x840
 
 addi x0, x0, 0 
 addi x0, x0, 0
@@ -191,7 +191,7 @@ addi x0, x0, 0
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
-lp.setup x1, 0x10
+lp.setup x1, 0x100
 
 lw x2, 0x0(x20)
 addi x0, x0, 0
@@ -1049,7 +1049,7 @@ addi x0, x0, 0
 addi x0, x0, 0
 addi x0, x0, 0 
 addi x0, x0, 0
-beq x17, x9, 0x100
+beq x17, x9, 0x320
 
 addi x0, x0, 0
 addi x0, x0, 0 
@@ -1154,7 +1154,7 @@ addi x6, x6, 0x0
 addi x7, x7, 0x0
 addi x8, x8, 0x0
 
-addi x0, x0, 0        
+addi x26, x26, 1       
 addi x0, x0, 0
 addi x0, x0, 0        
 addi x0, x0, 0
@@ -1323,7 +1323,7 @@ addi x0, x0, 0
 addi x0, x0, 0 
 addi x0, x0, 0
 addi x0, x0, 0
-lp.goto x2, -0x2E0
+lp.goto x2, 0x210
 
 addi x0, x0, 0 
 addi x0, x0, 0 
