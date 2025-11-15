@@ -45,7 +45,7 @@ if __name__ == "__main__":
         sg_add_main(A_ROW,B_COL,descriptors)
     elif(mood == 2): 
         sg_mul_main(A_ROW,A_B,B_COL,descriptors,block_width = block_width, element_size = element_size, APP0 = APP0)  
-
+#111
     print("\n")  
     if(mood == 1):
         matrix_add_main(random,A_ROW,B_COL)   
