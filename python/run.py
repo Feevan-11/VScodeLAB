@@ -40,7 +40,7 @@ if __name__ == "__main__":
         APP0 = 3
 
     mood = 2 #1+,2*
-
+是
     if(mood == 1):
         sg_add_main(A_ROW,B_COL,descriptors)
     elif(mood == 2): 
