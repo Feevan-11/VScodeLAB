@@ -101,10 +101,10 @@ def MAC():
     convert_hex_to_bin(input_txt1, output_mif1)
     print(f"转换完成！生成的MIF文件: {output_mif0}")
 
-def ETHSG():
+def test():
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    name = 'ethdma0_S2MM_sg'
-    name1 = 'ETH_SG0'
+    name = 'dma0_test_sg'
+    name1 = 'test_sg'
     mif_dir = os.path.join(script_dir, "mif")
     txt_dir = os.path.join(script_dir, "txt")
 

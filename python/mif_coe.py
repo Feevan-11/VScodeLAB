@@ -51,12 +51,12 @@ def main():
         coe_file = os.path.join(coe_dir, f"{name}.coe")
         convert_mif_to_coe(mif_file,coe_file)
 
-def ETHSG():
+def test():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     mif_dir = os.path.join(script_dir, "mif")
     coe_dir = os.path.join(script_dir, "coe")
 
-    names = ["ETH_SG0","ETH_TEST","test","MAC_GM1"]
+    names = ["test","test_sg","test_data"]
     for name in names:
         mif_file = os.path.join(mif_dir, f"{name}.mif")
         coe_file = os.path.join(coe_dir, f"{name}.coe")

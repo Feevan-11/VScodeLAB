@@ -1,1 +1,1 @@
- git commit --no-gpg-sign -m main1.23
+ git commit --no-gpg-sign -m main1

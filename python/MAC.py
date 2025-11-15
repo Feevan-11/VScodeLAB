@@ -33,8 +33,9 @@ def make_mac_head(mac_flag: int, mac_da: int, stye: int, data_da: int, data_bbt:
     words[0] = u32(mac_flag)
     words[1] = u32(mac_da)
     words[2] = u32(stye)
-    words[3] = u32(data_da)
-    words[4] = u32(data_bbt)
+    words[3] = u32(0x88B5)
+    words[4] = u32(data_da)
+    words[5] = u32(data_bbt)
     return words
 
 def header_words_to_bin_line(words: List[int]) -> str:
@@ -55,18 +56,19 @@ def header_words_to_hex_lines(words: List[int]) -> List[str]:
     """
     return [f"{u32(w):08X}" for w in words[:6]]
 
-# ===================== 新增：自动分段函数 =====================
+# ===================== 新增：自动分段函数（带补全） =====================
 
-def auto_segment(total_lines: int, max_lines_per_frame: int) -> List[int]:
+def auto_segment_with_padding(total_lines: int, max_lines_per_frame: int) -> List[Tuple[int, int]]:
     """
-    根据最大行数自动分段。
+    根据最大行数自动分段，返回每个分段的(有效行数, 补0行数)。
     
     参数:
         total_lines: MIF文件总行数
         max_lines_per_frame: 每帧最大数据行数
     
     返回:
-        分段列表，如100行，max=30，返回[30, 30, 30, 10]
+        分段列表，每个元素为(有效行数, 补0行数)
+        如100行，max=30，返回[(30,0), (30,0), (30,0), (10,20)]
     """
     if max_lines_per_frame <= 0:
         raise ValueError("最大行数必须大于0")
@@ -79,10 +81,11 @@ def auto_segment(total_lines: int, max_lines_per_frame: int) -> List[int]:
     
     while remaining > 0:
         if remaining >= max_lines_per_frame:
-            segments.append(max_lines_per_frame)
+            segments.append((max_lines_per_frame, 0))  # 完整帧，不需要补0
             remaining -= max_lines_per_frame
         else:
-            segments.append(remaining)
+            padding_lines = max_lines_per_frame - remaining
+            segments.append((remaining, padding_lines))  # 不完整帧，需要补0
             remaining = 0
     
     return segments
@@ -104,24 +107,24 @@ def read_mif_lines(mif_path: str) -> List[str]:
         raise ValueError("输入MIF为空。")
     return lines
 
-def segment_indices(total: int, seg_list: List[int]) -> List[Tuple[int, int]]:
+def segment_indices_with_padding(total: int, seg_list: List[Tuple[int, int]]) -> List[Tuple[int, int, int]]:
     """
-    根据分段列表生成 (start, end) 下标区间（左闭右开），用于切片。
-    要求：sum(seg_list) == total
+    根据分段列表生成 (start, end, padding_lines) 下标区间。
+    返回: (有效数据起始下标, 有效数据结束下标, 补0行数)
     """
-    if sum(seg_list) != total:
-        raise ValueError(f"分段列表之和({sum(seg_list)})不等于输入MIF总行数({total})。")
     res = []
     start = 0
-    for n in seg_list:
-        end = start + n
-        res.append((start, end))
+    for valid_lines, padding_lines in seg_list:
+        end = start + valid_lines
+        if end > total:
+            raise ValueError(f"分段索引超出范围：start={start}, end={end}, total={total}")
+        res.append((start, end, padding_lines))
         start = end
     return res
 
 def build_outputs(
     mif_lines: List[str],
-    seg_list: List[int],
+    seg_list: List[Tuple[int, int]],  # 现在每个元素是(有效行数, 补0行数)
     flag: int,
     mac_da: int,
     stye: int,
@@ -131,24 +134,24 @@ def build_outputs(
     """
     核心：为每个分段生成帧头，并输出：
       - headers_hex_lines: List[str] （包含所有帧头的十六进制行，帧与帧之间用空行分隔）
-      - new_mif_lines: List[str]     （包含帧头行+对应数据分段行）
+      - new_mif_lines: List[str]     （包含帧头行+对应数据分段行+补0行）
 
     地址与数据量（字节数）关系：
-      data_bytes = 段内行数 * 64
+      data_bytes = 有效行数 * 64  （补0行不计入数据量）
       第一帧 DATA_DA = base_addr
       第二帧 DATA_DA = base_addr + 第一帧 data_bytes
       ...
     data_bbt 默认使用 data_bytes；若传入 data_bbt_fixed 则使用固定值。
     """
-    idx_ranges = segment_indices(len(mif_lines), seg_list)
+    idx_ranges = segment_indices_with_padding(len(mif_lines), seg_list)
 
     headers_hex_lines: List[str] = []
     new_mif_lines: List[str] = []
 
     cur_addr = base_addr
-    for fi, (s, e) in enumerate(idx_ranges):
-        lines_in_frame = e - s
-        data_bytes = lines_in_frame * 64  # 每行64B
+    for fi, (s, e, padding_lines) in enumerate(idx_ranges):
+        valid_lines = e - s  # 有效数据行数
+        data_bytes = valid_lines * 64  # 每行64B，只计算有效数据
         data_da = cur_addr
         data_bbt = data_bbt_fixed if data_bbt_fixed is not None else data_bytes
 
@@ -164,10 +167,16 @@ def build_outputs(
         header_bin_line = header_words_to_bin_line(words)
         new_mif_lines.append(header_bin_line)
 
-        # 写入该分段原始数据
+        # 写入该分段原始数据（有效数据）
         new_mif_lines.extend(mif_lines[s:e])
+        
+        # 补全全0行（如果需要）
+        if padding_lines > 0:
+            zero_line = "0" * 512
+            for _ in range(padding_lines):
+                new_mif_lines.append(zero_line)
 
-        # 更新下一帧基地址：按"实际数据量"累加
+        # 更新下一帧基地址：按"有效数据量"累加（补0行不增加地址）
         cur_addr += data_bytes
 
     # 去除最后一个空行（若存在）
@@ -176,91 +185,26 @@ def build_outputs(
 
     return headers_hex_lines, new_mif_lines
 
-def main():
-    # ===================== 参数集中配置区域 =====================
-    # MIF 名称（输入文件：./mif/{MAC_NAME}.mif）
-    MAC_NAME = "MAC"
-
-    # 分段方式选择（二选一）：
-    # 方式1：手动指定分段列表
-    SEGMENTS = [10, 10, 20, 20, 20, 20]  # 手动分段
-    
-    # 方式2：自动分段（设置最大行数，SEGMENTS设为None）
-    #SEGMENTS = None
-    MAX_LINES_PER_FRAME = 30  # 每帧最大数据行数，当SEGMENTS为None时生效
-
-    BASE_ADDR = 0x10000000
-
-    flag = 0x11223344   
-    MAC_DA = 0xAABBCCDD   
-    STYE   = 0x00000001   
-
-    DATA_BBT_FIXED = None
-
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    MIF_DIR = os.path.join(script_dir, "mif")
-    MIF_O_DIR = os.path.join(script_dir, "mif_test")
-    TXT_DIR = os.path.join(script_dir, "txt")
-    mif_file = os.path.join(MIF_DIR, f"{MAC_NAME}.mif")
-
-    mif_lines = read_mif_lines(mif_file)
-    total_lines = len(mif_lines)
-    
-    # 分段逻辑：优先使用自动分段
-    if SEGMENTS is None:
-        if MAX_LINES_PER_FRAME is None:
-            raise ValueError("必须指定SEGMENTS或MAX_LINES_PER_FRAME")
-        segments_to_use = auto_segment(total_lines, MAX_LINES_PER_FRAME)
-        print(f"[INFO] 自动分段：总行数{total_lines}，最大{MAX_LINES_PER_FRAME}行/帧 -> {segments_to_use}")
-    else:
-        segments_to_use = SEGMENTS
-        print(f"[INFO] 手动分段：{segments_to_use}")
-
-    headers_hex_lines, new_mif_lines = build_outputs(
-        mif_lines=mif_lines,
-        seg_list=segments_to_use,
-        flag=flag,
-        mac_da=MAC_DA,
-        stye=STYE,
-        base_addr=BASE_ADDR,
-        data_bbt_fixed=DATA_BBT_FIXED,
-        BASE_ADDR = 0x10000000
-    )
-
-    headers_txt_path = os.path.join(TXT_DIR, f"{MAC_NAME}_headers_hex.txt")
-    with open(headers_txt_path, "w", encoding="utf-8") as f:
-        f.write("\n")
-        f.write("\n".join(headers_hex_lines))
-        f.write("\n")
-    print(f"[OK] 头部16进制已写出：{headers_txt_path}")
-
-    out_mif_path = os.path.join(MIF_DIR, f"{MAC_NAME}_with_headers.mif")
-    with open(out_mif_path, "w", encoding="utf-8") as f:
-        for line in new_mif_lines:
-            f.write(line + "\n")
-    print(f"[OK] 新MIF已写出：{out_mif_path}")
-    print(f"[INFO] 总帧数：{len(segments_to_use)}，总行数：{len(new_mif_lines)}")
 
 def main_auto(
-        flag = 0xCCA41704,
-        MAC_DA = 0xAABBCCDD,
-        STYE   = 0x00000001,
-        MAC_NAME = "MAC",
-        MAX_LINES_PER_FRAME = 30,
-        BASE_ADDR = 0x10000000
+        flag=0xCCA41704,
+        MAC_DA=0xAABBCCDD,
+        STYE=0x00000001,
+        MAC_NAME="MAC",
+        MAX_LINES_PER_FRAME=30,
+        BASE_ADDR=0x10000000
         ):
     
     MAC_NAME = MAC_NAME
 
-    
     SEGMENTS = None
-    MAX_LINES_PER_FRAME = MAX_LINES_PER_FRAME  
+    MAX_LINES_PER_FRAME = MAX_LINES_PER_FRAME
 
     BASE_ADDR = BASE_ADDR
 
-    flag = flag   
-    MAC_DA = MAC_DA   
-    STYE   = STYE   
+    flag = flag
+    MAC_DA = MAC_DA
+    STYE = STYE
 
     DATA_BBT_FIXED = None
 
@@ -276,10 +220,11 @@ def main_auto(
     if SEGMENTS is None:
         if MAX_LINES_PER_FRAME is None:
             raise ValueError("必须指定SEGMENTS或MAX_LINES_PER_FRAME")
-        segments_to_use = auto_segment(total_lines, MAX_LINES_PER_FRAME)
-        print(f"[INFO] 自动分段：总行数{total_lines}，最大{MAX_LINES_PER_FRAME}行/帧 -> {segments_to_use}")
+        segments_to_use = auto_segment_with_padding(total_lines, MAX_LINES_PER_FRAME)
+        print(f"[INFO] 自动分段（带补全）：总行数{total_lines}，最大{MAX_LINES_PER_FRAME}行/帧 -> {segments_to_use}")
     else:
-        segments_to_use = SEGMENTS
+        # 如果手动指定SEGMENTS，需要转换为新的格式（假设不需要补0）
+        segments_to_use = [(seg, 0) for seg in SEGMENTS]
         print(f"[INFO] 手动分段：{segments_to_use}")
 
     headers_hex_lines, new_mif_lines = build_outputs(
@@ -298,9 +243,10 @@ def main_auto(
         f.write("\n".join(headers_hex_lines))
         f.write("\n")
 
+    # segments.txt 现在记录有效行数（用于DATA_BBT计算）
     segments_txt_path = os.path.join(TXT_DIR, f"segments.txt")
     with open(segments_txt_path, "a", encoding="utf-8") as f:
-        lines = [str(segment + 1) + " " for segment in segments_to_use]
+        lines = [f"{valid_lines} " for valid_lines, _ in segments_to_use]
         f.writelines(lines)
         f.write("\n")
     print(f"[OK] 头部16进制已写出：{headers_txt_path}")
@@ -310,8 +256,27 @@ def main_auto(
         for line in new_mif_lines:
             f.write(line + "\n")
     print(f"[OK] 新MIF已写出：{out_mif_path}")
-    print(f"[INFO] 总帧数：{len(segments_to_use)}，总行数：{len(new_mif_lines)}")
+    
+    # 统计信息
+    total_frames = len(segments_to_use)
+    total_valid_lines = sum(valid_lines for valid_lines, _ in segments_to_use)
+    total_padding_lines = sum(padding_lines for _, padding_lines in segments_to_use)
+    print(f"[INFO] 总帧数：{total_frames}")
+    print(f"[INFO] 有效数据行：{total_valid_lines}，补0行：{total_padding_lines}")
+    print(f"[INFO] 新MIF总行数：{len(new_mif_lines)}（{total_frames}帧头 + {total_valid_lines}有效数据 + {total_padding_lines}补0）")
 
 
+# 示例使用
 if __name__ == "__main__":
-    main()
+    # 示例1：MIF只有10行，MAX_LINES_PER_FRAME=100
+    # 结果：1帧，帧头 + 10行有效数据 + 90行补0，DATA_BBT=10×64=640字节
+    
+    # 示例2：MIF有256行，MAX_LINES_PER_FRAME=100  
+    # 结果：3帧，前2帧各100行有效数据，第3帧56行有效数据+44行补0
+    # DATA_BBT：第1帧=6400，第2帧=6400，第3帧=56×64=3584
+    
+    main_auto(
+        MAC_NAME="test",
+        MAX_LINES_PER_FRAME=100,
+        BASE_ADDR=0x10000000
+    )

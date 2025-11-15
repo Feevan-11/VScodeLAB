@@ -13,10 +13,12 @@ def main():
     MPU_ID = '1000'
     mac_da = 0x80000000  
     flag = 0xCCA41704
+    mac_lenth= 499
+    mac_NUMBER = 13
 
-    main_rom_generate.main()
+    main_rom_generate.main(mac_lenth+1,mac_NUMBER)
     print('1')
-    SA_X_MAIN.main(martix_List , MPU_ID , mac_da , flag)
+    SA_X_MAIN.main(martix_List , MPU_ID , mac_da , flag, mac_lenth)
 
     macT.main()
 

@@ -249,14 +249,9 @@ def main_SA_ID():
         except ValueError as e:
             print(f"erro：{str(e)}")
 
-def ETH_TEST():
+def TEST():
 
     configs = [
-    {
-        "asm_in": os.path.join("asm", "ETH_TEST.asm"),
-        "reg_config": os.path.join("txt", "ETH_TEST.txt"),
-        "asm_out": os.path.join("asm", "ETH_TEST_.asm")
-    },
     {
         "asm_in": os.path.join("asm", "testCODE.asm"),
         "reg_config": os.path.join("txt", "test.txt"),

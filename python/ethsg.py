@@ -86,8 +86,9 @@ def write_txt_file_A(words, filename):
 
 
 def generate_ethdma_descriptors_for_S2MM(
-    Shared_Men3_base=0x98000000,
-    MAC_LENTH = 64
+    data_in_base=0x40000000,
+    MAC_LENTH = 64,
+    SG_NUM = 100
 ):
 
     descriptors = []
@@ -96,8 +97,8 @@ def generate_ethdma_descriptors_for_S2MM(
     block_size_bytes =  0x0C000000 + MAC_LENTH
     addr = 0
 
-    for j in range(3):
-      BUFFER_addr = Shared_Men3_base + addr
+    for j in range(SG_NUM):
+      BUFFER_addr = data_in_base + addr
       next_desc_addr = 0
      
       desc_words = make_sg_dma_descriptor(next_desc_addr, BUFFER_addr, block_size_bytes)
@@ -107,8 +108,9 @@ def generate_ethdma_descriptors_for_S2MM(
     return descriptors
 
 def generate_ethdma_descriptors_for_MM2S(
-    Shared_Men3_base=0x98000000,
-    MAC_LENTH = 64
+    data_out_base=0x98000000,
+    MAC_LENTH = 64,
+    SG_NUM = 100
 ):
 
     descriptors = []
@@ -117,8 +119,8 @@ def generate_ethdma_descriptors_for_MM2S(
     block_size_bytes =  0x0C000000 + MAC_LENTH
     addr = 0
 
-    for j in range(3):
-      BUFFER_addr = Shared_Men3_base + addr
+    for j in range(SG_NUM):
+      BUFFER_addr = data_out_base + addr
       next_desc_addr = 0
      
       desc_words = make_sg_dma_descriptor(next_desc_addr, BUFFER_addr, block_size_bytes)
@@ -194,25 +196,25 @@ def main():
 
     descriptors_ethdma_S2MM = generate_ethdma_descriptors_for_S2MM(
         
-        Shared_Men3_base=DDR0_START,
+        data_in_base=DDR0_START,
         MAC_LENTH = 128
     )
 
     descriptors_ethdma1_S2MM = generate_ethdma_descriptors_for_S2MM(
         
-        Shared_Men3_base=DDR0_START,
+        data_in_base=DDR0_START,
         MAC_LENTH = 128
     )
 
     descriptors_ethdma_MM2S = generate_ethdma_descriptors_for_MM2S(
         
-        Shared_Men3_base=DDR1_START,
+        data_in_base=DDR1_START,
         MAC_LENTH = 128
     )
 
     descriptors_ethdma0_MM2S = generate_ethdma_descriptors_for_MM2S(
         
-        Shared_Men3_base=DDR1_START,
+        data_in_base=DDR1_START,
         MAC_LENTH = 128
     )
 

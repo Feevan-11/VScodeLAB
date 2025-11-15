@@ -453,7 +453,7 @@ def flat(descriptor_list):
 WRITE_BACK = 0x10000
 
 def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A_TYPE = 0,B_TYPE = 0, MPU_ID = 0,
-          mac_da = 0xF0000000 , flag = 0xCCA41704):
+          mac_da = 0xF0000000 , flag = 0xCCA41704, mac_lenth= 99):
 
     if MPU_ID == 0:
         data0_in      = Data_Mem0
@@ -578,27 +578,7 @@ def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A
     DMA0_MM2S_len = 64*len(descriptors_DMA0_MM2S)
     DMA1_S2MM_len = 64*len(descriptors_DMA1_S2MM)
     DMA1_MM2S_len = 64*len(descriptors_DMA1_MM2S)
-    #DMA0_len = 64*(len(descriptors_DMA0_MM2S)+len(descriptors_DMA0_S2MM))
-    #DMA1_len = 64*(len(descriptors_DMA1_MM2S)+len(descriptors_DMA1_S2MM))
-    
 
-    # DMA0_START_DDR  =  CDMA1_len
-    # DMA1_START_DDR  = DMA0_START_DDR  + DMA0_len
-    
-
-    # with open(SG_LOOP_file0, 'w') as f0_L:
-        # f0_L.write("; --- SEGMENT 1 ---" +"\n")
-        # ds_x1 = descriptors(CDMA0_len)
-        # ds_x2 = descriptors(DMA0_len)
-        # f0_L.write("x1 0x" + f"{(ds_x1+100 & 0xFFFFFFFF):08x}"+"\n")
-        # f0_L.write("x2 0x" + f"{(9 & 0xFFFFFFFF):08x}"+"\n")
-    
-    # with open(SA_LOOP_file1, 'w') as f1_L:
-        # f1_L.write(f"; --- SEGMENT 1 ---" +"\n") #CDMA
-        # CDMA_X1 = cdma(A_ROWS,A_COLS)
-        # f1_L.write("x1 0x" + f"{(200 & 0xFFFFFFFF):08x}"+"\n")
-        # f1_L.write(f"; --- SEGMENT 2 ---" +"\n") #DMA
-        # f1_L.write("x1 0x" + f"{(100 & 0xFFFFFFFF):08x}"+"\n")
 
     DMA0_MM2S_START = DMA0_SG + DMA0_S2MM_len
     DMA1_MM2S_START = DMA1_SG + DMA1_S2MM_len
@@ -617,10 +597,7 @@ def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A
         f1.write("x10 0x" + f"{((DMA1_MM2S_START) & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x11 0x" + f"{((DMA0_MM2S_START+DMA0_MM2S_len-64) & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x12 0x" + f"{((DMA1_MM2S_START+DMA1_MM2S_len-64) & 0xFFFFFFFF):08x}"+"\n")
-        # f1.write("x29 0x" +  f"{(0xfff0fff0 & 0xFFFFFFFF):08x}"+"\n")
-        # f1.write("x30 0x" +  f"{(0xfff0fff0 & 0xFFFFFFFF):08x}"+"\n")
-        # f1.write("x31 0x" +  f"{(0xfff0fff0 & 0xFFFFFFFF):08x}"+"\n")
-        # f1.write("x28 0x" +  f"{(0xfff0fff0 & 0xFFFFFFFF):08x}"+"\n")
+
 
     
 
@@ -634,11 +611,11 @@ def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A
     
     global ROM_START
 
-    MAC.main_auto(flag,mac_da,1,"SA",16,ROM_START)
-    MAC.main_auto(flag,mac_da,1,"DMA0",16,DMA0_SG)
-    MAC.main_auto(flag,mac_da,1,"DMA1",16,DMA1_SG)
-    MAC.main_auto(flag,mac_da,1,'MATRIX_A',16,data0_in)
-    MAC.main_auto(flag,mac_da,1,'MATRIX_B',16,data1_in)
+    MAC.main_auto(flag,mac_da,1,"SA",mac_lenth,ROM_START)
+    MAC.main_auto(flag,mac_da,1,"DMA0",mac_lenth,DMA0_SG)
+    MAC.main_auto(flag,mac_da,1,"DMA1",mac_lenth,DMA1_SG)
+    MAC.main_auto(flag,mac_da,1,'MATRIX_A',mac_lenth,data0_in)
+    MAC.main_auto(flag,mac_da,1,'MATRIX_B',mac_lenth,data1_in)
     #merge_mif_files.SA()
 
     ROM_START = ROM_START + 64*10
@@ -681,7 +658,7 @@ Data_Mem7        = 0xCE000000
 ROM_START   = 0xF0001300
 
 def main(matrix_List= [[16,16,16,32,2,0,0],[16,16,16,32,2,0,0],[16,16,16,32,2,0,0],[16,16,16,32,2,0,0]], MPU_ID = '1000',
-         mac_da = 0xF0000000 , flag = 0xCCA41704):
+         mac_da = 0xF0000000 , flag = 0xCCA41704 , mac_lenth= 99):
 
 
     bin_str = MPU_ID
@@ -702,19 +679,23 @@ def main(matrix_List= [[16,16,16,32,2,0,0],[16,16,16,32,2,0,0],[16,16,16,32,2,0,
     
     if bin_str[0] == '1':
         op_SA(A__ROWS=matrix_List[0][0],B__ROWS=matrix_List[0][1],B__COLS=matrix_List[0][2], block_width = matrix_List[0][3], 
-              element_size = matrix_List[0][4],A_TYPE = matrix_List[0][5],B_TYPE = matrix_List[0][6], MPU_ID = 0,mac_da = mac_da , flag = flag)
+              element_size = matrix_List[0][4],A_TYPE = matrix_List[0][5],B_TYPE = matrix_List[0][6],
+                MPU_ID = 0,mac_da = mac_da , flag = flag, mac_lenth= mac_lenth)
     
     if bin_str[1] == '1':
         op_SA(A__ROWS=matrix_List[1][0],B__ROWS=matrix_List[1][1],B__COLS=matrix_List[1][2], block_width = matrix_List[1][3], 
-                element_size = matrix_List[1][4],A_TYPE = matrix_List[1][5],B_TYPE = matrix_List[1][6], MPU_ID = 1,mac_da = mac_da ,flag = flag)
+                element_size = matrix_List[1][4],A_TYPE = matrix_List[1][5],B_TYPE = matrix_List[1][6],
+                MPU_ID = 1,mac_da = mac_da ,flag = flag, mac_lenth= mac_lenth)
   
     if bin_str[2] == '1':
         op_SA(A__ROWS=matrix_List[2][0],B__ROWS=matrix_List[2][1],B__COLS=matrix_List[2][2], block_width = matrix_List[2][3], 
-              element_size = matrix_List[2][4],A_TYPE = matrix_List[2][5],B_TYPE = matrix_List[2][6], MPU_ID = 2,mac_da = mac_da ,flag = flag)
+              element_size = matrix_List[2][4],A_TYPE = matrix_List[2][5],B_TYPE = matrix_List[2][6], 
+              MPU_ID = 2,mac_da = mac_da ,flag = flag, mac_lenth= mac_lenth)
     
     if bin_str[3] == '1':
         op_SA(A__ROWS=matrix_List[3][0],B__ROWS=matrix_List[3][1],B__COLS=matrix_List[3][2], block_width = matrix_List[3][3], 
-              element_size = matrix_List[3][4],A_TYPE = matrix_List[3][5],B_TYPE = matrix_List[3][6], MPU_ID = 3,mac_da = mac_da ,flag = flag)
+              element_size = matrix_List[3][4],A_TYPE = matrix_List[3][5],B_TYPE = matrix_List[3][6], 
+              MPU_ID = 3,mac_da = mac_da ,flag = flag, mac_lenth= mac_lenth)
    
     #if bin_str[4] == '1':
     #    op_SA(A__ROWS=matrix_List[0][0],A__COLS=matrix_List[0][0],B__ROWS=matrix_List[0][0],B__COLS=matrix_List[0][0], block_width = block_width, element_size = element_size, APP0 = APP0,
@@ -728,7 +709,7 @@ def main(matrix_List= [[16,16,16,32,2,0,0],[16,16,16,32,2,0,0],[16,16,16,32,2,0,
 
 if __name__ == "__main__":
     main(matrix_List = [[16,16,16,32,2,0,0],[16,16,16,32,2,0,0],[16,16,16,32,2,0,0],[16,16,16,32,2,0,0]] , MPU_ID = '1000',
-         mac_da = 0x80000000 , flag = 0xCCA41704)
+         mac_da = 0x80000000 , flag = 0xCCA41704, mac_lenth= 99)
 
 
 

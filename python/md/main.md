@@ -21,12 +21,12 @@
 | `0x0120` | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `addi x0, x0, 0`       | `addi x0, x0, 0`       |
 | `0x0130` | `lui x11, 0x0`         | `lui x12, 0x0`        | `lui x13, 0x0`         | `lui x14, 0x0`         |
 | `0x0140` | `lui x15, 0xCCA41`     | `lui x10, 0x0`        | `lui x7, 0x0`          | `lui x8, 0x0`          |
-| `0x0150` | `lui x20, 0x40000`     | `lui x21, 0x40000`    | `lui x22, 0x0`         | `lui x23, 0x40049`     |
+| `0x0150` | `lui x20, 0x40000`     | `lui x21, 0x40000`    | `lui x22, 0x8`         | `lui x23, 0x40066`     |
 | `0x0160` | `addi x11, x11, 0xF1`  | `addi x12, x12, 0xF2` | `addi x13, x13, 0xF3`  | `addi x14, x14, 0xF4`  |
 | `0x0170` | `addi x15, x15, 0x704` | `addi x10, x10, 0xFF` | `addi x7, x7, 0x0`     | `addi x8, x8, 0x0`     |
-| `0x0180` | `addi x20, x20, 0x0`   | `addi x21, x21, 0x40` | `addi x22, x22, 0x440` | `addi x23, x23, 0x840` |
+| `0x0180` | `addi x20, x20, 0x0`   | `addi x21, x21, 0x40` | `addi x22, x22, 0xD00` | `addi x23, x23, 0x900` |
 | `0x0190` | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `addi x0, x0, 0`       | `addi x0, x0, 0`       |
-| `0x01A0` | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `addi x0, x0, 0`       | `lp.setup x1, 0x10`    |
+| `0x01A0` | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `addi x0, x0, 0`       | `lp.setup x1, 0x20`    |
 | `0x01B0` | `lw x19, 0x0(x23)`     | `addi x0, x0, 0`      | `addi x0, x0, 0`       | `addi x0, x0, 0`       |
 | `0x01C0` | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `addi x0, x0, 0`       | `lp.setup x2, 0x10`    |
 | `0x01D0` | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `addi x0, x0, 0`       | `addi x0, x0, 0`       |
@@ -41,7 +41,7 @@
 | `0x0260` | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `addi x0, x0, 0`       | `lp.goto x1, -0xC0`    |
 | `0x0270` | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `addi x0, x0, 0`       | `addi x0, x0, 0`       |
 | `0x0280` | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `addi x0, x0, 0`       | `lp.setup x1, 0x100`   |
-| `0x0290` | `lw x2, 0x0(x20)`      | `addi x0, x0, 0`      | `addi x0, x0, 0`       | `addi x0, x0, 0`       |
+| `0x0290` | `lw x2, 0x4(x20)`      | `addi x0, x0, 0`      | `addi x0, x0, 0`       | `addi x0, x0, 0`       |
 | `0x02A0` | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `addi x0, x0, 0`       | `lp.setup x2, 0x10`    |
 | `0x02B0` | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `addi x0, x0, 0`       | `addi x0, x0, 0`       |
 | `0x02C0` | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `addi x0, x0, 0`       | `lp.goto x2, -0x10`    |
@@ -240,8 +240,8 @@
 | `0x0ED0` | `addi x5, x5, 0x0`     | `addi x6, x6, 0x0`    | `addi x7, x7, 0x0`     | `addi x8, x8, 0x0`     |
 | `0x0EE0` | `addi x26, x26, 1`     | `addi x0, x0, 0`      | `addi x0, x0, 0`       | `addi x0, x0, 0`       |
 | `0x0EF0` | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `addi x0, x0, 0`       | `addi x0, x0, 0`       |
-| `0x0F00` | `lw x6, 0xC(x20)`      | `addi x0, x0, 0`      | `addi x0, x0, 0`       | `addi x0, x0, 0`       |
-| `0x0F10` | `lw x7, 0x10(x20)`     | `addi x0, x0, 0`      | `addi x0, x0, 0`       | `addi x0, x0, 0`       |
+| `0x0F00` | `lw x6, 0x10(x20)`     | `addi x0, x0, 0`      | `addi x0, x0, 0`       | `addi x0, x0, 0`       |
+| `0x0F10` | `lw x7, 0x14(x20)`     | `addi x0, x0, 0`      | `addi x0, x0, 0`       | `addi x0, x0, 0`       |
 | `0x0F20` | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `addi x0, x0, 0`       | `lp.setup x2, 0x10`    |
 | `0x0F30` | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `addi x0, x0, 0`       | `addi x0, x0, 0`       |
 | `0x0F40` | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `addi x0, x0, 0`       | `lp.goto x2, -0x10`    |
@@ -254,7 +254,7 @@
 | `0x0FB0` | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `sw x7, 0x28(x1)`      | `addi x0, x0, 0`       |
 | `0x0FC0` | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `addi x0, x0, 0`       | `addi x0, x0, 0`       |
 | `0x0FD0` | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `addi x0, x0, 0`       | `lp.setup x2, 0x10`    |
-| `0x0FE0` | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `addi x0, x0, 0`       | `lp.setup x3, 0x1`     |
+| `0x0FE0` | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `addi x0, x0, 0`       | `lp.setup x3, 0x4`     |
 | `0x0FF0` | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `addi x0, x0, 0`       | `addi x0, x0, 0`       |
 | `0x1000` | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `addi x0, x0, 0`       | `lp.goto x3, -0x10`    |
 | `0x1010` | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `addi x0, x0, 0`       | `addi x0, x0, 0`       |

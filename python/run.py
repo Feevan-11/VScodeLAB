@@ -11,10 +11,10 @@ from loop import main as loop_main
 
 
 if __name__ == "__main__":
-    A_ROW = 288
-    A_B = 288
-    B_COL = 288
-    descriptors = 0x0012800
+    A_ROW = 64
+    A_B = 64
+    B_COL = 64
+    descriptors = 0x002000
     random = False
     block_width = 32
     element_size = 2

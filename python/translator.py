@@ -1128,16 +1128,14 @@ def SA():
     
         process_mif(input_filename, output_filename)
 
-def ETH_TEST():    
+def TEST():    
     
     script_dir = os.path.dirname(os.path.abspath(__file__))
     mif_dir = os.path.join(script_dir, "mif")
     asm_dir = os.path.join(script_dir, "asm")
 
     names = [
-        {"input":"ETH_TEST_",
-         "output":"_ETH_TEST_",
-        },
+        
         {"input":"test",
          "output":"Atest",
         } 
@@ -1188,9 +1186,7 @@ def ETH_TEST():
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
     NS = [
-        {"input":"_ETH_TEST_",
-         "output":"ETH_TEST",
-        },
+        
         {"input":"Atest",
          "output":"test",
         } 

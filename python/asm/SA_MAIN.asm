@@ -71,7 +71,7 @@ addi x0, x0, 0
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
-lp.setup  x2, 10
+lp.setup  x2, 50
 
 addi x0, x0, 0 
 addi x0, x0, 0 

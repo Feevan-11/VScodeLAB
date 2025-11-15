@@ -59,9 +59,16 @@ class SparseMatrixCompressor:
                     })
                     total_nnz += nnz_count
             
+            # 检查是否包含最后一列
+            contains_last_col = False
+            for info in all_nnz_info:
+                if (cols - 1) in info['col_indices']:
+                    contains_last_col = True
+                    break
+            
             # 构建包头
             header = self._build_header(row_end == rows, 
-                                      is_matrix_b and row_end == rows, 
+                                      contains_last_col, 
                                       cols, total_nnz)
             packet_data.extend(header)
             
@@ -100,7 +107,7 @@ class SparseMatrixCompressor:
             for info in all_nnz_info[:16]:
                 for val in info['values']:
                     # FP16转换 - 使用自然顺序（小端序）
-                    value_data.extend(struct.pack('<e', val))  # 直接使用FP16值
+                    value_data.extend(struct.pack('<e', val))
             
             packet_data.extend(value_data)
             
@@ -179,6 +186,7 @@ def main():
     compressor = SparseMatrixCompressor()
     
     # 矩阵参数
+
     matrix_size = 32  # 32×32矩阵
     sparsity = 0.9    # 90%稀疏度
     
