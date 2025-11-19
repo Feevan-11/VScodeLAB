@@ -61,6 +61,15 @@ def test():
         mif_file = os.path.join(mif_dir, f"{name}.mif")
         coe_file = os.path.join(coe_dir, f"{name}.coe")
         convert_mif_to_coe(mif_file,coe_file)
+def tile_test():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    mif_dir = os.path.join(script_dir, "mif_test")
+    coe_dir = os.path.join(script_dir, "coe_test")
 
+    names = ["test","test_sg","test_data"]
+    for name in names:
+        mif_file = os.path.join(mif_dir, f"{name}.mif")
+        coe_file = os.path.join(coe_dir, f"{name}.coe")
+        convert_mif_to_coe(mif_file,coe_file)
 if __name__ == "__main__":
     main()

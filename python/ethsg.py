@@ -12,19 +12,7 @@ def make_sg_dma_descriptor(
     buffer_addr,
     length_bytes
 ):
-    """
-    Construct an AXI DMA SG descriptor (8 x 32-bit) and return a list of length 8, each element is int (32-bit).
-    Field Layout:
-      Word0 (0x00): [5:0]=0, [31:6] = next_desc_addr >> 6
-      Word1 (0x04): 0
-      Word2 (0x08): src_addr
-      Word3 (0x0C): 0
-      Word4 (0x10): dst_addr
-      Word5 (0x14): 0
-      Word6 (0x18): [25:0] = length_bytes, [31:26]=0
-      Word7 (0x1C): 0  (status word initialize as 0)
-    """
-    # Word0: NEXTDESC (Align addresses in 64 bytes => bits[31:6] = next_desc_addr >> 6)
+    
     word0 = 0  # bits[31:6]
     # Word1: 0
     word1 = 0
@@ -236,7 +224,8 @@ def main():
     ethdma1_MM2S_name = 'ethdma1_MM2S_sg'
     ethdma_TXT_name = 'check'
     txt_dir = os.path.join(script_dir,"txt")
-
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    ethdma0_S2MM_name = 'ethdma0_S2MM_sg'
     ethdma0_S2MM_file = os.path.join(txt_dir, f"{ethdma0_S2MM_name}.txt")
     ethdma1_MM2S_file = os.path.join(txt_dir, f"{ethdma1_MM2S_name}.txt")
     ethdma_TXT_file = os.path.join(txt_dir, f"{ethdma_TXT_name}.txt")
@@ -277,15 +266,7 @@ def main():
         f0.write("x6 0x"  + f"{((SGMEM_ethdma0_BASE + ETH0_S2MM_len - 64)    & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x7 0x"  + f"{((SGMEM_ethdma0_BASE + ETH0_S2MM_len)     & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x8 0x"  + f"{((SGMEM_ethdma0_BASE + ETH0_S2MM_len + ETH1_MM2S_len - 64)      & 0xFFFFFFFF):08x}"+"\n")
-       #f0.write("; --- SEGMENT 3 ---" +"\n")
-       #f0.write("x1 0x"  + f"{(0     & 0xFFFFFFFF):08x}"+"\n")
-       #f0.write("x2 0x"  + f"{(0     & 0xFFFFFFFF):08x}"+"\n")
-       #f0.write("x3 0x"  + f"{(0     & 0xFFFFFFFF):08x}"+"\n")
-       #f0.write("x4 0x"  + f"{(0     & 0xFFFFFFFF):08x}"+"\n")
-       #f0.write("x5 0x"  + f"{(0     & 0xFFFFFFFF):08x}"+"\n")
-       #f0.write("x6 0x"  + f"{(0     & 0xFFFFFFFF):08x}"+"\n")
-       #f0.write("x7 0x"  + f"{(0x00000000     & 0xFFFFFFFF):08x}"+"\n")
-       #f0.write("x8 0x"  + f"{((SGMEM_ethdma0_BASE + ETH0_S2MM_len - 64)     & 0xFFFFFFFF):08x}"+"\n")
+
     all_da = ethdma0_S2MM_sg_data + ethdma1_MM2S_sg_data + ethdma1_S2MM_sg_data + ethdma0_MM2S_sg_data
     write_txt_file(all_da, ethdma0_S2MM_file)
     write_txt_file(ethdma1_MM2S_sg_data, ethdma1_MM2S_file)

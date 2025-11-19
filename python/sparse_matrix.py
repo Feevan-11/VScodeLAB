@@ -182,13 +182,13 @@ class SparseMatrixCompressor:
                 for line in binary_lines:
                     f.write(line + '\n')
 
-def main():
+def main(matrix_size = 64,sparsity = 0.9 ):
     compressor = SparseMatrixCompressor()
     
     # 矩阵参数
 
-    matrix_size = 32  # 32×32矩阵
-    sparsity = 0.9    # 90%稀疏度
+    matrix_size = matrix_size  # 32×32矩阵
+    sparsity = sparsity    # 90%稀疏度
     
     print("生成随机稀疏矩阵...")
     # 生成矩阵A和B（直接使用FP16格式）
@@ -209,8 +209,8 @@ def main():
     
     # 写入数据包文件
     print("写入数据包文件...")
-    compressor.write_packets_to_file(packets_a, 'matrix_a_packets.txt')
-    compressor.write_packets_to_file(packets_b, 'matrix_b_packets.txt')
+    compressor.write_packets_to_file(packets_a, '.\sparse\matrix_a_packets.mif')
+    compressor.write_packets_to_file(packets_b, '.\sparse\matrix_b_packets.mif')
     
     # 计算每个数据包占用的512位块数
     def calculate_512bit_blocks(packets):
@@ -225,7 +225,7 @@ def main():
     b_blocks = calculate_512bit_blocks(packets_b)
     
     # 写入块信息文件
-    with open('packet_blocks_info.txt', 'w') as f:
+    with open('.\sparse\packet_blocks_info.txt', 'w') as f:
         # 矩阵A的数据包块信息
         f.write(' '.join(map(str, a_blocks)) + '\n')
         # 矩阵B的数据包块信息  
@@ -238,4 +238,4 @@ def main():
     print(f"矩阵B数据包块数: {b_blocks}")
 
 if __name__ == "__main__":
-    main()
+    main(matrix_size = 64,sparsity = 0.9 )

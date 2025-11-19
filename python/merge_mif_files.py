@@ -97,8 +97,9 @@ def merge_all():
     name2 = "MATRIX_A_with_headers"
     name3 = "MATRIX_B_with_headers"
     name4 = "SA_with_headers"
-    name5 = "START_MAC"
-    name6 = "ALL_MAC"
+    name5 = "ETHDMA1_with_headers"
+    name6 = "START_MAC"
+    name7 = "ALL_MAC"
     mif_file0 = os.path.join(mif_dir, f"{name0}.mif")
     mif_file1 = os.path.join(mif_dir, f"{name1}.mif")
     mif_file2 = os.path.join(mif_dir, f"{name2}.mif")
@@ -106,10 +107,11 @@ def merge_all():
     mif_file4 = os.path.join(mif_dir, f"{name4}.mif")
     mif_file5 = os.path.join(mif_dir, f"{name5}.mif")
     mif_file6 = os.path.join(mif_dir, f"{name6}.mif")
+    mif_file7 = os.path.join(mif_dir, f"{name7}.mif")
 
-    print("The SA series is being processed...")
-    files_to_merge = [mif_file0, mif_file1, mif_file2, mif_file3, mif_file4, mif_file5]
-    output_filename = mif_file6
+    print("The ALL_MAC is being processed...")
+    files_to_merge = [mif_file0, mif_file1, mif_file2, mif_file3, mif_file4, mif_file5, mif_file6]
+    output_filename = mif_file7
     
     merge__replace(files_to_merge, output_filename)
 
@@ -160,6 +162,43 @@ def main():
     # The second group：GM11.mif + b_2.mif
     print("\nGM1 series is being processed...")
     merge_and_replace(mif_file2, mif_file3)
+
+def SPARSE_main():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    mif_dir = os.path.join(script_dir, "mif")
+    sparse_dir = os.path.join(script_dir, "sparse")
+    
+    name0 = "GM0"
+    name1 = "matrix_a_packets"
+    mif_file0 = os.path.join(mif_dir, f"{name0}.mif")
+    mif_file1 = os.path.join(sparse_dir, f"{name1}.mif")
+
+    # first：GM0.mif + a_2.mif
+    print("The GM0 series is being processed...")
+    merge_and_replace(mif_file0, mif_file1)
+    
+    name2 = "GM1"
+    name3 = "matrix_b_packets"
+    mif_file2 = os.path.join(mif_dir, f"{name2}.mif")
+    mif_file3 = os.path.join(sparse_dir, f"{name3}.mif")
+    # The second group：GM11.mif + b_2.mif
+    print("\nGM1 series is being processed...")
+    merge_and_replace(mif_file2, mif_file3)
+
+def ROM_TABLE():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    mif_dir = os.path.join(script_dir, "mif_test")
+    sparse_dir = os.path.join(script_dir, "sparse")
+    
+    name0 = "MAIN_ROM"
+    name1 = "routing_table"
+    mif_file0 = os.path.join(mif_dir, f"{name0}.mif")
+    mif_file1 = os.path.join(mif_dir, f"{name1}.mif")
+
+    # first：GM0.mif + a_2.mif
+    print("The GM0 series is being processed...")
+    merge_and_replace(mif_file0, mif_file1)
+
 
 if __name__ == "__main__":
     main()

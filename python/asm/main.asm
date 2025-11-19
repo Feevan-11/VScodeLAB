@@ -1,20 +1,20 @@
 ; --- SEGMENT 1 ---
 lui x1, 0xFF003
 lui x2, 0xFF003
-lui x3, 0x0
-lui x4, 0x0
-lui x5, 0x0
-lui x6, 0x0
-lui x7, 0x0
-lui x8, 0x0
+lui x3, 0x1
+lui x4, 0x1
+lui x5, 0xF7400
+lui x6, 0xF7400
+lui x7, 0xF7600
+lui x8, 0xF7601
 addi x1, x1, 0x0
 addi x2, x2, 0x400
-addi x3, x3, 0x0
+addi x3, x3, 0x8
 addi x4, x4, 0x0
 addi x5, x5, 0x0
-addi x6, x6, 0x0
-addi x7, x7, 0x0
-addi x8, x8, 0x0
+addi x6, x6, 0x6C0
+addi x7, x7, 0x700
+addi x8, x8, 0xAC0
 addi x0, x0, 0
 addi x0, x0, 0
 addi x0, x0, 0
@@ -41,8 +41,8 @@ sw x3, 0x30(x1)
 addi x0, x0, 0
 
 addi x0, x0, 0
-addi x0, x0, 0 
 addi x0, x0, 0
+sw x6, 0x40(x1) 
 addi x0, x0, 0
 
 addi x0, x0, 0
@@ -66,8 +66,8 @@ sw x3, 0x0(x2)
 addi x0, x0, 0
 
 addi x0, x0, 0
-addi x0, x0, 0 
 addi x0, x0, 0
+sw x8, 0x10(x2) 
 addi x0, x0, 0
 
 addi x0, x0, 0 
@@ -102,7 +102,7 @@ lui x8, 0x0
 lui x20, 0x40000
 lui x21, 0x40000
 lui x22, 0x8
-lui x23, 0x40066
+lui x23, 0x4006D
 addi x11, x11, 0xF1
 addi x12, x12, 0xF2
 addi x13, x13, 0xF3
@@ -114,7 +114,7 @@ addi x8, x8, 0x0
 addi x20, x20, 0x0
 addi x21, x21, 0x40
 addi x22, x22, 0xD00
-addi x23, x23, 0x900
+addi x23, x23, 0x600
 
 addi x0, x0, 0 
 addi x0, x0, 0
