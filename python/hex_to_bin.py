@@ -121,6 +121,7 @@ def dmasg():
         {'input_name': 'dma0_sg', 'output_name': 'DMA0'},
         {'input_name': 'dma1_sg', 'output_name': 'DMA1'},
         {'input_name': 'ethdma1_sg', 'output_name': 'ETHDMA1'}
+        
          
     ]
     
@@ -133,6 +134,26 @@ def dmasg():
 
         convert_hex_to_bin(input_txt, output_mif)
         print(f"转换完成！生成的MIF文件: {output_mif}")
+
+def ETH_TILE_sg():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    file_configs = [
+
+        {'input_name': 'eth_tile_sg', 'output_name': 'ETH_TILE_SG'}
+         
+    ]
+    
+    mif_dir = os.path.join(script_dir, "mif_test")
+    txt_dir = os.path.join(script_dir, "txt")
+
+    for config in file_configs:
+        input_txt = os.path.join(txt_dir, f"{config['input_name']}.txt")
+        output_mif = os.path.join(mif_dir, f"{config['output_name']}.mif")
+
+        convert_hex_to_bin(input_txt, output_mif)
+        print(f"转换完成！生成的MIF文件: {output_mif}")
+
 
 if __name__ == "__main__":
     main()

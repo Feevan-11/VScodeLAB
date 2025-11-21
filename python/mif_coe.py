@@ -42,10 +42,10 @@ def convert_mif_to_coe(input_file,out_file):
 
 def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    mif_dir = os.path.join(script_dir, "mif")
-    coe_dir = os.path.join(script_dir, "coe")
+    mif_dir = os.path.join(script_dir, "mif_test")
+    coe_dir = os.path.join(script_dir, "coe_test")
 
-    names = ["MAIN_ROM","MAC_GM1"]
+    names = ["MAIN_ROM","ALL_MAC","ETH_TILE_SG"]
     for name in names:
         mif_file = os.path.join(mif_dir, f"{name}.mif")
         coe_file = os.path.join(coe_dir, f"{name}.coe")

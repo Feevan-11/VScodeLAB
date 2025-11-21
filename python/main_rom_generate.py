@@ -4,6 +4,7 @@ import  loop
 import  translator
 import  tablemd
 import  mif_coe
+import  hex_to_bin
 
 
 
@@ -112,22 +113,49 @@ def generate_ethdma_descriptors_for_S2MM(
 
     return descriptors
 
+def generate_ethdma_descriptors_for_MM2S(
+    data_in_base=0x40000000,
+    MAC_LENTH = 64,
+    MAC_HEAD_ADDR = 0x40000000,
+    SG_NUM = 100
+):
+
+    descriptors = []
+
+    head_size_bytes  =  0x08000000 + 64
+    block_size_bytes =  0x04000000 + MAC_LENTH
+    addr = 0
+
+    for j in range(SG_NUM):
+      BUFFER_addr = data_in_base + addr
+      next_desc_addr = 0
+      desc_words0 = make_sg_dma_descriptor(next_desc_addr, MAC_HEAD_ADDR, head_size_bytes )
+      descriptors.append(desc_words0)
+      desc_words1 = make_sg_dma_descriptor(next_desc_addr, BUFFER_addr, block_size_bytes)
+      addr = addr + MAC_LENTH
+      descriptors.append(desc_words1)
+
+    return descriptors
+
+
 SGMEM_CDMA0_start    = 0xF4000000
 SGMEM_CDMA1_start    = 0xF4200000
-SGMEM_DMA0_BASE      = 0xF4400000
-SGMEM_DMA1_BASE      = 0xF4800000
-SGMEM_DMA2_BASE      = 0xF4C00000
-SGMEM_DMA3_BASE      = 0xF5000000
-SGMEM_DMA4_BASE      = 0xF5400000
-SGMEM_DMA5_BASE      = 0xF5800000
-SGMEM_DMA6_BASE      = 0xF5C00000
-SGMEM_DMA7_BASE      = 0xF6000000
 
-SGMEM_ETHDMA0_BASE      = 0xF7400000
-SGMEM_ETHDMA1_BASE      = 0xF7600000
-SGMEM_ETHDMA2_BASE      = 0xF7800000
-SGMEM_ETHDMA3_BASE      = 0xF7A00000
-SGMEM_ETHDMA4_BASE      = 0xF7C00000
+SGMEM_DMA0_BASE      = 0xF4400000
+SGMEM_DMA1_BASE      = 0xF4600000
+SGMEM_DMA2_BASE      = 0xF4800000
+SGMEM_DMA3_BASE      = 0xF4A00000
+SGMEM_DMA4_BASE      = 0xF4C00000
+SGMEM_DMA5_BASE      = 0xF4E00000
+SGMEM_DMA6_BASE      = 0xF5000000
+SGMEM_DMA7_BASE      = 0xF5200000
+SGMEM_ETHDMA0_BASE      = 0xF5400000
+SGMEM_ETHDMA1_BASE      = 0xF5600000
+SGMEM_ETHDMA2_BASE      = 0xF5800000
+SGMEM_ETHDMA3_BASE      = 0xF5A00000
+SGMEM_ETHDMA4_BASE      = 0xF5C00000
+
+
 
 
 DMA0_config          = 0xFF000000
@@ -179,9 +207,9 @@ def main00(mac_lenth = 500,mac_NUMBER = 13):
 
     descriptors_ethdma_S2MM = generate_ethdma_descriptors_for_S2MM(
         
-        data_in_base=DDR0_START,
+        data_in_base=DDR0_START+0x10000,
         MAC_LENTH = MAC_LENTH,
-        SG_NUM = mac_NUMBER*2
+        SG_NUM = mac_NUMBER+2
     )
     
     descriptors_ethdma_MM2S = generate_ethdma_descriptors_for_S2MM(
@@ -191,30 +219,60 @@ def main00(mac_lenth = 500,mac_NUMBER = 13):
         SG_NUM = mac_NUMBER+2
     )
 
+    descriptors_ethdma1_S2MM = generate_ethdma_descriptors_for_S2MM(
+        
+        data_in_base=DDR1_START+0x10000,
+        MAC_LENTH = MAC_LENTH,
+        SG_NUM = mac_NUMBER+2
+    )
+    
+    descriptors_ethdma1_MM2S = generate_ethdma_descriptors_for_S2MM(
+        
+        data_in_base=DDR0_START,
+        MAC_LENTH = MAC_LENTH,
+        SG_NUM = mac_NUMBER+2
+    )
+
     ETH0_S2MM_len = 64*len(descriptors_ethdma_S2MM)
 
     ETH1_MM2S_len = 64*len(descriptors_ethdma_MM2S)
 
-    ethdma0_S2MM_sg_data = link_descriptors_in_memory(descriptors_ethdma_S2MM, base_addr=SGMEM_ETHDMA0_BASE, desc_size=64)
-    ethdma0_MM2S_sg_data = link_descriptors_in_memory(descriptors_ethdma_MM2S, base_addr=SGMEM_ETHDMA1_BASE, desc_size=64)
+    ETH1_S2MM_len = 64*len(descriptors_ethdma1_S2MM)
 
-    ethdma0_S2MM_name = 'ethdma0_S2MM_sg'
+    ETH0_MM2S_len = 64*len(descriptors_ethdma1_MM2S)
+
+    new_add = ETH0_S2MM_len + ETH1_MM2S_len
+
+    ethdma0_S2MM_sg_data = link_descriptors_in_memory(descriptors_ethdma_S2MM, base_addr=SGMEM_ETHDMA0_BASE, desc_size=64)
+    ethdma0_MM2S_sg_data = link_descriptors_in_memory(descriptors_ethdma_MM2S, base_addr=SGMEM_ETHDMA1_BASE+ETH0_S2MM_len, desc_size=64)
+
+    ethdma1_S2MM_sg_data = link_descriptors_in_memory(descriptors_ethdma1_S2MM, base_addr=SGMEM_ETHDMA0_BASE, desc_size=64)
+    ethdma1_MM2S_sg_data = link_descriptors_in_memory(descriptors_ethdma1_MM2S, base_addr=SGMEM_ETHDMA1_BASE+ETH0_S2MM_len, desc_size=64)
+
+    ethdma0_S2MM_name = 'eth_tile_sg'
     ethdma0_S2MM_file = os.path.join(txt_dir, f"{ethdma0_S2MM_name}.txt")
-    ALLDATA= ethdma0_S2MM_sg_data + ethdma0_MM2S_sg_data 
+    ALLDATA= ethdma0_S2MM_sg_data + ethdma0_MM2S_sg_data + ethdma1_S2MM_sg_data + ethdma1_MM2S_sg_data
+    
 
     write_txt_file(ALLDATA, ethdma0_S2MM_file)
+    hex_to_bin.ETH_TILE_sg()
+    
 
     with open(MAIN_TXT_file, 'w') as f0:
 
         f0.write("; --- SEGMENT 1 ---" +"\n")   
-        f0.write("x1 0x"  + f"{(ethdma0_config          & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x2 0x"  + f"{(ethdma1_config          & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x3 0x"  + f"{(0x00001008              & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x1 0x"  + f"{(ethdma3_config          & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x2 0x"  + f"{(ethdma4_config          & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x3 0x"  + f"{(0x00001001              & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x4 0x"  + f"{(0x00001000              & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x5 0x"  + f"{(SGMEM_ETHDMA0_BASE         & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x6 0x"  + f"{((SGMEM_ETHDMA0_BASE + ETH0_S2MM_len - 64)    & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x7 0x"  + f"{((SGMEM_ETHDMA1_BASE + ETH0_S2MM_len)     & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x8 0x"  + f"{((SGMEM_ETHDMA1_BASE + ETH0_S2MM_len + ETH1_MM2S_len - 64)      & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x15 0x"  + f"{(SGMEM_ETHDMA0_BASE + new_add         & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x16 0x"  + f"{((SGMEM_ETHDMA0_BASE + new_add + ETH1_S2MM_len - 64)    & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x17 0x"  + f"{((SGMEM_ETHDMA1_BASE + new_add + ETH1_S2MM_len)     & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x18 0x"  + f"{((SGMEM_ETHDMA1_BASE + new_add + ETH1_S2MM_len + ETH0_MM2S_len - 64)      & 0xFFFFFFFF):08x}"+"\n")
 
         f0.write("; --- SEGMENT 2 ---" +"\n")
         f0.write("x1 0x"   + f"{(0                      & 0xFFFFFFFF):08x}"+"\n")
@@ -239,7 +297,7 @@ def main00(mac_lenth = 500,mac_NUMBER = 13):
         f0.write("; --- SEGMENT 3 ---" +"\n")
         f0.write("x1 0x"  + f"{(0                               & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x2 0x"  + f"{(ethdma1_config                  & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x3 0x"  + f"{(0x00001008                      & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x3 0x"  + f"{(0x00001001                      & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x4 0x"  + f"{(0x00001000                      & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x5 0x"  + f"{(0                               & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x6 0x"  + f"{(0                               & 0xFFFFFFFF):08x}"+"\n")
@@ -249,7 +307,7 @@ def main00(mac_lenth = 500,mac_NUMBER = 13):
         f0.write("; --- SEGMENT 4 ---" +"\n")
         f0.write("x1 0x"  + f"{(0                               & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x2 0x"  + f"{(ethdma2_config                  & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x3 0x"  + f"{(0x00001008                      & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x3 0x"  + f"{(0x00001001                      & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x4 0x"  + f"{(0x00001000                      & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x5 0x"  + f"{(0                               & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x6 0x"  + f"{(0                               & 0xFFFFFFFF):08x}"+"\n")
@@ -259,7 +317,7 @@ def main00(mac_lenth = 500,mac_NUMBER = 13):
         f0.write("; --- SEGMENT 5 ---" +"\n")
         f0.write("x1 0x"  + f"{(0                               & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x2 0x"  + f"{(ethdma3_config                  & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x3 0x"  + f"{(0x00001008                      & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x3 0x"  + f"{(0x00001001                      & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x4 0x"  + f"{(0x00001000                      & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x5 0x"  + f"{(0                               & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x6 0x"  + f"{(0                               & 0xFFFFFFFF):08x}"+"\n")
@@ -269,7 +327,7 @@ def main00(mac_lenth = 500,mac_NUMBER = 13):
         f0.write("; --- SEGMENT 6 ---" +"\n")
         f0.write("x1 0x"  + f"{(0                               & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x2 0x"  + f"{(ethdma4_config                  & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x3 0x"  + f"{(0x00001008                      & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x3 0x"  + f"{(0x00001001                      & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x4 0x"  + f"{(0x00001000                      & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x5 0x"  + f"{(0                               & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x6 0x"  + f"{(0                               & 0xFFFFFFFF):08x}"+"\n")
@@ -297,7 +355,7 @@ def main(mac_lenth = 500,mac_NUMBER = 13):
     main00(mac_lenth,mac_NUMBER)
     asm_generate.main()
     translator.main()
-    mif_coe.main()
+
     tablemd.main()
 
 if __name__ == "__main__":

@@ -36,7 +36,7 @@ def merge_and_replace(source_file, append_file):
     except Exception as e:
         print(f"The operation failed：{str(e)}")
 
-def merge__replace(source_files, output_file):
+def merge__replace(source_files, output_file,mac_len):
     """
     将多个源文件的内容按顺序合并到输出文件中
     :param source_files: 要合并的源文件列表（按顺序合并）
@@ -75,7 +75,7 @@ def merge__replace(source_files, output_file):
         print(f"\n合并完成！输出文件：{output_file}")
         print(f"总共合并了 {total_files} 个文件")
         print(f"总行数：{len(all_lines)}")
-        
+        print(f"总帧数：{int(len(all_lines)/mac_len)+1}")
         # 显示每个文件的贡献行数
         print("\n各文件贡献行数统计：")
         current_position = 0
@@ -88,7 +88,7 @@ def merge__replace(source_files, output_file):
     except Exception as e:
         print(f"操作失败：{str(e)}")
 
-def merge_all():
+def merge_all(mac_len):
     script_dir = os.path.dirname(os.path.abspath(__file__))
     mif_dir = os.path.join(script_dir, "mif_test")
     
@@ -113,7 +113,7 @@ def merge_all():
     files_to_merge = [mif_file0, mif_file1, mif_file2, mif_file3, mif_file4, mif_file5, mif_file6]
     output_filename = mif_file7
     
-    merge__replace(files_to_merge, output_filename)
+    merge__replace(files_to_merge, output_filename,mac_len)
 
 def SA():
     script_dir = os.path.dirname(os.path.abspath(__file__))

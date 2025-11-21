@@ -30,7 +30,7 @@ def header_words_to_bin_line(words: List[int]) -> str:
 
 
 
-def main():
+def main(mac_da):
 
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -43,7 +43,7 @@ def main():
     routing_table_file = os.path.join(mif_dir, f"{name0}.mif")
     start_file1 = os.path.join(mif_dir, f"{name1}.mif")
 
-    mac_da = 0x80000000  
+    mac_da = mac_da  
     flag = 0xCCA41704
 
     RT = make_mac_head(0xFF, 0xFF, 0xFF, 0xFF, 0xFF)
@@ -61,7 +61,7 @@ def main():
     
 
 if __name__ == "__main__":
-    main()
+    main(mac_da = 0xCCA41704)
 
 
 
