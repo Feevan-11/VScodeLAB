@@ -62,20 +62,20 @@ addi x0, x0, 0
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0
-lui x1, 0xFF003
-lui x2, 0xFF003
-lui x3, 0xF5400
-lui x4, 0xF5600
+lui x1, 0xFF004
+lui x2, 0xFF004
+lui x3, 0xF5A00
+lui x4, 0xF5C00
 lui x5, 0x11
 lui x6, 0x1
-lui x7, 0xF5400
-lui x8, 0xF5600
-lui x11, 0xF5400
-lui x12, 0xF5600
-lui x13, 0xF5400
-lui x14, 0xF5600
-addi x1, x1, 0x0
-addi x2, x2, 0x400
+lui x7, 0xF5A00
+lui x8, 0xF5C00
+lui x11, 0xF5A00
+lui x12, 0xF5C00
+lui x13, 0xF5A00
+lui x14, 0xF5C00
+addi x1, x1, 0xC00
+addi x2, x2, 0x0
 addi x3, x3, 0x40
 addi x4, x4, 0x40
 addi x5, x5, 0x1

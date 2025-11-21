@@ -628,8 +628,8 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x40010000):
 
     # 2) 给这两份描述符列表分别创建“内存中线性存放”布局，并将 Word0 指向下一描述符
     #    这里假设 CDMA0的描述符从 0x00000000 开始, CDMA1的描述符从 0x00100000 开始 (示例)
-    DMA0_SG_BASE = 0xF5400000
-    DMA1_SG_BASE = 0xF5600000
+    DMA0_SG_BASE = 0xF5A00000
+    DMA1_SG_BASE = 0xF5C00000
     CDMA0_SG_BASE = 0xF4000000
     CDMA1_SG_BASE = 0xF4200000
     cdma0_base = CDMA0_SG_BASE
@@ -722,8 +722,8 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16,A_DATA_START = 0x40010000):
     #reg_values0 = read_reg_values(txt_file0)
     #reg_values1 = read_reg_values(txt_file1)    
     
-    DMA0_BASE = 0xFF003000
-    DMA1_BASE = 0xFF003400
+    DMA0_BASE = 0xFF003C00
+    DMA1_BASE = 0xFF004000
     CDMA0_BASE = 0xFF004400
     CDMA1_BASE = 0xFF004440
     cdma0_sg_start = 0x40000000
