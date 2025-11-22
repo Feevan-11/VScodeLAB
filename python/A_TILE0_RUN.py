@@ -10,7 +10,7 @@ def main():
     # 支持的数据类型: 0:"fp16", 1:"fp32", 2:"fp64", 3:"bf16"
     #[A_ROW,A*B,B_COL,阵列大小,数据字节数,A数据类型,B数据类型]
 
-    martix_List = [[16,4,16,16,2,0,0],[16,16,16,32,2,0,0],[16,16,16,32,2,0,0],[16,16,16,32,2,0,0]]
+    martix_List = [[32,8,32,32,2,0,0],[16,16,16,32,2,0,0],[16,16,16,32,2,0,0],[16,16,16,32,2,0,0]]
     MPU_ID = '1000'
     mac_da = 0x0000ff  
     flag = 0xCCA41704
@@ -23,10 +23,14 @@ def main():
 
     macT.main(mac_da)
 
-    merge_mif_files.merge_all(mac_lenth+1)
+    mac_num = merge_mif_files.merge_all(mac_lenth+1)
     merge_mif_files.ROM_TABLE()
     mif_coe.main()
 
+    if (mac_NUMBER == mac_num):
+        print("帧数正确")
+    else:
+        print("需调整帧数")
 
 
 

@@ -120,7 +120,7 @@ def dmasg():
     file_configs = [
         {'input_name': 'dma0_sg', 'output_name': 'DMA0'},
         {'input_name': 'dma1_sg', 'output_name': 'DMA1'},
-        {'input_name': 'ethdma1_sg', 'output_name': 'ETHDMA1'}
+        {'input_name': 'ethdma4_sg', 'output_name': 'ETHDMA4'}
         
          
     ]

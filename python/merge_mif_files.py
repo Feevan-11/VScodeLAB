@@ -76,15 +76,17 @@ def merge__replace(source_files, output_file,mac_len):
         print(f"总共合并了 {total_files} 个文件")
         print(f"总行数：{len(all_lines)}")
         print(f"总帧数：{int(len(all_lines)/mac_len)+1}")
+        mac_num = int(len(all_lines)/mac_len)+1
         # 显示每个文件的贡献行数
-        print("\n各文件贡献行数统计：")
-        current_position = 0
-        for i, filename in enumerate(source_files, 1):
-            with open(filename, 'r') as f:
-                file_line_count = len([line.strip() for line in f if line.strip()])
-            print(f"  {i}. {filename}: {file_line_count} 行 (位置 {current_position + 1}-{current_position + file_line_count})")
-            current_position += file_line_count
-    
+        #print("\n各文件贡献行数统计：")
+        #current_position = 0
+        #for i, filename in enumerate(source_files, 1):
+        #    with open(filename, 'r') as f:
+        #        file_line_count = len([line.strip() for line in f if line.strip()])
+        #    print(f"  {i}. {filename}: {file_line_count} 行 (位置 {current_position + 1}-{current_position + file_line_count})")
+        #    current_position += file_line_count
+        return mac_num
+
     except Exception as e:
         print(f"操作失败：{str(e)}")
 
@@ -97,7 +99,7 @@ def merge_all(mac_len):
     name2 = "MATRIX_A_with_headers"
     name3 = "MATRIX_B_with_headers"
     name4 = "SA_with_headers"
-    name5 = "ETHDMA1_with_headers"
+    name5 = "ETHDMA4_with_headers"
     name6 = "START_MAC"
     name7 = "ALL_MAC"
     mif_file0 = os.path.join(mif_dir, f"{name0}.mif")
@@ -113,7 +115,8 @@ def merge_all(mac_len):
     files_to_merge = [mif_file0, mif_file1, mif_file2, mif_file3, mif_file4, mif_file5, mif_file6]
     output_filename = mif_file7
     
-    merge__replace(files_to_merge, output_filename,mac_len)
+    mac_num = merge__replace(files_to_merge, output_filename,mac_len)
+    return mac_num
 
 def SA():
     script_dir = os.path.dirname(os.path.abspath(__file__))

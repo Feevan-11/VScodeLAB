@@ -561,11 +561,11 @@ def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A
     descriptors_ethdma_MM2S = generate_ethdma_descriptors_for_S2MM(
         
         data_in_base=data0_out,
-        MAC_LENTH = 32*32,
-        SG_NUM = int((A_ROWS/32) * (B_COLS/32))
+        MAC_LENTH = block_width*block_width,
+        SG_NUM = int((A_ROWS/block_width) * (B_COLS/block_width))
     )
 
-    ETH1_MM2S_len = 64*len(descriptors_ethdma_MM2S)
+    ETH4_MM2S_len = 64*len(descriptors_ethdma_MM2S)
     SGMEM_DMA0_start =  DMA0_SG            
     SGMEM_DMA0_start_MM2S =  SGMEM_DMA0_start + len(descriptors_DMA0_S2MM) * 64
     SGMEM_DMA1_start =  DMA1_SG
@@ -575,7 +575,7 @@ def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A
     dma1_MM2S_sg_data = link_descriptors_in_memory(descriptors_DMA1_MM2S, base_addr=SGMEM_DMA1_start_MM2S, desc_size=64)
     dma0_S2MM_sg_data = link_descriptors_in_memory(descriptors_DMA0_S2MM, base_addr=SGMEM_DMA0_start, desc_size=64)
     dma1_S2MM_sg_data = link_descriptors_in_memory(descriptors_DMA1_S2MM, base_addr=SGMEM_DMA1_start, desc_size=64)
-    ethdma1_sg_data = link_descriptors_in_memory(descriptors_ethdma_MM2S, base_addr=SGMEM_ETHDMA1_BASE, desc_size=64)
+    ethdma4_sg_data = link_descriptors_in_memory(descriptors_ethdma_MM2S, base_addr=SGMEM_ETHDMA4_BASE, desc_size=64)
    
     dma0_sg_data = dma0_S2MM_sg_data + dma0_MM2S_sg_data
     dma1_sg_data = dma1_S2MM_sg_data + dma1_MM2S_sg_data
@@ -584,17 +584,17 @@ def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A
     dma0_name = 'dma0_sg'
     dma1_name = 'dma1_sg'
 
-    ethdma1_name = 'ethdma1_sg'
+    ethdma4_name = 'ethdma4_sg'
     
     txt_dir = os.path.join(script_dir,"txt")
     dma0_file = os.path.join(txt_dir, f"{dma0_name}.txt")
     dma1_file = os.path.join(txt_dir, f"{dma1_name}.txt")
-    ethdma1_file = os.path.join(txt_dir, f"{ethdma1_name}.txt")
+    ethdma4_file = os.path.join(txt_dir, f"{ethdma4_name}.txt")
 
 
     write_txt_file(dma0_sg_data, dma0_file)
     write_txt_file(dma1_sg_data, dma1_file)
-    write_txt_file(ethdma1_sg_data, ethdma1_file)
+    write_txt_file(ethdma4_sg_data, ethdma4_file)
     
  
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -631,13 +631,13 @@ def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A
         f1.write("x12 0x" + f"{((DMA1_MM2S_START+DMA1_MM2S_len-64) & 0xFFFFFFFF):08x}"+"\n")
         f1.write(f"; --- SEGMENT 2 ---" +"\n")
         f1.write("x1 0x"  + f"{(ethdma0_config          & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x2 0x"  + f"{(ethdma1_config          & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x2 0x"  + f"{(ethdma4_config          & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x3 0x"  + f"{(0x00001001              & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x4 0x"  + f"{(0x00001000              & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x5 0x"  + f"{(SGMEM_ETHDMA0_BASE         & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x6 0x"  + f"{(SGMEM_ETHDMA0_BASE      & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x7 0x"  + f"{(SGMEM_ETHDMA1_BASE      & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x8 0x"  + f"{((SGMEM_ETHDMA1_BASE  + ETH1_MM2S_len - 64)      & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x7 0x"  + f"{(SGMEM_ETHDMA4_BASE      & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x8 0x"  + f"{((SGMEM_ETHDMA4_BASE  + ETH4_MM2S_len - 64)      & 0xFFFFFFFF):08x}"+"\n")
 
 
     
@@ -647,15 +647,15 @@ def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A
     translator.SA_ID() 
 
     hex_to_bin.dmasg()
-
-    matrix_mul.main(False ,A__ROWS,B__COLS,B__COLS, A_TYPE, A_TYPE , MPU_ID)
+    print("A__ROWS,B__COLS,B__COLS:",A__ROWS,B__COLS,B__COLS)
+    matrix_mul.main(False ,A__ROWS,B__ROWS,B__COLS, A_TYPE, A_TYPE , MPU_ID)
     
     global ROM_START
 
     MAC.main_auto(flag,mac_da,1,"SA",mac_lenth,ROM_START)
     MAC.main_auto(flag,mac_da,1,"DMA0",mac_lenth,DMA0_SG)
     MAC.main_auto(flag,mac_da,1,"DMA1",mac_lenth,DMA1_SG)
-    MAC.main_auto(flag,mac_da,1,"ETHDMA1",mac_lenth,SGMEM_ETHDMA1_BASE)
+    MAC.main_auto(flag,mac_da,1,"ETHDMA4",mac_lenth,SGMEM_ETHDMA4_BASE)
     MAC.main_auto(flag,mac_da,1,'MATRIX_A',mac_lenth,data0_in)
     MAC.main_auto(flag,mac_da,1,'MATRIX_B',mac_lenth,data1_in)
     #merge_mif_files.SA()
