@@ -1,6 +1,7 @@
 import SA_X_MAIN
 import asm_generate
 import main_rom_generate
+import main_rom_gen_vcs
 import merge_mif_files
 import macT
 import tablemd
@@ -16,9 +17,13 @@ def main():
     flag = 0xCCA41704
     mac_lenth= 8
     mac_NUMBER = 9
+    VCS = 0
 
-    main_rom_generate.main(mac_lenth+1,mac_NUMBER)
-    
+    if VCS == 0:
+        main_rom_generate.main(mac_lenth+1,mac_NUMBER)
+    if VCS == 1:
+        main_rom_gen_vcs.main(mac_lenth+1,mac_NUMBER)
+
     SA_X_MAIN.main(martix_List , MPU_ID , mac_da , flag, mac_lenth)
 
     macT.main(mac_da)
@@ -29,8 +34,11 @@ def main():
         print("\n帧数正确\n")
     else:
         print("\n需调整帧数\n")
+
     merge_mif_files.ROM_TABLE()
-    mif_coe.main()
+
+    if VCS == 0:
+        mif_coe.main()
 
     if (mac_NUMBER == mac_num):
         print("帧数正确")

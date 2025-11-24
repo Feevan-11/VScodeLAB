@@ -160,6 +160,54 @@ def main():
         except ValueError as e:
             print(f"erro：{str(e)}")
 
+def main_vcs():
+
+    configs = [
+    # {
+    #     "asm_in": os.path.join("asm", "SGCODE.asm"),
+    #     "reg_config": os.path.join("txt", "SG.txt"),
+    #     "asm_out": os.path.join("asm", "SG.asm")
+    # },
+    # {
+    #     "asm_in": os.path.join("asm", "SACODE.asm"),
+    #     "reg_config": os.path.join("txt", "SA.txt"),
+    #     "asm_out": os.path.join("asm", "SA.asm")
+    # },
+    {
+        "asm_in": os.path.join("asm", "main_code_vcs.asm"),
+        "reg_config": os.path.join("txt", "main.txt"),
+        "asm_out": os.path.join("asm", "main.asm")
+    }
+    ]
+    for cfg in configs:
+        reg_values = read_reg_values(cfg["reg_config"])
+        
+        with open(cfg["asm_in"], 'r') as f:
+            original_asm = f.read()
+        
+        raw_segments = split_into_segments(original_asm)
+        
+        processed_segments = []
+        for seg_content, seg_id in raw_segments:  
+            # Gets the register configuration for the current segment
+            seg_reg_values = reg_values.get(seg_id, {})
+            
+            # Handling code content (seg_content is a string)
+            processed = process_segment(seg_content, seg_reg_values)
+            processed_segments.append((processed, seg_id))
+        
+        # Generate an output file
+        try:
+            generate_output(
+                processed_segments=processed_segments,
+                reg_config=reg_values,
+                output_file=cfg["asm_out"]
+            )
+            print(f"Successfully load：{cfg['asm_in']}")
+            print(f"Successfully generated：{cfg['asm_out']}")
+        except ValueError as e:
+            print(f"erro：{str(e)}")
+
 def main_S():
 
     configs = [

@@ -51,30 +51,6 @@ addi x0, x0, 0
 addi x0, x0, 0
 addi x0, x0, 0
 
-addi x0, x0, 0
-addi x0, x0, 0 
-;sw x4, 0x4(x2)
-addi x0, x0, 0
-addi x0, x0, 0
-
-addi x0, x0, 0
-addi x0, x0, 0 
-;sw x7,  0x8(x2)
-addi x0, x0, 0
-addi x0, x0, 0 
-
-addi x0, x0, 0
-addi x0, x0, 0
-;sw x3, 0x0(x2)
-addi x0, x0, 0 
-addi x0, x0, 0
-
-addi x0, x0, 0
-addi x0, x0, 0
-addi x0, x0, 0
-;sw x8, 0x10(x2)
-addi x0, x0, 0 
-
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
