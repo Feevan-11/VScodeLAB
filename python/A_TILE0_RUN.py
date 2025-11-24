@@ -24,6 +24,11 @@ def main():
     macT.main(mac_da)
 
     mac_num = merge_mif_files.merge_all(mac_lenth+1)
+
+    if (mac_NUMBER == mac_num):
+        print("\n帧数正确\n")
+    else:
+        print("\n需调整帧数\n")
     merge_mif_files.ROM_TABLE()
     mif_coe.main()
 

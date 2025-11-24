@@ -197,7 +197,7 @@ DATA_START = MAC_START + 64
 
 def main00(mac_lenth = 500,mac_NUMBER = 13):
     MAC_LENTH  = mac_lenth * 64
-    MAC_END    = DDR0_START + mac_lenth * mac_NUMBER * 64
+    MAC_END    = DDR0_START + mac_lenth * (mac_NUMBER-1) * 64
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
     MAIN_TXT_name = 'MAIN'
@@ -207,7 +207,7 @@ def main00(mac_lenth = 500,mac_NUMBER = 13):
 
     descriptors_ethdma_S2MM = generate_ethdma_descriptors_for_S2MM(
         
-        data_in_base=DDR0_START+0x10000,
+        data_in_base=DDR0_START,
         MAC_LENTH = MAC_LENTH,
         SG_NUM = mac_NUMBER
     )

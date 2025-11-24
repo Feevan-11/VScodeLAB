@@ -53,22 +53,26 @@ addi x0, x0, 0
 
 addi x0, x0, 0
 addi x0, x0, 0 
-sw x4, 0x4(x2)
+;sw x4, 0x4(x2)
+addi x0, x0, 0
 addi x0, x0, 0
 
 addi x0, x0, 0
 addi x0, x0, 0 
-sw x7,  0x8(x2)
+;sw x7,  0x8(x2)
+addi x0, x0, 0
 addi x0, x0, 0 
 
 addi x0, x0, 0
 addi x0, x0, 0
-sw x3, 0x0(x2) 
+;sw x3, 0x0(x2)
+addi x0, x0, 0 
 addi x0, x0, 0
 
 addi x0, x0, 0
 addi x0, x0, 0
-sw x8, 0x10(x2)
+addi x0, x0, 0
+;sw x8, 0x10(x2)
 addi x0, x0, 0 
 
 addi x0, x0, 0 
@@ -115,7 +119,7 @@ addi x8, x8, 0x0
 addi x20, x20, 0x0
 addi x21, x21, 0x40
 addi x22, x22, 0x240
-addi x23, x23, 0x440
+addi x23, x23, 0x200
 
 addi x0, x0, 0 
 addi x0, x0, 0
