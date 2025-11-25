@@ -159,21 +159,21 @@ addi x0, x0, 0
 addi x0, x0, 0 
 ; --- SEGMENT 2 ---
 lui x1, 0xFF003
-lui x2, 0xFF004
+lui x2, 0xFF003
 lui x3, 0x1
 lui x4, 0x1
 lui x5, 0xF5400
 lui x6, 0xF5400
-lui x7, 0xF5C00
-lui x8, 0xF5C00
+lui x7, 0xF5600
+lui x8, 0xF5600
 addi x1, x1, 0x0
-addi x2, x2, 0x0
+addi x2, x2, 0x400
 addi x3, x3, 0x1
 addi x4, x4, 0x0
 addi x5, x5, 0x0
 addi x6, x6, 0x0
 addi x7, x7, 0x0
-addi x8, x8, 0x0
+addi x8, x8, 0x40
 addi x0, x0, 0
 addi x0, x0, 0
 addi x0, x0, 0

@@ -47,7 +47,7 @@ def main(mac_da):
     flag = 0xCCA41704
 
     RT = make_mac_head(0xFF, 0xFF, 0xFF, 0xFF, 0xFF)
-    start = make_mac_head(flag, mac_da, 2, 0, 0)
+    start = make_mac_head(flag, mac_da, 2, 0x88b5, 0)
 
     RT_BIN = header_words_to_bin_line(RT)
     header_bin_line = header_words_to_bin_line(start)

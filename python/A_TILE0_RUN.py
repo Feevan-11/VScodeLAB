@@ -40,12 +40,6 @@ def main():
     if VCS == 0:
         mif_coe.main()
 
-    if (mac_NUMBER == mac_num):
-        print("帧数正确")
-    else:
-        print("需调整帧数")
-
-
 
 
 if __name__ == "__main__":

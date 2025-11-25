@@ -32,9 +32,19 @@ sw x4, 0x34(x1)
 addi x0, x0, 0
 
 addi x0, x0, 0
+addi x0, x0, 0
+addi x0, x0, 0
+addi x0, x0, 0
+
+addi x0, x0, 0
 addi x0, x0, 0 
 sw x5,  0x38(x1)
 addi x0, x0, 0 
+
+addi x0, x0, 0
+addi x0, x0, 0
+addi x0, x0, 0
+addi x0, x0, 0
 
 addi x0, x0, 0
 addi x0, x0, 0
@@ -43,7 +53,17 @@ addi x0, x0, 0
 
 addi x0, x0, 0
 addi x0, x0, 0
+addi x0, x0, 0
+addi x0, x0, 0
+
+addi x0, x0, 0
+addi x0, x0, 0
 sw x6, 0x40(x1) 
+addi x0, x0, 0
+
+addi x0, x0, 0
+addi x0, x0, 0
+addi x0, x0, 0
 addi x0, x0, 0
 
 addi x0, x0, 0

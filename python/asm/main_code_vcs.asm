@@ -1421,7 +1421,7 @@ addi x0, x0, 0
 addi x0, x0, 0 
 addi x0, x0, 0
 addi x0, x0, 0
-lp.goto x2, 0x310
+lp.goto x2, 0x1E0
 
 addi x0, x0, 0 
 addi x0, x0, 0 
