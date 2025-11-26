@@ -4,7 +4,7 @@ import main_rom_generate
 import main_rom_gen_vcs
 import merge_mif_files
 import macT
-import tablemd
+import hex_to_bin
 import mif_coe
 
 def main():
@@ -17,7 +17,7 @@ def main():
     flag = 0xCCA41704
     mac_lenth= 8
     mac_NUMBER = 9
-    VCS = 0
+    VCS = 1
 
     if VCS == 0:
         main_rom_generate.main(mac_lenth+1,mac_NUMBER)
@@ -34,12 +34,13 @@ def main():
         print("\n帧数正确\n")
     else:
         print("\n需调整帧数\n")
-
+    hex_to_bin.test()
     merge_mif_files.ROM_TABLE()
+    merge_mif_files.T1()
 
-    if VCS == 0:
-        mif_coe.main()
-
+    #if VCS == 0:
+    mif_coe.main()
+    
 
 
 if __name__ == "__main__":

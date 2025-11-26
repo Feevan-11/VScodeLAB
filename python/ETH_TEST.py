@@ -86,8 +86,9 @@ def write_txt_file_A(words, filename):
 
 
 def generate_ethdma_descriptors_for_S2MM(
-    Shared_Men3_base=0x98000000,
-    MAC_LENTH = 64
+    data_in_base=0x40000000,
+    MAC_LENTH = 64,
+    SG_NUM = 100
 ):
 
     descriptors = []
@@ -96,8 +97,8 @@ def generate_ethdma_descriptors_for_S2MM(
     block_size_bytes =  0x0C000000 + MAC_LENTH
     addr = 0
 
-    for j in range(1):
-      BUFFER_addr = Shared_Men3_base + addr
+    for j in range(SG_NUM):
+      BUFFER_addr = data_in_base + addr
       next_desc_addr = 0
      
       desc_words = make_sg_dma_descriptor(next_desc_addr, BUFFER_addr, block_size_bytes)
@@ -105,6 +106,7 @@ def generate_ethdma_descriptors_for_S2MM(
       descriptors.append(desc_words)
 
     return descriptors
+
 
 def generate_ethdma_descriptors_for_MM2S(
     Shared_Men3_base=0x98000000,
@@ -175,17 +177,17 @@ def link(descriptor_list, base_addr=0x00000000, desc_size=64):
 
 SG_MEM0 = 0xFF000000
 
-ethdma0_CONFIG_BASE    = 0xFF003000
-SGMEM_ethdma0_BASE     = 0xF7400000
+ethdma0_CONFIG_BASE    = 0xFF003C00
+SGMEM_ethdma0_BASE     = 0xF5A00000
 
 ethdma1_CONFIG_BASE    = 0xFF003400
-SGMEM_ethdma1_BASE     = 0xF7600000
+SGMEM_ethdma1_BASE     = 0xF5600000
 
 cdma0_CONFIG_BASE    = 0xFF004400
 cdma1_CONFIG_BASE    = 0xFF004440
 
 
-DDR0_START       = 0x40050000
+DDR0_START       = 0x40000000
 DDR1_START       = 0x80000000
 
 def main():
@@ -193,27 +195,27 @@ def main():
 
 
     descriptors_ethdma_S2MM = generate_ethdma_descriptors_for_S2MM(
-        
-        Shared_Men3_base=DDR0_START,
-        MAC_LENTH = 256
+        data_in_base=0x40000000,
+        MAC_LENTH = 64,
+        SG_NUM = 100
     )
 
     descriptors_ethdma1_S2MM = generate_ethdma_descriptors_for_S2MM(
-        
-        Shared_Men3_base=DDR0_START,
-        MAC_LENTH = 256
+        data_in_base=0x40000000,
+        MAC_LENTH = 64,
+        SG_NUM = 100
     )
 
     descriptors_ethdma_MM2S = generate_ethdma_descriptors_for_MM2S(
-        
-        Shared_Men3_base=DDR1_START,
-        MAC_LENTH = 256
+        data_in_base=DDR1_START,
+        MAC_LENTH = 64,
+        SG_NUM = 100
     )
 
     descriptors_ethdma0_MM2S = generate_ethdma_descriptors_for_MM2S(
-        
-        Shared_Men3_base=DDR1_START,
-        MAC_LENTH = 256
+        data_in_base=DDR1_START,
+        MAC_LENTH = 64,
+        SG_NUM = 100
     )
 
     

@@ -26,7 +26,7 @@ addi x12, x12, 0x40
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
-addi x0, x0, 0
+addi x25, x25, 1
 
 addi x0, x0, 0 
 sw x6, 0x34(x2)
@@ -177,7 +177,7 @@ addi x8, x8, 0x40
 addi x0, x0, 0
 addi x0, x0, 0
 addi x0, x0, 0
-addi x0, x0, 0
+addi x25, x25, 1
 
 
 addi x0, x0, 0

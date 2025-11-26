@@ -103,9 +103,9 @@ def MAC():
 
 def test():
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    name = 'dma0_test_sg'
-    name1 = 'test_sg'
-    mif_dir = os.path.join(script_dir, "mif")
+    name = 'test_1'
+    name1 = 'test_123'
+    mif_dir = os.path.join(script_dir, "mif_test")
     txt_dir = os.path.join(script_dir, "txt")
 
     input_txt = os.path.join(txt_dir, f"{name}.txt")

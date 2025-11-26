@@ -202,6 +202,19 @@ def ROM_TABLE():
     print("The GM0 series is being processed...")
     merge_and_replace(mif_file0, mif_file1)
 
+def T1():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    mif_dir = os.path.join(script_dir, "mif_test")
+    sparse_dir = os.path.join(script_dir, "sparse")
+    
+    name0 = "ALL_MAC"
+    name1 = "test_123"
+    mif_file0 = os.path.join(mif_dir, f"{name0}.mif")
+    mif_file1 = os.path.join(mif_dir, f"{name1}.mif")
+
+    # first：GM0.mif + a_2.mif
+    print("The GM0 series is being processed...")
+    merge_and_replace(mif_file0, mif_file1)
 
 if __name__ == "__main__":
     main()

@@ -226,7 +226,7 @@ def main00(mac_lenth = 500,mac_NUMBER = 13):
     ETH1_MM2S_len = 64*len(descriptors_ethdma_MM2S)
 
     ethdma3_S2MM_sg_data = link_descriptors_in_memory(descriptors_ethdma_S2MM, base_addr=SGMEM_ETHDMA3_BASE, desc_size=64)
-    ethdma4_MM2S_sg_data = link_descriptors_in_memory(descriptors_ethdma_MM2S, base_addr=SGMEM_ETHDMA4_BASE+ETH0_S2MM_len, desc_size=64)
+    ethdma4_MM2S_sg_data = link_descriptors_in_memory(descriptors_ethdma_MM2S, base_addr=SGMEM_ETHDMA1_BASE+ETH0_S2MM_len, desc_size=64)
 
     ethdma3_S2MM_name = 'eth_tile_sg'
     ethdma3_S2MM_file = os.path.join(txt_dir, f"{ethdma3_S2MM_name}.txt")
@@ -247,15 +247,15 @@ def main00(mac_lenth = 500,mac_NUMBER = 13):
         f0.write("x5 0x"  + f"{(DDR0_START    & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x6 0x"  + f"{(SGMEM_ETHDMA3_BASE  & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x7 0x"  + f"{(ETH0_S2MM_len + ETH1_MM2S_len          & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x8 0x"  + f"{(SGMEM_ETHDMA4_BASE    & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x8 0x"  + f"{(SGMEM_ETHDMA1_BASE    & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x11 0x"  + f"{(ethdma3_config          & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x12 0x"  + f"{(ethdma4_config          & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x12 0x"  + f"{(ethdma1_config          & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x13 0x"  + f"{(0x00001001              & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x14 0x"  + f"{(0x00001000              & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x15 0x"  + f"{(SGMEM_ETHDMA3_BASE         & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x16 0x"  + f"{((SGMEM_ETHDMA3_BASE + ETH0_S2MM_len - 64)    & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x17 0x"  + f"{((SGMEM_ETHDMA4_BASE + ETH0_S2MM_len)     & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x18 0x"  + f"{((SGMEM_ETHDMA4_BASE + ETH0_S2MM_len + ETH1_MM2S_len - 64)      & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x17 0x"  + f"{((SGMEM_ETHDMA1_BASE + ETH0_S2MM_len)     & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x18 0x"  + f"{((SGMEM_ETHDMA1_BASE + ETH0_S2MM_len + ETH1_MM2S_len - 64)      & 0xFFFFFFFF):08x}"+"\n")
 
 
         f0.write("; --- SEGMENT 2 ---" +"\n")
