@@ -633,7 +633,7 @@ def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A
         f1.write("x11 0x" + f"{((DMA0_MM2S_START+DMA0_MM2S_len-64) & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x12 0x" + f"{((DMA1_MM2S_START+DMA1_MM2S_len-64) & 0xFFFFFFFF):08x}"+"\n")
         f1.write(f"; --- SEGMENT 2 ---" +"\n")
-        f1.write("x1 0x"  + f"{(ethdma0_config          & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x1 0x"  + f"{(0x0         & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x2 0x"  + f"{(ethdma1_config          & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x3 0x"  + f"{(0x00001001              & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x4 0x"  + f"{(0x00001000              & 0xFFFFFFFF):08x}"+"\n")

@@ -182,6 +182,12 @@ addi x25, x25, 1
 
 addi x0, x0, 0
 addi x0, x0, 0
+sw x0, 0x0(x2) 
+addi x0, x0, 0
+
+
+addi x0, x0, 0
+addi x0, x0, 0
 addi x0, x0, 0
 addi x0, x0, 0
 
@@ -199,6 +205,7 @@ addi x0, x0, 0
 addi x0, x0, 0
 sw x3, 0x0(x2) 
 addi x0, x0, 0
+
 
 addi x0, x0, 0
 addi x0, x0, 0
