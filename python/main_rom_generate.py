@@ -35,6 +35,19 @@ def link_descriptors_in_memory(descriptor_list, base_addr=0x00000000, desc_size=
 
     return flattened
 
+def link_SAME(descriptor_list, base_addr=0x00000000, desc_size=64):
+
+    flattened = []  # Stores the final sequentially expanded 32-bit word
+
+    for i in range(len(descriptor_list)):
+
+        next_desc_addr = base_addr 
+
+        words = descriptor_list[i]
+        words[0] = next_desc_addr
+        flattened.extend(words)
+
+    return flattened
 
 def write_txt_file(words, filename):
     """
@@ -116,24 +129,22 @@ def generate_ethdma_descriptors_for_S2MM(
 def generate_ethdma_descriptors_for_MM2S(
     data_in_base=0x40000000,
     MAC_LENTH = 64,
-    MAC_HEAD_ADDR = 0x40000000,
     SG_NUM = 100
 ):
 
     descriptors = []
 
-    head_size_bytes  =  0x08000000 + 64
-    block_size_bytes =  0x04000000 + MAC_LENTH
+
+    block_size_bytes =  0x0C000000 + MAC_LENTH
     addr = 0
 
     for j in range(SG_NUM):
       BUFFER_addr = data_in_base + addr
       next_desc_addr = 0
-      desc_words0 = make_sg_dma_descriptor(next_desc_addr, MAC_HEAD_ADDR, head_size_bytes )
-      descriptors.append(desc_words0)
-      desc_words1 = make_sg_dma_descriptor(next_desc_addr, BUFFER_addr, block_size_bytes)
+     
+      desc_words = make_sg_dma_descriptor(next_desc_addr, BUFFER_addr, block_size_bytes)
       addr = addr + MAC_LENTH
-      descriptors.append(desc_words1)
+      descriptors.append(desc_words)
 
     return descriptors
 
@@ -195,9 +206,11 @@ MAC_START  = DDR0_START
 DATA_START = MAC_START + 64
 
 
-def main00(mac_lenth = 500,mac_NUMBER = 13):
+def main00(mac_lenth = 20,mac_onece = 110):
     MAC_LENTH  = mac_lenth * 64
-    MAC_END    = DDR0_START + mac_lenth * (mac_NUMBER-1) * 64
+    MAC_ONECE = mac_onece
+    MAC_END    = DDR0_START + mac_lenth * (MAC_ONECE-1) * 64
+    
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
     MAIN_TXT_name = 'MAIN'
@@ -209,112 +222,114 @@ def main00(mac_lenth = 500,mac_NUMBER = 13):
         
         data_in_base=DDR0_START,
         MAC_LENTH = MAC_LENTH,
-        SG_NUM = mac_NUMBER
+        SG_NUM = MAC_ONECE            #每次批处理的帧数
     )
     
-    # descriptors_ethdma_MM2S = generate_ethdma_descriptors_for_S2MM(
-        
-    #     data_in_base=DDR1_START,
-    #     MAC_LENTH = MAC_LENTH,
-    #     SG_NUM = mac_NUMBER
-    # )
+    descriptors_ethdma_MM2S = generate_ethdma_descriptors_for_S2MM(
+      
+        data_in_base=DDR1_START,
+        MAC_LENTH = MAC_LENTH,
+        SG_NUM = MAC_ONECE
+    )
 
 
 
-    ETH0_S2MM_len = 64*len(descriptors_ethdma_S2MM)
+    ETH3_S2MM_len = 64*len(descriptors_ethdma_S2MM)
 
-    #ETH1_MM2S_len = 64*len(descriptors_ethdma_MM2S)
+    ETH_MM2S_len = 64*len(descriptors_ethdma_MM2S)
+
+    ETH_LEN = max(ETH3_S2MM_len, ETH_MM2S_len)
 
     ethdma3_S2MM_sg_data = link_descriptors_in_memory(descriptors_ethdma_S2MM, base_addr=SGMEM_ETHDMA3_BASE, desc_size=64)
-    #ethdma4_MM2S_sg_data = link_descriptors_in_memory(descriptors_ethdma_MM2S, base_addr=SGMEM_ETHDMA4_BASE+ETH0_S2MM_len, desc_size=64)
+    ethdma_MM2S_sg_data =  link_SAME(descriptors_ethdma_MM2S, base_addr=0, desc_size=64)
 
-    ethdma3_S2MM_name = 'eth_tile_sg'
-    ethdma3_S2MM_file = os.path.join(txt_dir, f"{ethdma3_S2MM_name}.txt")
-    ALLDATA= ethdma3_S2MM_sg_data #+ ethdma4_MM2S_sg_data 
+    ethdma_name = 'eth_tile_sg'
+    ethdma_file = os.path.join(txt_dir, f"{ethdma_name}.txt")
+    ALLDATA= ethdma3_S2MM_sg_data + ethdma_MM2S_sg_data 
     
 
-    write_txt_file(ALLDATA, ethdma3_S2MM_file)
+    write_txt_file(ALLDATA, ethdma_file)
     hex_to_bin.ETH_TILE_sg()
     
 
     with open(MAIN_TXT_file, 'w') as f0:
 
         f0.write("; --- SEGMENT 1 ---" +"\n")   
-        f0.write("x1 0x"  + f"{(ethdma3_config          & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x2 0x"  + f"{(ethdma4_config          & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x3 0x"  + f"{(0x00001001              & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x4 0x"  + f"{(0x00001000              & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x5 0x"  + f"{(SGMEM_ETHDMA3_BASE         & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x6 0x"  + f"{((SGMEM_ETHDMA3_BASE + ETH0_S2MM_len - 64)    & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x7 0x"  + f"{((SGMEM_ETHDMA4_BASE + ETH0_S2MM_len)     & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x8 0x"  + f"{((SGMEM_ETHDMA4_BASE + ETH0_S2MM_len  - 64)      & 0xFFFFFFFF):08x}"+"\n")
-
+        f0.write("x1 0x"  + f"{(CDMA0_config        & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x2 0x"  + f"{(CDMA1_config        & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x3 0x"  + f"{(0x00001001          & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x4 0x"  + f"{(0x00001000          & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x5 0x"  + f"{(SGMEM_CDMA0_start                               & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x6 0x"  + f"{(SGMEM_ETHDMA3_BASE                              & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x7 0x"  + f"{(ETH_LEN                                         & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x8 0x"  + f"{(SGMEM_CDMA0_start + ETH3_S2MM_len               & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x9 0x"  + f"{(SGMEM_CDMA1_start                               & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x10 0x"  + f"{(ethdma3_config                                   & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x11 0x"  + f"{(SGMEM_ETHDMA3_BASE                             & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x12 0x"  + f"{((SGMEM_ETHDMA3_BASE + ETH3_S2MM_len - 64)      & 0xFFFFFFFF):08x}"+"\n")
 
         f0.write("; --- SEGMENT 2 ---" +"\n")
         f0.write("x1 0x"   + f"{(0                      & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x2 0x"   + f"{(0                      & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x3 0x"   + f"{(0                      & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x4 0x"   + f"{(0                      & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x5 0x"   + f"{(0                      & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x6 0x"   + f"{(0                      & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x7 0x"   + f"{(0                      & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x8 0x"   + f"{(0                      & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x10 0x"  + f"{(0xFF                   & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x11 0x"  + f"{(0xF1                   & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x12 0x"  + f"{(0xF2                   & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x13 0x"  + f"{(0xF3                   & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x14 0x"  + f"{(0xF4                   & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x15 0x"  + f"{(0xCCA41704             & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x3 0x"   + f"{(0xFF                   & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x4 0x"   + f"{(0xF1                   & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x5 0x"   + f"{(0xF2                   & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x6 0x"   + f"{(0xF3                   & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x7 0x"   + f"{(0xF4                   & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x8 0x"   + f"{(0xCCA41704             & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x9 0x"   + f"{(0x0                    & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x20 0x"  + f"{(DDR0_START             & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x21 0x"  + f"{(DATA_START             & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x22 0x"  + f"{(MAC_LENTH              & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x23 0x"  + f"{(MAC_END                & 0xFFFFFFFF):08x}"+"\n")
+
+
         
         f0.write("; --- SEGMENT 3 ---" +"\n")
-        f0.write("x1 0x"  + f"{(0                               & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x1 0x"  + f"{(CDMA0_config                    & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x2 0x"  + f"{(ethdma4_config                  & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x3 0x"  + f"{(0x00001001                      & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x4 0x"  + f"{(0x00001000                      & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x5 0x"  + f"{(0                               & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x6 0x"  + f"{(0                               & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x7 0x"  + f"{((SGMEM_ETHDMA4_BASE + 64)       & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x8 0x"  + f"{((SGMEM_ETHDMA4_BASE + 64)       & 0xFFFFFFFF):08x}"+"\n") #MM2S
+        f0.write("x5 0x"  + f"{(SGMEM_CDMA1_start               & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x6 0x"  + f"{(SGMEM_ETHDMA4_BASE              & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x7 0x"  + f"{(0x40                            & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x8 0x"  + f"{(0                               & 0xFFFFFFFF):08x}"+"\n") 
 
         f0.write("; --- SEGMENT 4 ---" +"\n")
-        f0.write("x1 0x"  + f"{(0                               & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x2 0x"  + f"{(ethdma2_config                  & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x3 0x"  + f"{(0x00001001                      & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x4 0x"  + f"{(0x00001000                      & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x5 0x"  + f"{(0                               & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x6 0x"  + f"{(0                               & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x7 0x"  + f"{((SGMEM_ETHDMA2_BASE + 64)       & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x8 0x"  + f"{((SGMEM_ETHDMA2_BASE + 64)       & 0xFFFFFFFF):08x}"+"\n") #MM2S
-
-        f0.write("; --- SEGMENT 5 ---" +"\n")
-        f0.write("x1 0x"  + f"{(0                               & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x2 0x"  + f"{(ethdma3_config                  & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x3 0x"  + f"{(0x00001001                      & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x4 0x"  + f"{(0x00001000                      & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x5 0x"  + f"{(0                               & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x6 0x"  + f"{(0                               & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x7 0x"  + f"{((SGMEM_ETHDMA3_BASE + 64)       & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x8 0x"  + f"{((SGMEM_ETHDMA3_BASE + 64)       & 0xFFFFFFFF):08x}"+"\n") #MM2S
-
-        f0.write("; --- SEGMENT 6 ---" +"\n")
-        f0.write("x1 0x"  + f"{(0                               & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x1 0x"  + f"{(CDMA0_config                    & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x2 0x"  + f"{(ethdma0_config                  & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x3 0x"  + f"{(0x00001001                      & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x4 0x"  + f"{(0x00001000                      & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x5 0x"  + f"{(0                               & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x6 0x"  + f"{(0                               & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x7 0x"  + f"{((SGMEM_ETHDMA0_BASE + 64)       & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x8 0x"  + f"{((SGMEM_ETHDMA0_BASE + 64)       & 0xFFFFFFFF):08x}"+"\n") #MM2S
+        f0.write("x5 0x"  + f"{(SGMEM_CDMA1_start               & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x6 0x"  + f"{(SGMEM_ETHDMA0_BASE              & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x7 0x"  + f"{(0x40                            & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x8 0x"  + f"{(0                               & 0xFFFFFFFF):08x}"+"\n") 
+
+        f0.write("; --- SEGMENT 5 ---" +"\n")
+        f0.write("x1 0x"  + f"{(CDMA0_config                    & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x2 0x"  + f"{(ethdma1_config                  & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x3 0x"  + f"{(0x00001001                      & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x4 0x"  + f"{(0x00001000                      & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x5 0x"  + f"{(SGMEM_CDMA1_start               & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x6 0x"  + f"{(SGMEM_ETHDMA1_BASE              & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x7 0x"  + f"{(0x40                            & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x8 0x"  + f"{(0                               & 0xFFFFFFFF):08x}"+"\n") 
+
+        f0.write("; --- SEGMENT 6 ---" +"\n")
+        f0.write("x1 0x"  + f"{(CDMA0_config                    & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x2 0x"  + f"{(ethdma2_config                  & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x3 0x"  + f"{(0x00001001                      & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x4 0x"  + f"{(0x00001000                      & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x5 0x"  + f"{(SGMEM_CDMA1_start               & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x6 0x"  + f"{(SGMEM_ETHDMA2_BASE              & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x7 0x"  + f"{(0x40                            & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x8 0x"  + f"{(0                               & 0xFFFFFFFF):08x}"+"\n") 
 
         f0.write("; --- SEGMENT 7 ---" +"\n")
-        f0.write("x9  0x"  + f"{(0     & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x16 0x"  + f"{(1     & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x17 0x"  + f"{(2     & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x18 0x"  + f"{(3     & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x1 0x"  + f"{(1     & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x2 0x"  + f"{(2     & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x3 0x"  + f"{(3     & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x4 0x"  + f"{(4     & 0xFFFFFFFF):08x}"+"\n")
 
         f0.write("; --- SEGMENT 8 ---" +"\n")
         f0.write("x1 0x"  + f"{(CDMA0_config    & 0xFFFFFFFF):08x}"+"\n")
@@ -327,15 +342,15 @@ def main00(mac_lenth = 500,mac_NUMBER = 13):
         f0.write("x8 0x"  + f"{(0               & 0xFFFFFFFF):08x}"+"\n")
 
         
-def main(mac_lenth = 500,mac_NUMBER = 13):
-    main00(mac_lenth,mac_NUMBER)
+def main(mac_lenth = 20,mac_onece = 110):
+    main00(mac_lenth,mac_onece)
     asm_generate.main()
     translator.main()
 
     tablemd.main()
 
 if __name__ == "__main__":
-    main(mac_lenth = 500,mac_NUMBER = 13)
+    main(mac_lenth = 20,mac_onece = 110)
     
 
 

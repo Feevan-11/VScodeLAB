@@ -5,7 +5,7 @@ lui x3, 0x1
 lui x4, 0x1
 lui x5, 0x40000
 lui x6, 0xF5A00
-lui x7, 0x0
+lui x7, 0x1
 lui x8, 0xF5600
 addi x1, x1, 0x400
 addi x2, x2, 0x440
@@ -13,7 +13,7 @@ addi x3, x3, 0x0
 addi x4, x4, 0x0
 addi x5, x5, 0x0
 addi x6, x6, 0x0
-addi x7, x7, 0x480
+addi x7, x7, 0x980
 addi x8, x8, 0x0
 
 addi x0, x0, 0
@@ -110,15 +110,15 @@ lui x14, 0x1
 lui x15, 0xF5A00
 lui x16, 0xF5A00
 lui x17, 0xF5600
-lui x18, 0xF5600
+lui x18, 0xF5601
 addi x11, x11, 0xC00
 addi x12, x12, 0x400
 addi x13, x13, 0x1
 addi x14, x14, 0x0
 addi x15, x15, 0x0
-addi x16, x16, 0x200
-addi x17, x17, 0x240
-addi x18, x18, 0x440
+addi x16, x16, 0x480
+addi x17, x17, 0x4C0
+addi x18, x18, 0x940
 
 addi x0, x0, 0
 addi x0, x0, 0 
@@ -199,7 +199,7 @@ lui x8, 0x0
 lui x20, 0x40000
 lui x21, 0x40000
 lui x22, 0x0
-lui x23, 0x40001
+lui x23, 0x40006
 addi x11, x11, 0xF1
 addi x12, x12, 0xF2
 addi x13, x13, 0xF3
@@ -210,8 +210,8 @@ addi x7, x7, 0x0
 addi x8, x8, 0x0
 addi x20, x20, 0x0
 addi x21, x21, 0x40
-addi x22, x22, 0x240
-addi x23, x23, 0x200
+addi x22, x22, 0x500
+addi x23, x23, 0xA00
 
 addi x0, x0, 0 
 addi x0, x0, 0

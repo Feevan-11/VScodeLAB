@@ -11,18 +11,19 @@ def main():
     # 支持的数据类型: 0:"fp16", 1:"fp32", 2:"fp64", 3:"bf16"
     #[A_ROW,A*B,B_COL,阵列大小,数据字节数,A数据类型,B数据类型]
 
-    martix_List = [[32,8,32,32,2,0,0],[16,16,16,32,2,0,0],[16,16,16,32,2,0,0],[16,16,16,32,2,0,0]]
+    martix_List = [[288,288,288,32,2,0,0],[16,16,16,32,2,0,0],[16,16,16,32,2,0,0],[16,16,16,32,2,0,0]]
     MPU_ID = '1000'
     mac_da = 0x0000ff  
     flag = 0xCCA41704
-    mac_lenth= 8
-    mac_NUMBER = 9
+    mac_lenth= 19
+    mac_NUMBER = 312
+    mac_onece = 110
     VCS = 1
 
     if VCS == 0:
-        main_rom_generate.main(mac_lenth+1,mac_NUMBER)
+        main_rom_generate.main(mac_lenth+1,mac_onece)
     if VCS == 1:
-        main_rom_gen_vcs.main(mac_lenth+1,mac_NUMBER)
+        main_rom_gen_vcs.main(mac_lenth+1,mac_onece)
 
     SA_X_MAIN.main(martix_List , MPU_ID , mac_da , flag, mac_lenth)
 

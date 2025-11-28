@@ -55,6 +55,32 @@ def main():
             f.write(md_table)
     
         print("A Markdown table has been generated")
+def main_t():
 
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    names = ['main_code']
+    md_dir = os.path.join(script_dir,"md")
+    asm_dir = os.path.join(script_dir,"asm")
+    for name in names:
+        filename = os.path.join(asm_dir, f"{name}.asm")
+
+        if not filename:
+            print("Not found.asm文件")
+            return
+
+        print(f"Work with files: {filename}")
+    
+    # Generate Markdown content
+        headers = ["PC", "Slot3", "Slot2", "Slot1", "Slot0"]
+        table_data = process_asm_file(filename)
+        md_table = tabulate(table_data, headers=headers, tablefmt="github")
+    
+        # Write to a Markdown file
+        outputf = os.path.join(md_dir, f"{name}.md")
+        with open(outputf, 'w', encoding='utf-8') as f:
+
+            f.write(md_table)
+    
+        print("A Markdown table has been generated")
 if __name__ == "__main__":
     main()

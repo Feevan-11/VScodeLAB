@@ -565,7 +565,7 @@ def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A
         
         data_in_base=data0_out,
         MAC_LENTH = block_width*block_width,
-        SG_NUM = int((A_ROWS/block_width) * (B_COLS/block_width))
+        SG_NUM = int((A_ROWS/block_width) * (B_COLS/block_width))*2
     )
 
     ETH4_MM2S_len = 64*len(descriptors_ethdma_MM2S)
