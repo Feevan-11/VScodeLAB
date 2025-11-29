@@ -6,6 +6,7 @@ import merge_mif_files
 import macT
 import hex_to_bin
 import mif_coe
+import tablemd
 
 def main():
     # 支持的数据类型: 0:"fp16", 1:"fp32", 2:"fp64", 3:"bf16"
@@ -17,8 +18,8 @@ def main():
     flag = 0xCCA41704
     mac_lenth= 19
     mac_NUMBER = 312
-    mac_onece = 110
-    VCS = 1
+    mac_onece = 156
+    VCS = 0
 
     if VCS == 0:
         main_rom_generate.main(mac_lenth+1,mac_onece)
@@ -36,11 +37,12 @@ def main():
     else:
         print("\n需调整帧数\n")
     hex_to_bin.test()
-    merge_mif_files.ROM_TABLE()
+    #merge_mif_files.ROM_TABLE()
     merge_mif_files.T1()
 
     #if VCS == 0:
     mif_coe.main()
+    tablemd.main()
     
 
 

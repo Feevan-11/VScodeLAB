@@ -225,9 +225,9 @@ def main00(mac_lenth = 20,mac_onece = 110):
         SG_NUM = MAC_ONECE            #每次批处理的帧数
     )
     
-    descriptors_ethdma_MM2S = generate_ethdma_descriptors_for_S2MM(
+    descriptors_ethdma_MM2S = generate_ethdma_descriptors_for_MM2S(
       
-        data_in_base=DDR1_START,
+        data_in_base=DDR0_START,
         MAC_LENTH = MAC_LENTH,
         SG_NUM = MAC_ONECE
     )
@@ -269,15 +269,15 @@ def main00(mac_lenth = 20,mac_onece = 110):
         f0.write("x12 0x"  + f"{((SGMEM_ETHDMA3_BASE + ETH3_S2MM_len - 64)      & 0xFFFFFFFF):08x}"+"\n")
 
         f0.write("; --- SEGMENT 2 ---" +"\n")
-        f0.write("x1 0x"   + f"{(0                      & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x2 0x"   + f"{(0                      & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x3 0x"   + f"{(0xFF                   & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x4 0x"   + f"{(0xF1                   & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x5 0x"   + f"{(0xF2                   & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x6 0x"   + f"{(0xF3                   & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x7 0x"   + f"{(0xF4                   & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x8 0x"   + f"{(0xCCA41704             & 0xFFFFFFFF):08x}"+"\n")
-        f0.write("x9 0x"   + f"{(0x0                    & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x11 0x"   + f"{(0                      & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x12 0x"   + f"{(0                      & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x13 0x"   + f"{(0xFF                   & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x14 0x"   + f"{(0xF1                   & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x15 0x"   + f"{(0xF2                   & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x16 0x"   + f"{(0xF3                   & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x17 0x"   + f"{(0xF4                   & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x18 0x"   + f"{(0xCCA41704             & 0xFFFFFFFF):08x}"+"\n")
+        f0.write("x19 0x"   + f"{(0x0                    & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x20 0x"  + f"{(DDR0_START             & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x21 0x"  + f"{(DATA_START             & 0xFFFFFFFF):08x}"+"\n")
         f0.write("x22 0x"  + f"{(MAC_LENTH              & 0xFFFFFFFF):08x}"+"\n")

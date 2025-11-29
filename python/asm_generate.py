@@ -128,7 +128,7 @@ def main():
     # },
     {
         "asm_in": os.path.join("asm", "main_code.asm"),
-        "reg_config": os.path.join("txt", "main.txt"),
+        "reg_config": os.path.join("txt", "MAIN.txt"),
         "asm_out": os.path.join("asm", "main.asm")
     }
     ]
