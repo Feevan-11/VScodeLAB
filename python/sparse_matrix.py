@@ -6,7 +6,7 @@ from typing import Tuple, List
 class SparseMatrixCompressor:
     def __init__(self):
         # 计算粒度（每次处理32行）
-        self.granularity = 32
+        self.granularity = 16
         
     def generate_random_matrix(self, rows: int, cols: int, sparsity: float) -> np.ndarray:
         """生成随机稀疏矩阵（直接使用FP16格式）"""
@@ -66,7 +66,7 @@ class SparseMatrixCompressor:
                     contains_last_col = True
                     break
             
-            # 构建包头
+            # 构建包头（固定512位）
             header = self._build_header(row_end == rows, 
                                       contains_last_col, 
                                       cols, total_nnz)
@@ -117,39 +117,44 @@ class SparseMatrixCompressor:
     
     def _build_header(self, rlast: bool, clast: bool, 
                      total_cols: int, nnz_count: int) -> bytes:
-        """构建包头（5字节）"""
-        # 类型(2bit)固定为0（FP16） + RLast(1bit) + CLast(1bit) + 列掩码(12bit) + 值数量(16bit)
-        header = bytearray(5)
+        """构建包头（固定512位=64字节），右侧补零"""
+        # 创建64字节的包头，初始全为零
+        header = bytearray(64)  # 64字节 = 512位
         
-        # 第一个字节：类型(2bit)=0 + RLast(1bit) + CLast(1bit) + 列掩码高4bit
+        # 包头结构（前5字节为有效数据，右侧补零）：
+        # 字节0: 类型(2bit) + RLast(1bit) + CLast(1bit) + 列掩码高4bit
+        # 字节1: 列掩码低8bit
+        # 字节2-3: 值数量(16bit)
+        # 字节4: 保留
+        
+        # 第一个字节：类型(2bit)=0（FP16） + RLast(1bit) + CLast(1bit) + 列掩码高4bit
         first_byte = 0  # FP16类型
         first_byte |= (1 if rlast else 0) << 5
         first_byte |= (1 if clast else 0) << 4
         first_byte |= (total_cols >> 8) & 0x0F
-        header[0] = first_byte
         
-        # 第二个字节：列掩码低8bit
-        header[1] = total_cols & 0xFF
+        # 在右侧补零（低位地址），所以有效数据放在最前面的5字节
+        # 小端序：低地址存放低位字节，符合常规的数据排列
         
-        # 第三、四个字节：值数量
-        header[2] = (nnz_count >> 8) & 0xFF
-        header[3] = nnz_count & 0xFF
+        # 有效数据位置（前5字节）
+        header[0] = first_byte           # 字节0的有效数据
+        header[1] = total_cols & 0xFF   # 字节1的有效数据
+        header[2] = (nnz_count >> 8) & 0xFF  # 字节2的有效数据
+        header[3] = nnz_count & 0xFF        # 字节3的有效数据
+        header[4] = 0                       # 字节4的保留位
         
-        # 第五个字节：保留（填充到5字节对齐）
-        header[4] = 0
+        # 第5-63字节自动保持为0（右侧补零）
         
         return bytes(header)
     
     def pad_to_512bits(self, data: bytes) -> List[str]:
-        """将数据填充到512位（64字节）的倍数，并转换为二进制字符串列表
-        修正：使用自然顺序构建数据包，最后统一进行字节反转
-        """
+        """将数据填充到512位（64字节）的倍数，右侧补零，并转换为二进制字符串列表"""
         # 计算需要填充的字节数
         total_bytes = len(data)
         target_bytes = ((total_bytes + 63) // 64) * 64  # 64字节对齐
         pad_bytes = target_bytes - total_bytes
         
-        # 在数据后面补零
+        # 在数据右侧补零（低位地址方向）
         padded_data = data + b'\x00' * pad_bytes
         
         # 转换为二进制字符串列表
@@ -184,10 +189,10 @@ class SparseMatrixCompressor:
 
 def main(matrix_size = 64,sparsity = 0.9 ):
     compressor = SparseMatrixCompressor()
-    
+
     # 矩阵参数
 
-    matrix_size = matrix_size  # 32×32矩阵
+    matrix_size = matrix_size  
     sparsity = sparsity    # 90%稀疏度
     
     print("生成随机稀疏矩阵...")
@@ -209,8 +214,8 @@ def main(matrix_size = 64,sparsity = 0.9 ):
     
     # 写入数据包文件
     print("写入数据包文件...")
-    compressor.write_packets_to_file(packets_a, '.\sparse\matrix_a_packets.mif')
-    compressor.write_packets_to_file(packets_b, '.\sparse\matrix_b_packets.mif')
+    compressor.write_packets_to_file(packets_a, '.\\sparse\\matrix_a_packets.mif')
+    compressor.write_packets_to_file(packets_b, '.\\sparse\\matrix_b_packets.mif')
     
     # 计算每个数据包占用的512位块数
     def calculate_512bit_blocks(packets):
@@ -225,7 +230,7 @@ def main(matrix_size = 64,sparsity = 0.9 ):
     b_blocks = calculate_512bit_blocks(packets_b)
     
     # 写入块信息文件
-    with open('.\sparse\packet_blocks_info.txt', 'w') as f:
+    with open('.\\sparse\\packet_blocks_info.txt', 'w') as f:
         # 矩阵A的数据包块信息
         f.write(' '.join(map(str, a_blocks)) + '\n')
         # 矩阵B的数据包块信息  
@@ -236,6 +241,18 @@ def main(matrix_size = 64,sparsity = 0.9 ):
     print(f"矩阵B生成 {len(packets_b)} 个数据包")
     print(f"矩阵A数据包块数: {a_blocks}")
     print(f"矩阵B数据包块数: {b_blocks}")
+    
+    # 显示数据包结构示例
+    if len(packets_a) > 0:
+        sample_packet = packets_a[0]
+        print(f"\n数据包总大小: {len(sample_packet)} 字节")
+        print("包头前8字节（十六进制）:", sample_packet[:8].hex())
+        print("数据包末尾8字节（十六进制）:", sample_packet[-8:].hex())
+        
+        # 显示填充后的二进制格式
+        binary_lines = compressor.pad_to_512bits(sample_packet)
+        if len(binary_lines) > 0:
+            print("第一个512位块的前128位:",len(binary_lines))#, binary_lines[471][:511])
 
 if __name__ == "__main__":
-    main(matrix_size = 64,sparsity = 0.9 )
+    main(matrix_size=64, sparsity=0.9)
