@@ -1,258 +1,570 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+将稀疏矩阵 A、B 压缩为数据包并输出为 512bit 对齐的二进制 txt 文件。
+
+主要功能：
+1. 根据给定尺寸和稀疏度，生成随机稀疏矩阵 A(M×K)、B(K×N)，数据类型为 fp16。
+2. 按 16×4096 / 4096×16 规则对 A、B 分块，并按照给定的格式压缩：
+   - 包头（512bit，对齐，右对齐）
+   - Row Data（64Byte = 512bit）
+   - Column Mask（每个 16bit，数量 = total_cols + 1）
+   - Non-zero Values（每个 16bit，按行/列优先顺序）
+3. 每个数据包末尾补 0 到 512bit 整数倍。
+4. 输出：
+   - A_packets.txt：矩阵 A 所有数据包拼接后的 512bit 行
+   - B_packets.txt：矩阵 B 所有数据包拼接后的 512bit 行
+   - packet_stats.txt：
+       第一行：矩阵 A 每两个数据包占用的 512bit 行数（空格分隔）
+       第二行：矩阵 B 每两个数据包占用的 512bit 行数（空格分隔）
+"""
+
 import numpy as np
-import struct
-import random
-from typing import Tuple, List
+from typing import List, Tuple
 
-class SparseMatrixCompressor:
-    def __init__(self):
-        # 计算粒度（每次处理32行）
-        self.granularity = 16
-        
-    def generate_random_matrix(self, rows: int, cols: int, sparsity: float) -> np.ndarray:
-        """生成随机稀疏矩阵（直接使用FP16格式）"""
-        # 直接创建FP16格式的矩阵
-        matrix = np.zeros((rows, cols), dtype=np.float16)
-        
-        # 根据稀疏度生成非零元素
-        nnz_total = int(rows * cols * (1 - sparsity))
-        indices = np.random.choice(rows * cols, nnz_total, replace=False)
-        
-        # 生成FP16格式的随机值
-        values = np.random.uniform(-1.0, 1.0, nnz_total).astype(np.float16)
-            
-        # 填充非零元素
-        for idx in indices:
-            i, j = idx // cols, idx % cols
-            matrix[i, j] = values[idx % nnz_total]
-            
-        return matrix
-    
-    def compress_matrix(self, matrix: np.ndarray, is_matrix_b: bool = False) -> List[bytes]:
-        """压缩稀疏矩阵为数据包格式"""
-        rows, cols = matrix.shape
-        
-        packets = []
-        
-        # 按32行分块处理
-        for row_start in range(0, rows, self.granularity):
-            row_end = min(row_start + self.granularity, rows)
-            current_rows = row_end - row_start
-            
-            # 处理当前块
-            packet_data = bytearray()
-            
-            # 收集当前块的所有非零元素信息
-            all_nnz_info = []
-            total_nnz = 0
-            
-            for i in range(row_start, row_end):
-                row_data = matrix[i]
-                nnz_indices = np.where(row_data != 0)[0]
-                nnz_count = len(nnz_indices)
-                
-                if nnz_count > 0:
-                    all_nnz_info.append({
-                        'row_idx': i,
-                        'nnz_count': nnz_count,
-                        'col_indices': nnz_indices,
-                        'values': [row_data[j] for j in nnz_indices]
-                    })
-                    total_nnz += nnz_count
-            
-            # 检查是否包含最后一列
-            contains_last_col = False
-            for info in all_nnz_info:
-                if (cols - 1) in info['col_indices']:
-                    contains_last_col = True
-                    break
-            
-            # 构建包头（固定512位）
-            header = self._build_header(row_end == rows, 
-                                      contains_last_col, 
-                                      cols, total_nnz)
-            packet_data.extend(header)
-            
-            # 构建行向量信息（固定16行，不足补零）
-            row_vector_size = 16 * 4  # 16行 × 4字节
-            row_vector_data = bytearray(row_vector_size)
-            
-            for idx, info in enumerate(all_nnz_info[:16]):  # 最多16行
-                # 行索引（2字节）- 使用自然顺序（小端序）
-                struct.pack_into('<H', row_vector_data, idx*4, info['row_idx'])
-                # 行非零值数量（2字节）- 使用自然顺序（小端序）
-                struct.pack_into('<H', row_vector_data, idx*4 + 2, info['nnz_count'])
-            
-            packet_data.extend(row_vector_data)
-            
-            # 构建列掩码
-            col_mask_data = bytearray()
-            mask_count = (cols + 15) // 16
-            for info in all_nnz_info[:16]:  # 对应行向量中的行
-                # 每行需要mask_count个列掩码
-                for mask_idx in range(mask_count):
-                    mask_value = 0
-                    start_col = mask_idx * 16
-                    for col_idx in info['col_indices']:
-                        if start_col <= col_idx < start_col + 16:
-                            bit_pos = col_idx - start_col
-                            mask_value |= (1 << bit_pos)
-                    
-                    # 使用自然顺序（小端序）
-                    col_mask_data.extend(struct.pack('<H', mask_value))
-            
-            packet_data.extend(col_mask_data)
-            
-            # 构建非零值序列（FP16）
-            value_data = bytearray()
-            for info in all_nnz_info[:16]:
-                for val in info['values']:
-                    # FP16转换 - 使用自然顺序（小端序）
-                    value_data.extend(struct.pack('<e', val))
-            
-            packet_data.extend(value_data)
-            
-            packets.append(bytes(packet_data))
-        
-        return packets
-    
-    def _build_header(self, rlast: bool, clast: bool, 
-                     total_cols: int, nnz_count: int) -> bytes:
-        """构建包头（固定512位=64字节），右侧补零"""
-        # 创建64字节的包头，初始全为零
-        header = bytearray(64)  # 64字节 = 512位
-        
-        # 包头结构（前5字节为有效数据，右侧补零）：
-        # 字节0: 类型(2bit) + RLast(1bit) + CLast(1bit) + 列掩码高4bit
-        # 字节1: 列掩码低8bit
-        # 字节2-3: 值数量(16bit)
-        # 字节4: 保留
-        
-        # 第一个字节：类型(2bit)=0（FP16） + RLast(1bit) + CLast(1bit) + 列掩码高4bit
-        first_byte = 0  # FP16类型
-        first_byte |= (1 if rlast else 0) << 5
-        first_byte |= (1 if clast else 0) << 4
-        first_byte |= (total_cols >> 8) & 0x0F
-        
-        # 在右侧补零（低位地址），所以有效数据放在最前面的5字节
-        # 小端序：低地址存放低位字节，符合常规的数据排列
-        
-        # 有效数据位置（前5字节）
-        header[0] = first_byte           # 字节0的有效数据
-        header[1] = total_cols & 0xFF   # 字节1的有效数据
-        header[2] = (nnz_count >> 8) & 0xFF  # 字节2的有效数据
-        header[3] = nnz_count & 0xFF        # 字节3的有效数据
-        header[4] = 0                       # 字节4的保留位
-        
-        # 第5-63字节自动保持为0（右侧补零）
-        
-        return bytes(header)
-    
-    def pad_to_512bits(self, data: bytes) -> List[str]:
-        """将数据填充到512位（64字节）的倍数，右侧补零，并转换为二进制字符串列表"""
-        # 计算需要填充的字节数
-        total_bytes = len(data)
-        target_bytes = ((total_bytes + 63) // 64) * 64  # 64字节对齐
-        pad_bytes = target_bytes - total_bytes
-        
-        # 在数据右侧补零（低位地址方向）
-        padded_data = data + b'\x00' * pad_bytes
-        
-        # 转换为二进制字符串列表
-        binary_lines = []
-        
-        # 按64字节（512位）分块
-        chunk_count = len(padded_data) // 64
-        for i in range(chunk_count):
-            chunk = padded_data[i*64:(i+1)*64]
-            
-            # 对每个64字节块，反转字节顺序
-            reversed_chunk = bytes(reversed(chunk))
-            
-            # 转换为二进制字符串
-            binary_str = ''
-            for byte in reversed_chunk:
-                binary_str += format(byte, '08b')
-            
-            binary_lines.append(binary_str)
-        
-        return binary_lines
-    
-    def write_packets_to_file(self, packets: List[bytes], filename: str):
-        """将数据包写入文件，每行512位"""
-        with open(filename, 'w') as f:
-            for packet in packets:
-                binary_lines = self.pad_to_512bits(packet)
-                
-                # 写入所有行
-                for line in binary_lines:
-                    f.write(line + '\n')
 
-def main(matrix_size = 64,sparsity = 0.9 ):
-    compressor = SparseMatrixCompressor()
 
-    # 矩阵参数
+def int_to_bits_le(value: int, bit_width: int) -> List[int]:
+    """
+    将整数编码为小端 bit 序列（LSB-first），长度固定为 bit_width。
+    比如 value = 5 (0b0101), bit_width = 4 -> [1,0,1,0]
+    """
+    bits = [(value >> i) & 1 for i in range(bit_width)]
+    return bits
 
-    matrix_size = matrix_size  
-    sparsity = sparsity    # 90%稀疏度
-    
-    print("生成随机稀疏矩阵...")
-    # 生成矩阵A和B（直接使用FP16格式）
-    matrix_a = compressor.generate_random_matrix(matrix_size, matrix_size, sparsity)
-    matrix_b = compressor.generate_random_matrix(matrix_size, matrix_size, sparsity)
-    
-    print(f"矩阵A非零元素: {np.count_nonzero(matrix_a)}")
-    print(f"矩阵B非零元素: {np.count_nonzero(matrix_b)}")
-    print(f"矩阵A数据类型: {matrix_a.dtype}")
-    print(f"矩阵B数据类型: {matrix_b.dtype}")
-    
-    # 压缩矩阵
-    print("压缩矩阵A...")
-    packets_a = compressor.compress_matrix(matrix_a, is_matrix_b=False)
-    
-    print("压缩矩阵B...")
-    packets_b = compressor.compress_matrix(matrix_b, is_matrix_b=True)
-    
-    # 写入数据包文件
-    print("写入数据包文件...")
-    compressor.write_packets_to_file(packets_a, '.\\sparse\\matrix_a_packets.mif')
-    compressor.write_packets_to_file(packets_b, '.\\sparse\\matrix_b_packets.mif')
-    
-    # 计算每个数据包占用的512位块数
-    def calculate_512bit_blocks(packets):
-        blocks = []
-        for packet in packets:
-            total_bytes = len(packet)
-            blocks_required = (total_bytes + 63) // 64  # 64字节=512位
-            blocks.append(blocks_required)
-        return blocks
-    
-    a_blocks = calculate_512bit_blocks(packets_a)
-    b_blocks = calculate_512bit_blocks(packets_b)
-    
-    # 写入块信息文件
-    with open('.\\sparse\\packet_blocks_info.txt', 'w') as f:
-        # 矩阵A的数据包块信息
-        f.write(' '.join(map(str, a_blocks)) + '\n')
-        # 矩阵B的数据包块信息  
-        f.write(' '.join(map(str, b_blocks)) + '\n')
-    
-    print("压缩完成！")
-    print(f"矩阵A生成 {len(packets_a)} 个数据包")
-    print(f"矩阵B生成 {len(packets_b)} 个数据包")
-    print(f"矩阵A数据包块数: {a_blocks}")
-    print(f"矩阵B数据包块数: {b_blocks}")
-    
-    # 显示数据包结构示例
-    if len(packets_a) > 0:
-        sample_packet = packets_a[0]
-        print(f"\n数据包总大小: {len(sample_packet)} 字节")
-        print("包头前8字节（十六进制）:", sample_packet[:8].hex())
-        print("数据包末尾8字节（十六进制）:", sample_packet[-8:].hex())
-        
-        # 显示填充后的二进制格式
-        binary_lines = compressor.pad_to_512bits(sample_packet)
-        if len(binary_lines) > 0:
-            print("第一个512位块的前128位:",len(binary_lines))#, binary_lines[471][:511])
+
+def float16_to_bits_le(value: np.float16) -> List[int]:
+    """
+    将 fp16（numpy.float16）转换为 16bit 小端 bit 序列。
+    """
+    # view 为 uint16 以便取原始二进制
+    u16 = value.view(np.uint16).item()
+    return int_to_bits_le(u16, 16)
+
+
+def bits_to_512bit_lines(bits_le: List[int]) -> List[str]:
+    """
+    将整体 bit 流（LSB-first）切分为 512bit 一行的字符串列表。
+    输出字符串为 MSB 在左，LSB 在右（即对每个 512bit 块 reversed）。
+    """
+    lines = []
+    n = len(bits_le)
+    for i in range(0, n, 512):
+        block = bits_le[i:i + 512]
+        if len(block) < 512:
+            block = block + [0] * (512 - len(block))  # 末尾补 0
+        # 打印时左边是高位，右边是低位：需要将 LSB-first 的列表反转
+        line_bits = ''.join(str(b) for b in reversed(block))
+        lines.append(line_bits)
+    return lines
+
+
+# =========================
+# 包头、行信息打包
+# =========================
+
+def pack_header_bits(
+    data_type: int,
+    r_last: int,
+    c_last: int,
+    total_cols_encoded: int,
+    nnz_count: int
+) -> List[int]:
+    """
+    打包包头字段为 bit（小端），并在高位补 0 到 512bit。
+
+    字段布局（共 32bit）：
+    [0:1]   data_type (2bit)      这里只用 00 表示 fp16
+    [2]     RLast (1bit)
+    [3]     CLast (1bit)
+    [4:15]  total_cols (12bit)    0 -> 1, 0xFFF -> 4096
+    [16:31] nnz_count (16bit)     当前包中的非零数量（若超过 0xFFFF 则裁剪）
+    """
+    bits = []
+    bits.extend(int_to_bits_le(data_type, 2))
+    bits.extend(int_to_bits_le(r_last, 1))
+    bits.extend(int_to_bits_le(c_last, 1))
+    bits.extend(int_to_bits_le(total_cols_encoded, 12))
+    bits.extend(int_to_bits_le(nnz_count, 16))
+
+    assert len(bits) == 32
+
+    # 包头补 0 至 512bit。注意我们是小端存储：
+    # bits[0:32] 是低位，补在后面的是高位，在输出时会位于 512bit 行的左边。
+    padding = [0] * (512 - 32)
+    bits.extend(padding)
+    return bits
+
+
+def pack_row_data_for_A(
+    row_start: int,
+    num_rows_block: int,
+    row_nnz_list: List[int],
+    total_rows_A: int
+) -> List[int]:
+    """
+    A 矩阵的 Row Data 打包，总长度固定 64Byte = 512bit。
+
+    对块内最多 16 行，每行：
+      row_idx(2B) + nnz_per_row(2B)，均为小端字节序。
+    若当前块行数 < 16，多余 slot 填 0。
+    行号使用 0-based（0~65535），假设总行数 < 65536。
+    """
+    bits = []
+    for slot in range(16):
+        if slot < num_rows_block:
+            global_row_idx = row_start + slot  # 0-based
+            nnz_per_row = row_nnz_list[slot]
+        else:
+            global_row_idx = 0
+            nnz_per_row = 0
+
+        # row_idx: 16bit 小端
+        bits.extend(int_to_bits_le(global_row_idx, 16))
+        # nnz_per_row: 16bit 小端
+        bits.extend(int_to_bits_le(nnz_per_row, 16))
+
+    assert len(bits) == 16 * 32  # 16 行 * 4B * 8bit = 512bit
+    return bits
+
+
+def pack_row_data_for_B(
+    col_start: int,
+    num_cols_block: int,
+    col_nnz_list: List[int],
+    total_cols_B: int
+) -> List[int]:
+    """
+    B 矩阵的 Row Data 打包，总长度固定 64Byte = 512bit。
+
+    此时“行信息”中的 row_idx 实际表示 B 的列号：
+      row_idx(2B) = 原始 B 的列索引（0-based）
+      nnz_per_row(2B) = 当前块内该列的非零数量
+    若当前块列数 < 16，多余 slot 填 0。
+    """
+    bits = []
+    for slot in range(16):
+        if slot < num_cols_block:
+            global_col_idx = col_start + slot  # 0-based
+            nnz_per_col = col_nnz_list[slot]
+        else:
+            global_col_idx = 0
+            nnz_per_col = 0
+
+        bits.extend(int_to_bits_le(global_col_idx, 16))
+        bits.extend(int_to_bits_le(nnz_per_col, 16))
+
+    assert len(bits) == 16 * 32
+    return bits
+
+
+# =========================
+# 单个数据包打包：A
+# =========================
+
+def build_packet_bits_A(
+    A: np.ndarray,
+    row_start: int,
+    row_end: int,
+    col_start: int,
+    col_end: int,
+    total_rows_A: int,
+    total_cols_A: int,
+    is_last_packet: bool
+) -> List[int]:
+    """
+    构造矩阵 A 的一个数据包的 bit 流（LSB-first），并补齐到 512bit 的整数倍。
+
+    分块尺寸：最多 16 行 × 4096 列
+    对应字段含义：
+      - total_cols: 当前块的列数（K 方向），编码为 cols-1
+      - RLast: 若这是 A 的最后一个数据包则置 1
+      - CLast: 若该包包含 A 的最后一列（col_end == total_cols_A）则置 1
+    """
+    block = A[row_start:row_end, col_start:col_end]  # shape: (num_rows_block, num_cols_block)
+    num_rows_block, num_cols_block = block.shape
+
+    # 行非零统计
+    row_nnz = np.count_nonzero(block, axis=1).astype(int).tolist()
+    # 总非零数
+    nnz_total = int(np.count_nonzero(block))
+    nnz_clipped = min(nnz_total, 0xFFFF)  # 超过 16bit 的部分这里简单裁剪（极端全 1 才会超）
+
+    # 列掩码：对当前块中每一列产生 16bit 掩码，bit r 表示块内第 r 行是否非零
+    col_masks: List[int] = []
+    for c in range(num_cols_block):
+        col_vec = block[:, c]
+        mask = 0
+        for r in range(num_rows_block):
+            if col_vec[r] != 0:
+                mask |= (1 << r)  # row r -> bit r
+        col_masks.append(mask)
+
+    # total_cols 字段编码：0->1, 0xFFF->4096
+    total_cols_encoded = num_cols_block - 1  # num_cols_block 至多 4096
+
+    # RLast / CLast 约定：
+    # - RLast: 若这是整个 A 的最后一个数据包则置 1
+    # - CLast: 若该包包含 A 的最后一列（col_end == total_cols_A）则置 1
+    r_last = 1 if is_last_packet else 0
+    c_last = 1 if col_end == total_cols_A else 0
+
+    # 打包包头
+    data_type = 0  # 00b -> fp16
+    header_bits = pack_header_bits(
+        data_type=data_type,
+        r_last=r_last,
+        c_last=c_last,
+        total_cols_encoded=total_cols_encoded,
+        nnz_count=nnz_clipped
+    )
+
+    # 打包行信息（Row Data）
+    row_data_bits = pack_row_data_for_A(
+        row_start=row_start,
+        num_rows_block=num_rows_block,
+        row_nnz_list=row_nnz,
+        total_rows_A=total_rows_A
+    )
+
+    # 打包列掩码（Column Mask），共 num_cols_block 个，每个 16bit
+    col_mask_bits: List[int] = []
+    for mask in col_masks:
+        col_mask_bits.extend(int_to_bits_le(mask, 16))
+
+    # 打包非零值序列（Non-Zero Values），A 按行优先
+    value_bits: List[int] = []
+    for r in range(num_rows_block):
+        for c in range(num_cols_block):
+            v = block[r, c]
+            if v != 0:
+                value_bits.extend(float16_to_bits_le(np.float16(v)))
+
+    # 拼接整个包的 bit 流
+    packet_bits = header_bits + row_data_bits + col_mask_bits + value_bits
+
+    # 包尾补 0 到 512bit 整数倍（高位补 0，即在 bit 序列末尾补）
+    remainder = len(packet_bits) % 512
+    if remainder != 0:
+        pad_len = 512 - remainder
+        packet_bits.extend([0] * pad_len)
+
+    return packet_bits
+
+
+# =========================
+# 单个数据包打包：B
+# =========================
+
+def build_packet_bits_B(
+    B: np.ndarray,
+    row_start: int,
+    row_end: int,
+    col_start: int,
+    col_end: int,
+    total_rows_B: int,
+    total_cols_B: int,
+    is_last_packet: bool
+) -> List[int]:
+    """
+    构造矩阵 B 的一个数据包的 bit 流（LSB-first），并补齐到 512bit 的整数倍。
+
+    分块尺寸：最多 4096 行 × 16 列
+    对应字段含义：
+      - total_cols: 当前块的行数（K 方向），编码为 rows-1
+      - Row Data 中的 row_idx 表示 B 的列索引（0-based）
+      - RLast: 若这是 B 的最后一个数据包则置 1
+      - CLast: 若该包包含 B 的最后一行（row_end == total_rows_B）则置 1
+    """
+    block = B[row_start:row_end, col_start:col_end]  # shape: (num_rows_block, num_cols_block)
+    num_rows_block, num_cols_block = block.shape
+
+    # 每列非零统计（Row Data 使用“列信息”）
+    col_nnz = np.count_nonzero(block, axis=0).astype(int).tolist()
+
+    # 总非零数
+    nnz_total = int(np.count_nonzero(block))
+    nnz_clipped = min(nnz_total, 0xFFFF)
+
+    # 行掩码：对当前块中每一行产生 16bit 掩码，bit c 表示块内第 c 列是否非零
+    row_masks: List[int] = []
+    for r in range(num_rows_block):
+        row_vec = block[r, :]
+        mask = 0
+        for c in range(num_cols_block):
+            if row_vec[c] != 0:
+                mask |= (1 << c)  # col c -> bit c
+        row_masks.append(mask)
+
+    # total_cols 字段编码：对 B 是“行数-1”
+    total_cols_encoded = num_rows_block - 1
+
+    # RLast / CLast 约定：
+    # - RLast: 若这是整个 B 的最后一个数据包则置 1
+    # - CLast: 若该包包含 B 的最后一行（row_end == total_rows_B）则置 1
+    r_last = 1 if is_last_packet else 0
+    c_last = 1 if row_end == total_rows_B else 0
+
+    data_type = 0  # 00b -> fp16
+    header_bits = pack_header_bits(
+        data_type=data_type,
+        r_last=r_last,
+        c_last=c_last,
+        total_cols_encoded=total_cols_encoded,
+        nnz_count=nnz_clipped
+    )
+
+    # Row Data：此时 row_idx 对应 B 的列索引
+    row_data_bits = pack_row_data_for_B(
+        col_start=col_start,
+        num_cols_block=num_cols_block,
+        col_nnz_list=col_nnz,
+        total_cols_B=total_cols_B
+    )
+
+    # Column Mask：每一行一个 mask（对 B 来说是“行掩码”）
+    col_mask_bits: List[int] = []
+    for mask in row_masks:
+        col_mask_bits.extend(int_to_bits_le(mask, 16))
+
+    # 非零值序列：B 按列优先
+    value_bits: List[int] = []
+    for c in range(num_cols_block):
+        for r in range(num_rows_block):
+            v = block[r, c]
+            if v != 0:
+                value_bits.extend(float16_to_bits_le(np.float16(v)))
+
+    packet_bits = header_bits + row_data_bits + col_mask_bits + value_bits
+
+    remainder = len(packet_bits) % 512
+    if remainder != 0:
+        pad_len = 512 - remainder
+        packet_bits.extend([0] * pad_len)
+
+    return packet_bits
+
+
+# =========================
+# 矩阵整体压缩：A、B
+# =========================
+
+def compress_matrix_A_to_packets(A: np.ndarray) -> List[List[int]]:
+    """
+    将矩阵 A(M×K) 按 16 行 × 最多 4096 列 分块，压缩为多个数据包。
+    返回：每个数据包对应一个 bit 列表（LSB-first）。
+    """
+    M, K = A.shape
+    row_block_size = 16
+    col_block_size = 4096
+
+    packets: List[List[int]] = []
+
+    # 预判总共有多少个包，用于判断“最后一个包”
+    row_blocks = (M + row_block_size - 1) // row_block_size
+    col_blocks = (K + col_block_size - 1) // col_block_size
+    total_packets = row_blocks * col_blocks
+
+    packet_index = 0
+
+    for row_start in range(0, M, row_block_size):
+        row_end = min(row_start + row_block_size, M)
+        for col_start in range(0, K, col_block_size):
+            col_end = min(col_start + col_block_size, K)
+            packet_index += 1
+            is_last = (packet_index == total_packets)
+            packet_bits = build_packet_bits_A(
+                A=A,
+                row_start=row_start,
+                row_end=row_end,
+                col_start=col_start,
+                col_end=col_end,
+                total_rows_A=M,
+                total_cols_A=K,
+                is_last_packet=is_last
+            )
+            packets.append(packet_bits)
+
+    return packets
+
+
+def compress_matrix_B_to_packets(B: np.ndarray) -> List[List[int]]:
+    """
+    将矩阵 B(K×N) 按 最多 4096 行 × 16 列 分块，压缩为多个数据包。
+    返回：每个数据包对应一个 bit 列表（LSB-first）。
+    """
+    K, N = B.shape
+    row_block_size = 4096
+    col_block_size = 16
+
+    packets: List[List[int]] = []
+
+    row_blocks = (K + row_block_size - 1) // row_block_size
+    col_blocks = (N + col_block_size - 1) // col_block_size
+    total_packets = row_blocks * col_blocks
+
+    packet_index = 0
+
+    for col_start in range(0, N, col_block_size):
+        col_end = min(col_start + col_block_size, N)
+        for row_start in range(0, K, row_block_size):
+            row_end = min(row_start + row_block_size, K)
+            packet_index += 1
+            is_last = (packet_index == total_packets)
+            packet_bits = build_packet_bits_B(
+                B=B,
+                row_start=row_start,
+                row_end=row_end,
+                col_start=col_start,
+                col_end=col_end,
+                total_rows_B=K,
+                total_cols_B=N,
+                is_last_packet=is_last
+            )
+            packets.append(packet_bits)
+
+    return packets
+
+
+# =========================
+# 稀疏矩阵生成
+# =========================
+
+def generate_random_sparse_matrix(
+    rows: int,
+    cols: int,
+    density: float,
+    low: float = -1.0,
+    high: float = 1.0,
+    seed: int = 0
+) -> np.ndarray:
+    """
+    生成随机稀疏矩阵（fp16）。
+
+    density: 非零比例 (0~1)
+    low, high: 非零元素的均匀分布范围
+    """
+    assert 0.0 <= density <= 1.0
+    rng = np.random.default_rng(seed)
+
+    mat = np.zeros((rows, cols), dtype=np.float16)
+
+    # 为每个位置生成一个 [0,1) 的随机数，小于 density 的位置设为非零
+    mask = rng.random((rows, cols)) < density
+    num_nnz = int(mask.sum())
+    if num_nnz > 0:
+        values = rng.uniform(low, high, size=num_nnz).astype(np.float16)
+        mat[mask] = values
+
+    return mat
+
+
+# =========================
+# 文件输出 & 统计
+# =========================
+
+def write_packets_file(packets: List[List[int]], filename: str) -> List[int]:
+    """
+    将若干数据包（bit 流，LSB-first）拼接，并写入 txt 文件，每行 512bit。
+    返回：每个数据包各自占用的 512bit 行数列表。
+    """
+    # 统计每个包占多少行（因为之前已补齐）
+    lines_per_packet = [len(p) // 512 for p in packets]
+
+    # 全部拼接成一个大 bit 流
+    all_bits: List[int] = []
+    for packet_bits in packets:
+        all_bits.extend(packet_bits)
+
+    lines = bits_to_512bit_lines(all_bits)
+
+    with open(filename, 'w') as f:
+        for line in lines:
+            f.write(line + '\n')
+
+    return lines_per_packet
+
+
+def compute_lines_per_two_packets(lines_per_packet: List[int]) -> List[int]:
+    """
+    根据“每个数据包占多少个 512bit 行”，计算“每两个数据包占多少个 512bit 行”。
+    若数量为奇数，最后一个单独作为一组。
+    """
+    result: List[int] = []
+    n = len(lines_per_packet)
+    i = 0
+    while i < n:
+        if i + 1 < n:
+            result.append(lines_per_packet[i] + lines_per_packet[i + 1])
+            i += 2
+        else:
+            result.append(lines_per_packet[i])
+            i += 1
+    return result
+
+
+def write_packet_stats_file(
+    A_lines_per_packet: List[int],
+    B_lines_per_packet: List[int],
+    filename: str = "packet_stats.txt"
+):
+    """
+    输出统计文件：
+    第一行：矩阵 A 的每两个数据包占多少个 512bit 行（空格分隔）
+    第二行：矩阵 B 的每两个数据包占多少个 512bit 行（空格分隔）
+    """
+    A_pairs = compute_lines_per_two_packets(A_lines_per_packet)
+    B_pairs = compute_lines_per_two_packets(B_lines_per_packet)
+
+    with open(filename, 'w') as f:
+        f.write(' '.join(str(x) for x in A_pairs) + '\n')
+        f.write(' '.join(str(x) for x in B_pairs) + '\n')
+
+
+# =========================
+# 示例主函数
+# =========================
+
+def main(matrix_size,sparsity):
+    # ======= 可根据需要修改的参数 =======
+    # 矩阵尺寸
+    M = matrix_size   # A 的行数
+    K = matrix_size   # A 的列数 / B 的行数
+    N = matrix_size   # B 的列数
+
+    # 稀疏度（非零比例）
+    density_A = 1-sparsity
+    density_B = 1-sparsity
+
+    # 随机种子
+    seed_A = 1
+    seed_B = 2
+    # =================================
+
+    print(f"Generating random sparse matrices A({M}x{K}), B({K}x{N}) ...")
+    A = generate_random_sparse_matrix(M, K, density_A, seed=seed_A)
+    B = generate_random_sparse_matrix(K, N, density_B, seed=seed_B)
+
+    print("Compressing matrix A into packets ...")
+    A_packets = compress_matrix_A_to_packets(A)
+
+    print("Compressing matrix B into packets ...")
+    B_packets = compress_matrix_B_to_packets(B)
+
+    print("Writing A_packets.txt ...")
+    A_lines_per_packet = write_packets_file(A_packets, ".\sparse\matrix_a_packets.mif")
+
+    print("Writing B_packets.txt ...")
+    B_lines_per_packet = write_packets_file(B_packets, ".\sparse\matrix_b_packets.mif")
+
+    print("Writing packet_stats.txt ...")
+    write_packet_stats_file(A_lines_per_packet, B_lines_per_packet, ".\sparse\packet_stats.txt")
+
+    print("Done.")
+    print(f"Matrix A: {len(A_packets)} packets")
+    print(f"Matrix B: {len(B_packets)} packets")
+
 
 if __name__ == "__main__":
-    main(matrix_size=64, sparsity=0.9)
+    main(matrix_size = 32,sparsity=0.9)

@@ -305,14 +305,19 @@ def op(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16):
 
     with open(GM1_file1, 'w') as f1:
         f1.write("; --- SEGMENT 1 ---" +"\n")
-        f1.write("x1 0x" + f"{(0x00000000 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x2 0x" + f"{(0x00000000 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x3 0x" + f"{(0x00000000 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x4 0x" + f"{(0x00000000+DMA0_S2MM_len-64 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x5 0x" + f"{(0x00001001 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x6 0x" + f"{(0x00001000 & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x7 0x" + f"{((0x00000000+DMA0_S2MM_len) & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x8 0x" + f"{((0x00000000+DMA0_S2MM_len+DMA0_MM2S_len-64) & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x1 0x" + f"{(0xFF006000 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x2 0x" + f"{(0x00000074 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x3 0x" + f"{(0x00000065 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x4 0x" + f"{(0x00000073 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x5 0x" + f"{(0x00000074 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x6 0x" + f"{(0x00000020 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x7 0x" + f"{(0x00000073 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x8 0x" + f"{(0x00000075 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x9 0x" + f"{(0x00000063 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x10 0x" + f"{(0x00000063 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x11 0x" + f"{(0x00000065 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x12 0x" + f"{(0x00000065 & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x13 0x" + f"{(0x00000064 & 0xFFFFFFFF):08x}"+"\n")
 
 
 

@@ -11,9 +11,9 @@ from loop import main as loop_main
 
 
 if __name__ == "__main__":
-    A_ROW = 64
-    A_B = 64
-    B_COL = 64
+    A_ROW = 128
+    A_B = 128
+    B_COL = 128
     descriptors = 0x002000
     random = False
     block_width = 32
@@ -50,7 +50,7 @@ if __name__ == "__main__":
     if(mood == 1):
         matrix_add_main(random,A_ROW,B_COL)   
     elif(mood == 2):    
-        matrix_mul_main(random,A_ROW,A_B,B_COL, A_type = 0,B_type = 0)
+        matrix_mul_main(random,A_ROW,A_B,B_COL,type = 0)
 
     hex_to_bin_main()
 

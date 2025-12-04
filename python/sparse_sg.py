@@ -483,7 +483,7 @@ def op_SA(DDR0_START = 0x0, DDR1_START = 0x0, CDMA0_reg_base= 0x0, CDMA1_reg_bas
     else:
         print(f"ERRO")
 
-    file_path = r".\sparse\packet_blocks_info.txt"
+    file_path = r".\sparse\packet_stats.txt"
     List1, List2, len1, len2 = read_integer_lists_and_lengths(file_path)
 
     global ALL_SG_descriptors

@@ -651,17 +651,17 @@ def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A
 
     hex_to_bin.dmasg()
     print("A__ROWS,B__COLS,B__COLS:",A__ROWS,B__COLS,B__COLS)
-    matrix_mul.main(False ,A__ROWS,B__ROWS,B__COLS, A_TYPE, A_TYPE , MPU_ID)
+    matrix_mul.main(False ,A__ROWS,B__ROWS,B__COLS, A_TYPE , MPU_ID)
     
     global ROM_START
 
     
-    MAC.main_auto(flag,0xf1,1,"DMA0",mac_lenth,DMA0_SG)
-    MAC.main_auto(flag,0xf2,1,"DMA1",mac_lenth,DMA1_SG)
-    MAC.main_auto(flag,0xf4,1,'MATRIX_A',mac_lenth,data0_in)
+    MAC.main_auto(flag,mac_da,1,"DMA0",mac_lenth,DMA0_SG)
+    MAC.main_auto(flag,mac_da,1,"DMA1",mac_lenth,DMA1_SG)
+    MAC.main_auto(flag,mac_da,1,'MATRIX_A',mac_lenth,data0_in)
     MAC.main_auto(flag,mac_da,1,'MATRIX_B',mac_lenth,data1_in)
     MAC.main_auto(flag,mac_da,1,"SA",mac_lenth,ROM_START)
-    MAC.main_auto(flag,0xf3,1,"ETHDMA4",mac_lenth,SGMEM_ETHDMA4_BASE)
+    MAC.main_auto(flag,mac_da,1,"ETHDMA4",mac_lenth,SGMEM_ETHDMA4_BASE)
     
     #merge_mif_files.SA()
 

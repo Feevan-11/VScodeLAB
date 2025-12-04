@@ -171,10 +171,10 @@ addi x0, x0, 0
 addi x11, x11, 0x0
 addi x12, x12, 0x0
 addi x13, x13, 0xFF
-addi x14, x14, 0xF1
-addi x15, x15, 0xF2
-addi x16, x16, 0xF3
-addi x17, x17, 0xF4
+addi x14, x14, 0xF4
+addi x15, x15, 0xF0
+addi x16, x16, 0xF1
+addi x17, x17, 0xF2
 addi x18, x18, 0x704
 addi x19, x19, 0x0
 addi x20, x20, 0x0

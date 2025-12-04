@@ -35,8 +35,8 @@
 | `0x0200` | `lui x15, 0x0`         | `lui x16, 0x0`         | `lui x17, 0x0`        | `lui x18, 0xCCA41`     |
 | `0x0210` | `lui x19, 0x0`         | `lui x20, 0x40000`     | `lui x21, 0x40000`    | `lui x22, 0x0`         |
 | `0x0220` | `lui x23, 0x40003`     | `lui x24, 0x0`         | `addi x0, x0, 0`      | `addi x0, x0, 0`       |
-| `0x0230` | `addi x11, x11, 0x0`   | `addi x12, x12, 0x0`   | `addi x13, x13, 0xFF` | `addi x14, x14, 0xF1`  |
-| `0x0240` | `addi x15, x15, 0xF2`  | `addi x16, x16, 0xF3`  | `addi x17, x17, 0xF4` | `addi x18, x18, 0x704` |
+| `0x0230` | `addi x11, x11, 0x0`   | `addi x12, x12, 0x0`   | `addi x13, x13, 0xFF` | `addi x14, x14, 0xF4`  |
+| `0x0240` | `addi x15, x15, 0xF0`  | `addi x16, x16, 0xF1`  | `addi x17, x17, 0xF2` | `addi x18, x18, 0x704` |
 | `0x0250` | `addi x19, x19, 0x0`   | `addi x20, x20, 0x0`   | `addi x21, x21, 0x40` | `addi x22, x22, 0x500` |
 | `0x0260` | `addi x23, x23, 0x800` | `addi x24, x24, 0x0`   | `addi x0, x0, 0`      | `addi x0, x0, 0`       |
 | `0x0270` | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `addi x0, x0, 0`       |
