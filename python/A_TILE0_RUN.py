@@ -3,7 +3,7 @@ import asm_generate
 import main_rom_generate
 import main_rom_gen_vcs
 import merge_mif_files
-import macT
+import mac_start_make
 import hex_to_bin
 import mif_coe
 import tablemd
@@ -17,7 +17,6 @@ def main():
     mac_da = 0x0000ff  
     flag = 0xCCA41704
     mac_lenth= 19
-    mac_NUMBER = 9
     mac_onece = 9
     VCS = 0
 
@@ -28,19 +27,18 @@ def main():
 
     SA_X_MAIN.main(martix_List , MPU_ID , mac_da , flag, mac_lenth)
 
-    macT.main(mac_da)
+    mac_start_make.main(mac_da,mac_lenth)
 
     mac_num = merge_mif_files.merge_all(mac_lenth+1)
 
-    if (mac_NUMBER == mac_num):
-        print("\n帧数正确\n")
-    else:
-        print("\n需调整帧数\n")
-    hex_to_bin.test()
-    #merge_mif_files.ROM_TABLE()
-    merge_mif_files.T1()
+    mac_add = mac_onece - mac_num % mac_onece
 
-    #if VCS == 0:
+    mac_start_make.make_null(mac_da,mac_lenth,mac_add)
+
+
+    #merge_mif_files.add_null()
+
+
     mif_coe.main()
     tablemd.main()
     

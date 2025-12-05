@@ -578,8 +578,8 @@ def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A
     dma1_MM2S_sg_data = link_descriptors_in_memory(descriptors_DMA1_MM2S, base_addr=SGMEM_DMA1_start_MM2S, desc_size=64)
     dma0_S2MM_sg_data = link_descriptors_in_memory(descriptors_DMA0_S2MM, base_addr=SGMEM_DMA0_start, desc_size=64)
     dma1_S2MM_sg_data = link_descriptors_in_memory(descriptors_DMA1_S2MM, base_addr=SGMEM_DMA1_start, desc_size=64)
-    ethdma4_sg_data = link_descriptors_in_memory(descriptors_ethdma_MM2S, base_addr=SGMEM_ETHDMA4_BASE, desc_size=64)
-   
+    ethdma4_sg_data = link_descriptors_in_memory(descriptors_ethdma_MM2S, base_addr=SGMEM_ETHDMA1_BASE, desc_size=64)
+    
     dma0_sg_data = dma0_S2MM_sg_data + dma0_MM2S_sg_data
     dma1_sg_data = dma1_S2MM_sg_data + dma1_MM2S_sg_data
 
@@ -634,13 +634,13 @@ def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A
         f1.write("x12 0x" + f"{((DMA1_MM2S_START+DMA1_MM2S_len-64) & 0xFFFFFFFF):08x}"+"\n")
         f1.write(f"; --- SEGMENT 2 ---" +"\n")
         f1.write("x1 0x"  + f"{(0x0         & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x2 0x"  + f"{(ethdma4_config          & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x2 0x"  + f"{(ethdma1_config          & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x3 0x"  + f"{(0x00001001              & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x4 0x"  + f"{(0x00001000              & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x5 0x"  + f"{(SGMEM_ETHDMA0_BASE         & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x6 0x"  + f"{(SGMEM_ETHDMA0_BASE      & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x7 0x"  + f"{(SGMEM_ETHDMA4_BASE      & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x8 0x"  + f"{((SGMEM_ETHDMA4_BASE  + ETH4_MM2S_len - 64)      & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x7 0x"  + f"{(SGMEM_ETHDMA1_BASE      & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x8 0x"  + f"{((SGMEM_ETHDMA1_BASE  + ETH4_MM2S_len - 64)      & 0xFFFFFFFF):08x}"+"\n")
 
 
     
@@ -661,7 +661,7 @@ def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A
     MAC.main_auto(flag,mac_da,1,'MATRIX_A',mac_lenth,data0_in)
     MAC.main_auto(flag,mac_da,1,'MATRIX_B',mac_lenth,data1_in)
     MAC.main_auto(flag,mac_da,1,"SA",mac_lenth,ROM_START)
-    MAC.main_auto(flag,mac_da,1,"ETHDMA4",mac_lenth,SGMEM_ETHDMA4_BASE)
+    MAC.main_auto(flag,mac_da,1,"ETHDMA4",mac_lenth,SGMEM_ETHDMA1_BASE)
     
     #merge_mif_files.SA()
 

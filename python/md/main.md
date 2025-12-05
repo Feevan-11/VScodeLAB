@@ -250,7 +250,7 @@
 | `0x0F70` | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `addi x0, x0, 0`       |
 | `0x0F80` | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `addi x0, x0, 0`       |
 | `0x0F90` | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `addi x0, x0, 0`       |
-| `0x0FA0` | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `beq x3, x5, 0x110`    |
+| `0x0FA0` | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `beq x3, x5, 0x400`    |
 | `0x0FB0` | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `addi x0, x0, 0`       |
 | `0x0FC0` | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `addi x0, x0, 0`       |
 | `0x0FD0` | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `addi x0, x0, 0`       |

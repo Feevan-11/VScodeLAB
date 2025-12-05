@@ -75,16 +75,9 @@ def merge__replace(source_files, output_file,mac_len):
         print(f"\n合并完成！输出文件：{output_file}")
         print(f"总共合并了 {total_files} 个文件")
         print(f"总行数：{len(all_lines)}")
-        print(f"总帧数：{int(len(all_lines)/mac_len)+1}")
-        mac_num = int(len(all_lines)/mac_len)+1
-        # 显示每个文件的贡献行数
-        #print("\n各文件贡献行数统计：")
-        #current_position = 0
-        #for i, filename in enumerate(source_files, 1):
-        #    with open(filename, 'r') as f:
-        #        file_line_count = len([line.strip() for line in f if line.strip()])
-        #    print(f"  {i}. {filename}: {file_line_count} 行 (位置 {current_position + 1}-{current_position + file_line_count})")
-        #    current_position += file_line_count
+        print(f"总帧数：{len(all_lines)//mac_len}")
+        mac_num = len(all_lines)//mac_len
+        
         return mac_num
 
     except Exception as e:
@@ -202,18 +195,16 @@ def ROM_TABLE():
     print("The GM0 series is being processed...")
     merge_and_replace(mif_file0, mif_file1)
 
-def T1():
+def add_null():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     mif_dir = os.path.join(script_dir, "mif_test")
     sparse_dir = os.path.join(script_dir, "sparse")
     
     name0 = "ALL_MAC"
-    name1 = "test_123"
+    name1 = "null_mac"
     mif_file0 = os.path.join(mif_dir, f"{name0}.mif")
     mif_file1 = os.path.join(mif_dir, f"{name1}.mif")
 
-    # first：GM0.mif + a_2.mif
-    print("The GM0 series is being processed...")
     merge_and_replace(mif_file0, mif_file1)
 
 if __name__ == "__main__":

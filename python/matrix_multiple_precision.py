@@ -164,9 +164,9 @@ def decode_datatype(type_code, name="A"):
     if type_code == 0:
         return "fp16"
     elif type_code == 1:
-        return "fp32"
-    elif type_code == 3:
         return "bf16"
+    elif type_code == 2:
+        return "fp32"
     else:
         raise ValueError(f"{name}_type 只能是 0(fp16), 1(fp32), 3(bf16)")
 
@@ -181,8 +181,8 @@ def main(random=False, A_row=32, A__B=32, B_col=32,
 
     dtype_info = {
         "fp16": {"np_type": np.float16, "block_size": 32},
-        "fp32": {"np_type": np.float32, "block_size": 16},
         "bf16": {"np_type": np.float32, "block_size": 32},
+        "fp32": {"np_type": np.float32, "block_size": 16},
     }
 
     A_np_type = dtype_info[A_datatype]["np_type"]
@@ -299,7 +299,7 @@ def main(random=False, A_row=32, A__B=32, B_col=32,
 
 if __name__ == "__main__":
     #   0: "fp16"
-    #   1: "fp32"
-    #   3: "bf16"
+    #   2: "fp32"
+    #   1: "bf16"
     main(random=False, A_row=32, A__B=32, B_col=32,
          A_type=0, B_type=1, COUNT=0)

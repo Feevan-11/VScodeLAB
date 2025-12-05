@@ -166,6 +166,35 @@ def generate_cdma0_descriptors_for_matrix_A_IN(
 
     return descriptors
 
+def generate_cdma_descriptors(
+    A=64,
+    B=128,
+    block_width = 4,
+    Global_base=0x00010000,
+    Shared_Men_base=0x80000000
+):
+    
+    descriptors = []
+    num_blocks = A // block_width
+
+    # Each subblock: block_width rows, A_cols elements per row, each element = 4 bytes = > block_size_bytes
+    block_size_bytes = 64 * B 
+
+    for i in range(num_blocks):
+       
+        # SA：BASE + i* (block_width*A_cols*4)
+        src_addr = Global_base + i * block_size_bytes
+        #print(f'{src_addr:08x}')
+        # DA 0x80000000 / 0x90000000 
+        dst_addr = Shared_Men_base + i * block_size_bytes
+        # Set next_desc_addr to 0 first, and then the main tone function will handle the links uniformly
+        next_desc_addr = 0
+        #if (i != 0):
+        desc_words = make_sg_cdma_descriptor(next_desc_addr, src_addr, dst_addr, block_size_bytes)
+        descriptors.append(desc_words)
+
+    return descriptors
+
 def generate_cdma1_descriptors_for_matrix_B_IN(
     B_rows=128,
     B_cols=64,
@@ -187,76 +216,6 @@ def generate_cdma1_descriptors_for_matrix_B_IN(
         next_desc_addr = 0
         desc_words = make_sg_cdma_descriptor(next_desc_addr, src_addr, dst_addr, block_size_bytes)
         descriptors.append(desc_words)
-
-    return descriptors
-
-def generate_cdma0_descriptors_for_matrix_A_OUT(
-    A_rows=64,
-    A_cols=128,
-    B_cols=64,
-    block_width=16,
-    Global_0_base=0x24000000,
-    Shared_Men0_base=0x84000000,
-    Shared_Men2_base=0x94000000,
-    element_size=4
-):
-
-    descriptors = []
-
-    Anum_blocks = A_rows // block_width
-    Bnum_blocks = B_cols // block_width
-
-    block_size_bytes = block_width * block_width * element_size
-    src_addr_add = 0
-
-    for i in range(Anum_blocks):
-
-        for j in range(Bnum_blocks):
-          A = i*Bnum_blocks + j
-
-          dst_addr = Global_0_base + A * block_size_bytes
-          src_addr = Shared_Men0_base if (A % 2 == 0) else Shared_Men2_base
-          src_addr = src_addr + src_addr_add
-          next_desc_addr = 0
-          
-          desc_words = make_sg_cdma_descriptor(next_desc_addr, src_addr, dst_addr, block_size_bytes)
-          descriptors.append(desc_words)
-          if(A % 2 == 1):
-                src_addr_add = src_addr_add + 512
-
-    return descriptors
-
-def generate_cdma1_descriptors_for_matrix_B_OUT(
-    A_rows=64,
-    B_rows=128,
-    B_cols=64,
-    block_width=16,
-    Global_1_base=0x68000000,
-    Shared_Men1_base=0x8c000000,
-    Shared_Men3_base=0x9c000000,
-    element_size=4
-):
-    
-    descriptors = []
-    Bnum_blocks = B_cols // block_width
-    Anum_blocks = A_rows // block_width
-
-    block_size_bytes = B_rows * block_width * element_size
-    src_addr_add = 0
-
-    for i in range(Anum_blocks):
-
-        for j in range(Bnum_blocks):
-            B = i*Bnum_blocks + j
-            dst_addr = Global_1_base + B * block_size_bytes
-
-            src_addr = Shared_Men1_base if (B % 2 == 0) else Shared_Men3_base
-            src_addr = src_addr + src_addr_add
-            next_desc_addr = 0
-            desc_words = make_sg_cdma_descriptor(next_desc_addr, src_addr, dst_addr, block_size_bytes)
-            descriptors.append(desc_words)
-            if (B % 2 == 1):
-                src_addr_add = src_addr_add + 512
 
     return descriptors
 
@@ -284,16 +243,7 @@ def generate_dma0_descriptors_for_MM2S(
         BUFFER_addr = Shared_Men0_base + (i * block_size)
         for j in range(Bnum_blocks):
           next_desc_addr = 0
-          '''
-          if(i*Bnum_blocks + j == 0):
-          #if((i*Bnum_blocks + j)%16 == 0):
-              block_size_bytes = block_width * A_B * element_size + 0x08000000
-          #elif((i*Bnum_blocks + j)%16 == 15):  
-          elif(i*Bnum_blocks + j == Anum_blocks *Bnum_blocks - 1):
-              block_size_bytes = block_width * A_B * element_size + 0x04000000
-          else:
-              block_size_bytes = block_width * A_B * element_size
-          '''
+          
           desc_words = make_sg_dma_descriptor(next_desc_addr, BUFFER_addr, block_size_bytes , APP0)
           descriptors.append(desc_words)
 
@@ -321,16 +271,61 @@ def generate_dma1_descriptors_for_MM2S(
         for j in range(Bnum_blocks):
           BUFFER_addr = Shared_Men1_base + (j * block_size) 
           next_desc_addr = 0
-          '''
-          if(i*Bnum_blocks + j == 0):
-          #if((i*Bnum_blocks + j)%16 == 0):
-              block_size_bytes = block_width * A_B * element_size + 0x08000000
-          #elif((i*Bnum_blocks + j)%16 == 15):  
-          elif(i*Bnum_blocks + j == Anum_blocks *Bnum_blocks - 1):
-              block_size_bytes = block_width * A_B * element_size + 0x04000000
-          else:
-              block_size_bytes = block_width * A_B * element_size
-          '''
+          
+          desc_words = make_sg_dma_descriptor(next_desc_addr, BUFFER_addr, block_size_bytes, APP0)
+          descriptors.append(desc_words)
+
+    return descriptors
+
+def generate_dma0_MM2S(
+    A_rows=64,
+    A_B=128,
+    B_cols=64,
+    block_width=16,
+    Shared_Men0_base=0x80000000,
+    APP0 =0
+):
+    
+    descriptors = []
+
+    Anum_blocks = A_rows // block_width
+    Bnum_blocks = B_cols // block_width
+
+    block_size_bytes =  A_B * 64 + 0x0C000000
+    block_size =        A_B * 64 
+
+    for i in range(Anum_blocks):
+        BUFFER_addr = Shared_Men0_base + (i * block_size)
+        for j in range(Bnum_blocks):
+          next_desc_addr = 0
+          
+          desc_words = make_sg_dma_descriptor(next_desc_addr, BUFFER_addr, block_size_bytes , APP0)
+          descriptors.append(desc_words)
+
+    return descriptors
+
+def generate_dma1_MM2S(
+    A_rows=64,
+    A_B=128,
+    B_cols=64,
+    block_width=16,
+    Shared_Men1_base=0x88000000,
+    APP0 = 0
+):
+    
+    descriptors = []
+    Anum_blocks = A_rows // block_width
+    Bnum_blocks = B_cols // block_width
+
+    block_size_bytes = A_B * 64 + 0x0C000000
+    block_size =       A_B * 64 
+
+    for i in range(Anum_blocks):
+        
+        for j in range(Bnum_blocks):
+          BUFFER_addr = Shared_Men1_base + (j * block_size) 
+          next_desc_addr = 0
+          
           desc_words = make_sg_dma_descriptor(next_desc_addr, BUFFER_addr, block_size_bytes, APP0)
           descriptors.append(desc_words)
 
@@ -357,17 +352,9 @@ def generate_dma0_descriptors_for_S2MM(
         for j in range(Bnum_blocks):
           BUFFER_addr = Shared_Men2_base + addr
           next_desc_addr = 0
-          '''
-          if((i*Bnum_blocks + j)%16 == 0):
-              block_size_bytes = block_width * block_width * element_size + 0x08000000
-          #elif((i*Bnum_blocks + j)%16 == 15):  
-          elif(i*Bnum_blocks + j == Anum_blocks *Bnum_blocks - 1):
-              block_size_bytes = block_width * block_width * element_size + 0x04000000
-          else:
-              block_size_bytes = block_width * block_width * element_size
-          '''    
+           
           desc_words = make_sg_dma_descriptor(next_desc_addr, BUFFER_addr, block_size_bytes, APP0)
-          addr = addr + 512
+          addr = addr + block_width * block_width * element_size
           descriptors.append(desc_words)
 
     return descriptors
@@ -391,20 +378,11 @@ def generate_dma1_descriptors_for_S2MM(
     for i in range(Anum_blocks):
 
         for j in range(Bnum_blocks):
-          A = i*Bnum_blocks + j
           BUFFER_addr = Shared_Men3_base + addr
           next_desc_addr = 0
-          '''
-          if((i*Bnum_blocks + j)%16 == 0):
-              block_size_bytes = block_width * block_width * element_size + 0x08000000
-          #elif((i*Bnum_blocks + j)%16 == 15):  
-          elif(i*Bnum_blocks + j == Anum_blocks *Bnum_blocks - 1):
-              block_size_bytes = block_width * block_width * element_size + 0x04000000
-          else:
-              block_size_bytes = block_width * block_width * element_size
-          '''
+    
           desc_words = make_sg_dma_descriptor(next_desc_addr, BUFFER_addr, block_size_bytes, APP0)
-          addr = addr + 512
+          addr = addr + block_width * block_width * element_size
           descriptors.append(desc_words)
 
     return descriptors
@@ -448,14 +426,12 @@ def flat(descriptor_list):
     return flattened
 
 def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element_size = 2, APP0 = 0,
-       DDR0_START = 0x0, DDR1_START = 0x0, CDMA0_reg_base= 0x0, CDMA1_reg_base= 0x0,  MPU_ID = 0):
+       DDR0_START = 0x0, DDR1_START = 0x0, CDMA0_reg_base= 0x0, CDMA1_reg_base= 0x0,  MPU_ID = 0,MPU_WORD = 64):
 
     out = 0x10000
     if MPU_ID == 0:
         data0_in      = Data_Mem0
         data1_in      = Data_Mem1
-        data0_out     = Data_Mem0 + out
-        data1_out     = Data_Mem1 + out
         DMA0_REG_base = DMA0_config
         DMA1_REG_base = DMA1_config
         DMA0_SG       = SGMEM_DMA0_BASE
@@ -463,8 +439,6 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
     elif MPU_ID == 1:
         data0_in      = Data_Mem2
         data1_in      = Data_Mem3
-        data0_out     = Data_Mem2 + out
-        data1_out     = Data_Mem3 + out
         DMA0_REG_base = DMA2_config
         DMA1_REG_base = DMA3_config
         DMA0_SG       = SGMEM_DMA2_BASE
@@ -472,8 +446,6 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
     elif MPU_ID == 2:
         data0_in      = Data_Mem4
         data1_in      = Data_Mem5
-        data0_out     = Data_Mem4 + out
-        data1_out     = Data_Mem5 + out
         DMA0_REG_base = DMA4_config
         DMA1_REG_base = DMA5_config
         DMA0_SG       = SGMEM_DMA4_BASE
@@ -481,30 +453,10 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
     elif MPU_ID == 3:
         data0_in      = Data_Mem6
         data1_in      = Data_Mem7
-        data0_out     = Data_Mem6 + out
-        data1_out     = Data_Mem7 + out
         DMA0_REG_base = DMA6_config
         DMA1_REG_base = DMA7_config
         DMA0_SG       = SGMEM_DMA6_BASE
         DMA1_SG       = SGMEM_DMA7_BASE
-    # elif MPU_ID == 4:
-        # data0_in      = Data_Mem8
-        # data1_in      = Data_Mem9
-        # data0_out     = Data_Mem8 + 0x100000
-        # data1_out     = Data_Mem9 + 0x100000
-        # DMA0_REG_base = DMA8_config
-        # DMA1_REG_base = DMA9_config
-        # DMA0_SG       = SGMEM_DMA8_BASE
-        # DMA1_SG       = SGMEM_DMA9_BASE
-    # elif MPU_ID == 5:
-        # data0_in      = Data_Mem10
-        # data1_in      = Data_Mem11
-        # data0_out     = Data_Mem10 + 0x100000
-        # data1_out     = Data_Mem11 + 0x100000
-        # DMA0_REG_base = DMA10_config
-        # DMA1_REG_base = DMA11_config
-        # DMA0_SG       = SGMEM_DMA10_BASE
-        # DMA1_SG       = SGMEM_DMA11_BASE
     else:
         print(f"ERRO")
 
@@ -518,62 +470,112 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
     global SGMEM_CDMA1_start
     global ALL_SG_strat_DDR
 
-    #global SA_setid
+    if(APP0 == 0):
+        descriptors_A_IN = generate_cdma0_descriptors_for_matrix_A_IN(
+            A_rows=A_ROWS,
+            A_cols=A_COLS,
+            block_width=block_width,
+            Global_0_base=DDR0_START,
+            Shared_Men0_base=data0_in,
+            element_size=element_size
+        )
+        descriptors_B_IN = generate_cdma1_descriptors_for_matrix_B_IN(
+            B_rows=B_ROWS,
+            B_cols=B_COLS,
+            block_width=block_width,
+            Global_1_base=DDR1_START,
+            Shared_Men1_base=data1_in,
+            element_size=element_size
+        )
 
-    descriptors_A_IN = generate_cdma0_descriptors_for_matrix_A_IN(
-        A_rows=A_ROWS,
-        A_cols=A_COLS,
-        block_width=block_width,
-        Global_0_base=DDR0_START,
-        Shared_Men0_base=data0_in,
-        element_size=element_size
-    )
-    descriptors_B_IN = generate_cdma1_descriptors_for_matrix_B_IN(
-        B_rows=B_ROWS,
-        B_cols=B_COLS,
-        block_width=block_width,
-        Global_1_base=DDR1_START,
-        Shared_Men1_base=data1_in,
-        element_size=element_size
-    )
+        descriptors_A = descriptors_A_IN
+        descriptors_B = descriptors_B_IN
 
-    descriptors_A = descriptors_A_IN
-    descriptors_B = descriptors_B_IN
+        descriptors_DMA0_S2MM = generate_dma0_descriptors_for_S2MM(
+            A_rows=A_ROWS,
+            B_cols=B_COLS,
+            block_width=block_width,
+            Shared_Men2_base=data0_in  + A_ROWS *  A_COLS *element_size,
+            element_size=element_size,
+            APP0 = APP0
+        )
+        descriptors_DMA1_S2MM = generate_dma1_descriptors_for_S2MM(
+            A_rows=A_ROWS,
+            B_cols=B_COLS,
+            block_width=block_width,
+            Shared_Men3_base=data1_in  + B_ROWS *  B_COLS *element_size,
+            element_size=element_size,
+            APP0 = APP0
+        )
+        descriptors_DMA0_MM2S = generate_dma0_descriptors_for_MM2S(
+            A_rows=A_ROWS,
+            A_B = B_ROWS,
+            B_cols=B_COLS,
+            block_width=block_width,
+            Shared_Men0_base=data0_in,
+            element_size=element_size,
+            APP0 = APP0
+        )
+        descriptors_DMA1_MM2S = generate_dma1_descriptors_for_MM2S(
+            A_rows=A_ROWS,
+            A_B = B_ROWS,
+            B_cols=B_COLS,
+            block_width=block_width,
+            Shared_Men1_base=data1_in,
+            element_size=element_size,
+            APP0 = APP0
+        )
+    if(APP0 == 3):
+        descriptors_A_IN = generate_cdma_descriptors(
+            A=A_ROWS,
+            B=A_COLS,
+            block_width = 4,
+            Global_base=DDR0_START,
+            Shared_Men_base=data0_in
+        )
+        descriptors_B_IN = generate_cdma_descriptors(
+            A=B_COLS,
+            B=B_ROWS,
+            block_width = 4,
+            Global_base=DDR1_START,
+            Shared_Men_base=data1_in
+        )
 
-    descriptors_DMA0_S2MM = generate_dma0_descriptors_for_S2MM(
-        A_rows=A_ROWS,
-        B_cols=B_COLS,
-        block_width=block_width,
-        Shared_Men2_base=data0_out,
-        element_size=element_size,
-        APP0 = APP0
-    )
-    descriptors_DMA1_S2MM = generate_dma1_descriptors_for_S2MM(
-        A_rows=A_ROWS,
-        B_cols=B_COLS,
-        block_width=block_width,
-        Shared_Men3_base=data1_out,
-        element_size=element_size,
-        APP0 = APP0
-    )
-    descriptors_DMA0_MM2S = generate_dma0_descriptors_for_MM2S(
-        A_rows=A_ROWS,
-        A_B = B_ROWS,
-        B_cols=B_COLS,
-        block_width=block_width,
-        Shared_Men0_base=data0_in,
-        element_size=element_size,
-        APP0 = APP0
-    )
-    descriptors_DMA1_MM2S = generate_dma1_descriptors_for_MM2S(
-        A_rows=A_ROWS,
-        A_B = B_ROWS,
-        B_cols=B_COLS,
-        block_width=block_width,
-        Shared_Men1_base=data1_in,
-        element_size=element_size,
-        APP0 = APP0
-    )
+        descriptors_A = descriptors_A_IN
+        descriptors_B = descriptors_B_IN
+
+        descriptors_DMA0_S2MM = generate_dma0_descriptors_for_S2MM(
+            A_rows=A_ROWS,
+            B_cols=B_COLS,
+            block_width=4,
+            Shared_Men2_base=data0_in  + A_ROWS//4 *  A_COLS * 64,
+            element_size=4,
+            APP0 = APP0
+        )
+        descriptors_DMA1_S2MM = generate_dma1_descriptors_for_S2MM(
+            A_rows=A_ROWS,
+            B_cols=B_COLS,
+            block_width=4,
+            Shared_Men3_base=data1_in  + B_ROWS//4 *  B_COLS * 64,
+            element_size=4,
+            APP0 = APP0
+        )
+        descriptors_DMA0_MM2S = generate_dma0_MM2S(
+            A_rows=A_ROWS,
+            A_B = B_ROWS,
+            B_cols=B_COLS,
+            block_width=4,
+            Shared_Men0_base=data0_in,
+            APP0 = APP0
+        )
+        descriptors_DMA1_MM2S = generate_dma1_descriptors_for_MM2S(
+            A_rows=A_ROWS,
+            A_B = B_ROWS,
+            B_cols=B_COLS,
+            block_width=4,
+            Shared_Men1_base=data1_in,
+            APP0 = APP0
+        )
     
     CDMA0_len  = 64*len(descriptors_A)
     CDMA1_len  = 64*len(descriptors_B)
@@ -667,20 +669,6 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
         cd_x1 = int(cd_x1)
         return cd_x1
 
-    # with open(SG_LOOP_file0, 'w') as f0_L:
-        # f0_L.write("; --- SEGMENT 1 ---" +"\n")
-        # ds_x1 = descriptors(CDMA0_len)
-        # ds_x2 = descriptors(DMA0_len)
-        # f0_L.write("x1 0x" + f"{(ds_x1+100 & 0xFFFFFFFF):08x}"+"\n")
-        # f0_L.write("x2 0x" + f"{(9 & 0xFFFFFFFF):08x}"+"\n")
-    
-    # with open(SA_LOOP_file1, 'w') as f1_L:
-        # f1_L.write(f"; --- SEGMENT 1 ---" +"\n") #CDMA
-        # CDMA_X1 = cdma(A_ROWS,A_COLS)
-        # f1_L.write("x1 0x" + f"{(200 & 0xFFFFFFFF):08x}"+"\n")
-        # f1_L.write(f"; --- SEGMENT 2 ---" +"\n") #DMA
-        # f1_L.write("x1 0x" + f"{(100 & 0xFFFFFFFF):08x}"+"\n")
-
     DMA0_MM2S_START = DMA0_SG + DMA0_S2MM_len
     DMA1_MM2S_START = DMA1_SG + DMA1_S2MM_len
 
@@ -694,8 +682,8 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
         f1.write("x6 0x" + f"{(SGMEM_CDMA1_start       & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x7 0x" + f"{((SGMEM_CDMA0_start + CDMA0_len -64) & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x8 0x" + f"{((SGMEM_CDMA1_start + CDMA1_len -64) & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x29 0x" + f"{(0x00000000             & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x30 0x" + f"{(0xFF005001             & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x11 0x" + f"{(MPU_REG                & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x12 0x" + f"{(MPU_WORD               & 0xFFFFFFFF):08x}"+"\n")
         f1.write(f"; --- SEGMENT 2 ---" +"\n")
         f1.write("x1 0x" + f"{(DMA0_REG_base   & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x2 0x" + f"{(DMA1_REG_base   & 0xFFFFFFFF):08x}"+"\n")
@@ -715,7 +703,6 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
         f1.write("x28 0x" +  f"{(0xfff0fff0 & 0xFFFFFFFF):08x}"+"\n")
 
     asm_generate.main_S()
-    #loop.main()
     print("1")
     translator.SA()
     print("2")
@@ -756,6 +743,7 @@ DMA8_config      = 0xFF002000
 DMA9_config      = 0xFF002400
 DMA10_config     = 0xFF002800
 DMA11_config     = 0xFF002C00
+MPU_REG          = 0xFF005000
 
 DDR0_START       = 0x40000000
 DDR1_START       = 0x80000000
@@ -775,7 +763,7 @@ Data_Mem11       = 0xD6000000
 ALL_SG_descriptors = []
 ALL_SG_strat_DDR   = 0x40000000
 
-def main(AROWS = 16,AB =16,BCOLS = 16,START = 0x00000800, block_width = 16, element_size = 2, APP0 = 0):
+def main(AROWS = 16,AB =16,BCOLS = 16,START = 0x00000800, block_width = 16, element_size = 2, APP0 = 0,MPU_ID='1000',MPU_WORD = 64):
 
     ALL_SG_LENTH = START
     global ALL_SG_descriptors
@@ -785,8 +773,7 @@ def main(AROWS = 16,AB =16,BCOLS = 16,START = 0x00000800, block_width = 16, elem
     global DDR0_START
     global DDR1_START
 
-    MUP_select = 0b100000
-    bin_str = bin(MUP_select)[2:].zfill(6)
+    bin_str = MPU_ID
 
     DDR0_START = DDR0_START + START
 
@@ -820,28 +807,20 @@ def main(AROWS = 16,AB =16,BCOLS = 16,START = 0x00000800, block_width = 16, elem
     
     if bin_str[0] == '1':
         op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
-        DDR0_START = DDR0_START , DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config,MPU_ID = 0)
+        DDR0_START = DDR0_START , DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config,MPU_ID = 0,MPU_WORD = MPU_WORD)
     
     if bin_str[1] == '1':
         op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
-        DDR0_START = DDR0_START , DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config,MPU_ID = 1)
+        DDR0_START = DDR0_START , DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config,MPU_ID = 1,MPU_WORD = MPU_WORD)
   
     if bin_str[2] == '1':
         op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
-        DDR0_START = DDR0_START , DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config,MPU_ID = 2)
+        DDR0_START = DDR0_START , DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config,MPU_ID = 2,MPU_WORD = MPU_WORD)
     
     if bin_str[3] == '1':
         op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
-        DDR0_START = DDR0_START , DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config, MPU_ID = 3)
+        DDR0_START = DDR0_START , DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config, MPU_ID = 3,MPU_WORD = MPU_WORD)
    
-    if bin_str[4] == '1':
-        op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
-        DDR0_START = DDR0_START , DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config,MPU_ID = 4)
-
-    if bin_str[5] == '1':
-        op_SA(A__ROWS=AROWS,A__COLS=AB,B__ROWS=AB,B__COLS=BCOLS, block_width = block_width, element_size = element_size, APP0 = APP0,
-        DDR0_START = DDR0_START , DDR1_START = DDR1_START, CDMA0_reg_base= CDMA0_config, CDMA1_reg_base= CDMA1_config,MPU_ID = 5)
-
     
     sg_lenth = int(ALL_SG_strat_DDR) - int(0x40000000)
     allSGdescriptors = int(ALL_SG_LENTH/64)
@@ -866,7 +845,7 @@ def main(AROWS = 16,AB =16,BCOLS = 16,START = 0x00000800, block_width = 16, elem
     
 
 if __name__ == "__main__":
-    main(AROWS = 16,AB =16,BCOLS = 16,START = 0x00004000 , block_width = 16, element_size = 2, APP0 = 0 )
+    main(AROWS = 16,AB =16,BCOLS = 16,START = 0x00004000 , block_width = 16, element_size = 2, APP0 = 0 ,MPU_ID='1000',MPU_WORD = 64)
 
 
 

@@ -1,4 +1,4 @@
-import macT
+import mac_start_make
 import asm_generate
 import ETH_TEST
 import hex_to_bin 
@@ -7,7 +7,7 @@ import translator
 import tablemd
 
 if __name__ == "__main__":
-    macT.main()
+    mac_start_make.main()
     ETH_TEST.main()
     asm_generate.ETH_TEST()
     translator.ETH_TEST()
