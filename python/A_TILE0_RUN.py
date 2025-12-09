@@ -17,7 +17,7 @@ def main():
     mac_da = 0x0000ff  
     flag = 0xCCA41704
     mac_lenth= 19
-    mac_onece = 9
+    mac_onece = 22
     VCS = 0
 
     if VCS == 0:

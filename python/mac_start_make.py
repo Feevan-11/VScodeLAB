@@ -20,6 +20,19 @@ def make_mac_head(mac_flag: int, mac_da: int, stye: int, data_da: int, data_bbt:
     #words[6] = u32(ALL)
     return words
 
+def make_mac_WB_head(mac_flag: int, mac_da: int, stye: int, data_da: int, data_bbt: int, ID: int,ALL: int) :
+    """生成 16×32bit 的 MAC 头部（前 5 项有效，其余补 0）。"""
+    words = [0] * 16
+    words[0] = u32(mac_flag)
+    words[1] = u32(mac_da)
+    words[2] = u32(stye)
+    words[3] = 0x88b5
+    words[4] = u32(data_da)
+    words[5] = u32(data_bbt)
+    words[5] = u32(ID)
+    words[6] = u32(ALL)
+    return words
+
 def header_words_to_bin_line(words: List[int]) -> str:
     """
     将16个32-bit word 组装为一行512位二进制字符串：
@@ -32,7 +45,7 @@ def header_words_to_bin_line(words: List[int]) -> str:
         panull_macs.append(f"{u32(words[i]):032b}")
     return "".join(panull_macs)
 
-XN_FLAG = 257
+
 
 
 def main(mac_da,mac_len):
@@ -92,6 +105,27 @@ def make_null(mac_da,mac_len,mac_add):
             for _ in range(mac_len):  
                 f.write('01' * 256 + '\n')    
 
+def make_Array(mac_da,mac_num):
+
+
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    name0 = "Array_mac"
+
+    mif_dir = os.path.join(script_dir,"mif")
+
+    Array_file = os.path.join(mif_dir, f"{name0}.mif")
+
+
+    mac_da = mac_da  
+    flag = 0xCCA41704
+
+    with open(Array_file, 'w') as f:
+        for i in range(mac_num): 
+            Array_mac = make_mac_WB_head(flag, mac_da, 513, 0xc4000000,64,i,mac_num)
+            Array_mac_BIN = header_words_to_bin_line(Array_mac)
+            f.write(Array_mac_BIN + '\n')
+
 def make_XN(mac_da,mac_len,mac_add):
 
 
@@ -135,7 +169,7 @@ def make_XN(mac_da,mac_len,mac_add):
                 for _ in range(4): 
                     f.write('00' * 240 + f"{(96 & 0xFF):016b}" + f"{(96 & 0xFF):016b}" + '\n')
 
-def make_XN_head(mac_da):
+def make_XN_head(mac_da,XN_FLAG):
 
 
     script_dir = os.path.dirname(os.path.abspath(__file__))

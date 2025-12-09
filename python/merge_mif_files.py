@@ -95,6 +95,7 @@ def merge_all(mac_len):
     "MATRIX_B_with_headers",
     "SA_with_headers",
     "ETHDMA4_with_headers",
+    "Array_mac_with_headers",
     "XN_head_mac_with_headers",
     "XN_mac_with_headers",
     "START_MAC"

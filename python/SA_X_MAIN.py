@@ -371,7 +371,7 @@ def generate_dma0_descriptors_for_S2MM(
               block_size_bytes = block_width * block_width * element_size
           '''    
           desc_words = make_sg_dma_descriptor(next_desc_addr, BUFFER_addr, block_size_bytes, APP0)
-          addr = addr + 512
+          addr = addr + block_width*block_width*element_size
           descriptors.append(desc_words)
 
     return descriptors
@@ -398,28 +398,15 @@ def generate_dma1_descriptors_for_S2MM(
           A = i*Bnum_blocks + j
           BUFFER_addr = Shared_Men3_base + addr
           next_desc_addr = 0
-          '''
-          if((i*Bnum_blocks + j)%16 == 0):
-              block_size_bytes = block_width * block_width * element_size + 0x08000000
-          #elif((i*Bnum_blocks + j)%16 == 15):  
-          elif(i*Bnum_blocks + j == Anum_blocks *Bnum_blocks - 1):
-              block_size_bytes = block_width * block_width * element_size + 0x04000000
-          else:
-              block_size_bytes = block_width * block_width * element_size
-          '''
+          
           desc_words = make_sg_dma_descriptor(next_desc_addr, BUFFER_addr, block_size_bytes, APP0)
-          addr = addr + 512
+          addr = addr + block_width*block_width*element_size
           descriptors.append(desc_words)
 
     return descriptors
 
 def link_descriptors_in_memory(descriptor_list, base_addr=0x00000000, desc_size=64):
-    """
-    Given a set of descriptors (each of which is 16 words), we imagine that they are sequentially stored in memory, starting with base_addr,
-    Each descriptor is 64 bytes in size (16 words × 4 bytes). This function is updated sequentially
-    Word0 for each descriptor so that it points to the next descriptor address (except for the last one = 0).
-    Finally, a string of 32-bit words in the form of "flattened" is returned (in descriptive order).
-    """
+    
 
     flattened = []  # Stores the final sequentially expanded 32-bit word
 
@@ -464,9 +451,10 @@ def generate_ethdma_descriptors_for_MM2S(
     block_size_bytes0=  0x08000000 + 64
     block_size_bytes =  0x04000000 + MAC_LENTH
     addr = 0
-    addr0 = 0x40000000
+    addr0 = data_in_base 
 
     for j in range(SG_NUM):
+      addr0 = addr0 + 64*j
       BUFFER_addr = data_in_base + addr
       next_desc_addr = 0
       desc_words0 = make_sg_dma_descriptor(next_desc_addr, addr0, block_size_bytes0,0)
@@ -588,11 +576,12 @@ def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A
         element_size=element_size,
         APP0 = 0
     )
+    M_NUM = int((A_ROWS/block_width) * (B_COLS/block_width))*2
     descriptors_ethdma_DATA_MM2S = generate_ethdma_descriptors_for_MM2S(
         
         data_in_base=data0_in,
         MAC_LENTH = block_width*block_width,
-        SG_NUM = int((A_ROWS/block_width) * (B_COLS/block_width))*2
+        SG_NUM = M_NUM
     )
     descriptors_ethdma_XN_MM2S = generate_ethdma_XN_for_MM2S(
         data_in_head=DDR1_XN_HEAD,
@@ -600,8 +589,10 @@ def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A
         MAC_LENTH = mac_lenth*64,
         xn_NUM = XN_NUM
     )
+    
 
     ETH4_DATA_MM2S_len = 64*len(descriptors_ethdma_DATA_MM2S)
+    #ETH43_DATA_len = 64*len(descriptors_ETHDMA1_S2MM)
     ETH4_XN_MM2S_len = 64*len(descriptors_ethdma_XN_MM2S)
 
     SGMEM_DMA0_start =  DMA0_SG            
@@ -613,8 +604,9 @@ def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A
     dma1_MM2S_sg_data = link_descriptors_in_memory(descriptors_DMA1_MM2S, base_addr=SGMEM_DMA1_start_MM2S, desc_size=64)
     dma0_S2MM_sg_data = link_descriptors_in_memory(descriptors_DMA0_S2MM, base_addr=SGMEM_DMA0_start, desc_size=64)
     dma1_S2MM_sg_data = link_descriptors_in_memory(descriptors_DMA1_S2MM, base_addr=SGMEM_DMA1_start, desc_size=64)
-    ethdma4_sg_DATA_data = link_descriptors_in_memory(descriptors_ethdma_DATA_MM2S, base_addr=SGMEM_ETHDMA1_BASE, desc_size=64)
+    ethdma4_sg_DATA_data0 = link_descriptors_in_memory(descriptors_ethdma_DATA_MM2S, base_addr=SGMEM_ETHDMA1_BASE, desc_size=64)
     ethdma4_sg_XN_data = link_descriptors_in_memory(descriptors_ethdma_XN_MM2S, base_addr=SGMEM_ETHDMA1_BASE+ETH4_DATA_MM2S_len, desc_size=64)
+    #ethdma3_sg_DATA_data = link_descriptors_in_memory(descriptors_ETHDMA1_S2MM, base_addr=SGMEM_ETHDMA3_BASE, desc_size=64)
     
     dma0_sg_data = dma0_S2MM_sg_data + dma0_MM2S_sg_data
     dma1_sg_data = dma1_S2MM_sg_data + dma1_MM2S_sg_data
@@ -624,16 +616,21 @@ def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A
     dma1_name = 'dma1_sg'
 
     ethdma4_name = 'ethdma4_sg'
+    ethdma3_name = 'ethdma3_sg'
+
     
     txt_dir = os.path.join(script_dir,"txt")
     dma0_file = os.path.join(txt_dir, f"{dma0_name}.txt")
     dma1_file = os.path.join(txt_dir, f"{dma1_name}.txt")
     ethdma4_file = os.path.join(txt_dir, f"{ethdma4_name}.txt")
-    ethdma4_file = os.path.join(txt_dir, f"{ethdma4_name}.txt")
+    ethdma3_file = os.path.join(txt_dir, f"{ethdma3_name}.txt")
+
+    ethdma4_sg_DATA_data = ethdma4_sg_DATA_data0 
 
     write_txt_file(dma0_sg_data, dma0_file)
     write_txt_file(dma1_sg_data, dma1_file)
     write_txt_file(ethdma4_sg_DATA_data+ethdma4_sg_XN_data, ethdma4_file)
+    #write_txt_file(ethdma3_sg_DATA_data, ethdma3_file)
     
  
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -667,17 +664,17 @@ def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A
         f1.write("x11 0x" + f"{((DMA0_MM2S_START+DMA0_MM2S_len-64) & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x12 0x" + f"{((DMA1_MM2S_START+DMA1_MM2S_len-64) & 0xFFFFFFFF):08x}"+"\n")
         f1.write(f"; --- SEGMENT 2 ---" +"\n")
-        f1.write("x1 0x"  + f"{(0x0         & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x1 0x"  + f"{(0x0          & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x2 0x"  + f"{(ethdma1_config          & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x3 0x"  + f"{(0x00001001              & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x4 0x"  + f"{(0x00001000              & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x5 0x"  + f"{(SGMEM_ETHDMA0_BASE      & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x6 0x"  + f"{(SGMEM_ETHDMA0_BASE      & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x5 0x"  + f"{(SGMEM_ETHDMA3_BASE      & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x6 0x"  + f"{(SGMEM_ETHDMA3_BASE      & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x7 0x"  + f"{(SGMEM_ETHDMA1_BASE  + ETH4_DATA_MM2S_len    & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x8 0x"  + f"{((SGMEM_ETHDMA1_BASE + ETH4_DATA_MM2S_len + ETH4_XN_MM2S_len - 64)      & 0xFFFFFFFF):08x}"+"\n")
         f1.write(f"; --- SEGMENT 3 ---" +"\n")
         f1.write("x1 0x"  + f"{(0x0         & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x2 0x"  + f"{(ethdma2_config          & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x2 0x"  + f"{(ethdma1_config          & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x3 0x"  + f"{(0x00001001              & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x4 0x"  + f"{(0x00001000              & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x5 0x"  + f"{(SGMEM_ETHDMA0_BASE         & 0xFFFFFFFF):08x}"+"\n")
@@ -691,10 +688,10 @@ def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A
     asm_generate.main_SA_ID()
     
     translator.SA_ID() 
-    mac_start_make.make_XN_head(mac_da)
+    mac_start_make.make_XN_head(mac_da,XN_FLAG-1)
+    mac_start_make.make_Array(mac_da,M_NUM)
     mac_start_make.make_XN(mac_da,mac_lenth,XN_NUM)
     hex_to_bin.dmasg()
-    print("A__ROWS,B__COLS,B__COLS:",A__ROWS,B__COLS,B__COLS)
     matrix_mul.main(False ,A__ROWS,B__ROWS,B__COLS, A_TYPE , MPU_ID)
     
     global ROM_START
@@ -706,6 +703,7 @@ def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A
     MAC.main_auto(flag,mac_da,1,'MATRIX_B',mac_lenth,data1_in)
     MAC.main_auto(flag,mac_da,1,"SA",mac_lenth,ROM_START)
     MAC.main_auto(flag,mac_da,1,"ETHDMA4",mac_lenth,SGMEM_ETHDMA1_BASE)
+    MAC.main_auto(flag,mac_da,1,"Array_mac",mac_lenth,DDR1_START)
     MAC.main_auto(flag,mac_da,1,"XN_head_mac",mac_lenth,DDR1_XN_HEAD)
     MAC.main_auto(flag,mac_da,1,"XN_mac",mac_lenth,DDR1_XN_DATA)
     
@@ -745,6 +743,7 @@ ethdma1_config       = 0xFF003400
 ethdma2_config       = 0xFF003800
 ethdma3_config       = 0xFF003C00
 ethdma4_config       = 0xFF004000
+XN_FLAG = 257
 
 
 DDR0_START       = 0x40000000

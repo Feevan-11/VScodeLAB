@@ -121,6 +121,7 @@ def dmasg():
         {'input_name': 'dma0_sg', 'output_name': 'DMA0'},
         {'input_name': 'dma1_sg', 'output_name': 'DMA1'},
         {'input_name': 'ethdma4_sg', 'output_name': 'ETHDMA4'}
+       # {'input_name': 'ethdma3_sg', 'output_name': 'ETHDMA3'}
         
          
     ]
