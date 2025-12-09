@@ -36,7 +36,7 @@ def main():
     mac_start_make.make_null(mac_da,mac_lenth,mac_add)
 
 
-    #merge_mif_files.add_null()
+    merge_mif_files.add_null()
 
 
     mif_coe.main()

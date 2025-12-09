@@ -1,6 +1,7 @@
 import numpy as np
 import os
 import struct
+#import tensorflow as tf
 
 
 def matrix_to_mif(matrix, filename, split_by, block_size, internal_order, HER=True):
@@ -172,7 +173,7 @@ def decode_datatype(type_code, name="A"):
 
 
 def main(random=False, A_row=32, A__B=32, B_col=32,
-         A_type=0, B_type=0, COUNT=0):
+         A_type=0, B_type=0, COUNT=0,OUTPUT_TYPE=0):
 
     random_mode = random  # True=随机矩阵，False=自定义矩阵
 
@@ -207,7 +208,7 @@ def main(random=False, A_row=32, A__B=32, B_col=32,
 
     
     # 计算结果矩阵 C
-    C = np.matmul(A.astype(np.float64), B.astype(np.float64))
+    C = np.matmul(A.astype(np.float32), B.astype(np.float32))
     
 
     # 按类型插入0行 / 0列
@@ -302,4 +303,4 @@ if __name__ == "__main__":
     #   2: "fp32"
     #   1: "bf16"
     main(random=False, A_row=32, A__B=32, B_col=32,
-         A_type=0, B_type=1, COUNT=0)
+         A_type=0, B_type=1, COUNT=0,OUTPUT_TYPE=0)

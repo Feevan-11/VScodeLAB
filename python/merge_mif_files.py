@@ -87,28 +87,27 @@ def merge_all(mac_len):
     script_dir = os.path.dirname(os.path.abspath(__file__))
     mif_dir = os.path.join(script_dir, "mif_test")
     
-    name0 = "DMA0_with_headers"
-    name1 = "DMA1_with_headers"
-    name2 = "MATRIX_A_with_headers"
-    name3 = "MATRIX_B_with_headers"
-    name4 = "SA_with_headers"
-    name5 = "ETHDMA4_with_headers"
-    name6 = "START_MAC"
-    name7 = "ALL_MAC"
-    mif_file0 = os.path.join(mif_dir, f"{name0}.mif")
-    mif_file1 = os.path.join(mif_dir, f"{name1}.mif")
-    mif_file2 = os.path.join(mif_dir, f"{name2}.mif")
-    mif_file3 = os.path.join(mif_dir, f"{name3}.mif")
-    mif_file4 = os.path.join(mif_dir, f"{name4}.mif")
-    mif_file5 = os.path.join(mif_dir, f"{name5}.mif")
-    mif_file6 = os.path.join(mif_dir, f"{name6}.mif")
-    mif_file7 = os.path.join(mif_dir, f"{name7}.mif")
+
+    names = [
+    "DMA0_with_headers",
+    "DMA1_with_headers", 
+    "MATRIX_A_with_headers",
+    "MATRIX_B_with_headers",
+    "SA_with_headers",
+    "ETHDMA4_with_headers",
+    "XN_head_mac_with_headers",
+    "XN_mac_with_headers",
+    "START_MAC"
+    ]
+    mif_file_o = os.path.join(mif_dir, f"ALL_MAC.mif")
+
+    # 创建对应的文件路径列表
+    mif_files = [os.path.join(mif_dir, f"{name}.mif") for name in names]
 
     print("The ALL_MAC is being processed...")
-    files_to_merge = [mif_file0, mif_file1, mif_file2, mif_file3, mif_file4, mif_file5, mif_file6]
-    output_filename = mif_file7
+    output_filename = mif_file_o
     
-    mac_num = merge__replace(files_to_merge, output_filename,mac_len)
+    mac_num = merge__replace(mif_files, output_filename,mac_len)
     return mac_num
 
 def SA():

@@ -359,6 +359,34 @@ def generate_dma0_descriptors_for_S2MM(
 
     return descriptors
 
+def generate_dma_S2MM(
+    A_rows=64,
+    B_cols=64,
+    block_width=16,
+    Shared_Men_base=0x90000000,
+    element_size=2,
+    APP0 = 0
+):
+
+    descriptors = []
+    Anum_blocks = A_rows // 4
+    Bnum_blocks = B_cols // 4
+
+    block_size_bytes = block_width * block_width * element_size + 0x0C000000
+    addr = 0
+
+    for i in range(Anum_blocks):
+
+        for j in range(Bnum_blocks):
+          BUFFER_addr = Shared_Men_base + addr
+          next_desc_addr = 0
+           
+          desc_words = make_sg_dma_descriptor(next_desc_addr, BUFFER_addr, block_size_bytes, APP0)
+          addr = addr + block_width * block_width * element_size
+          descriptors.append(desc_words)
+
+    return descriptors
+
 def generate_dma1_descriptors_for_S2MM(
     A_rows=64,
     B_cols=64,
@@ -544,19 +572,19 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
         descriptors_A = descriptors_A_IN
         descriptors_B = descriptors_B_IN
 
-        descriptors_DMA0_S2MM = generate_dma0_descriptors_for_S2MM(
+        descriptors_DMA0_S2MM = generate_dma_S2MM(
             A_rows=A_ROWS,
             B_cols=B_COLS,
-            block_width=4,
-            Shared_Men2_base=data0_in  + A_ROWS//4 *  A_COLS * 64,
+            block_width=32,
+            Shared_Men_base=data0_in  + A_ROWS//4 *  A_COLS * 64,
             element_size=4,
             APP0 = APP0
         )
-        descriptors_DMA1_S2MM = generate_dma1_descriptors_for_S2MM(
+        descriptors_DMA1_S2MM = generate_dma_S2MM(
             A_rows=A_ROWS,
             B_cols=B_COLS,
-            block_width=4,
-            Shared_Men3_base=data1_in  + B_ROWS//4 *  B_COLS * 64,
+            block_width=32,
+            Shared_Men_base=data1_in  + B_ROWS//4 *  B_COLS * 64,
             element_size=4,
             APP0 = APP0
         )
@@ -568,7 +596,7 @@ def op_SA(A__ROWS=16,A__COLS=16,B__ROWS=16,B__COLS=16, block_width = 16, element
             Shared_Men0_base=data0_in,
             APP0 = APP0
         )
-        descriptors_DMA1_MM2S = generate_dma1_descriptors_for_MM2S(
+        descriptors_DMA1_MM2S = generate_dma1_MM2S(
             A_rows=A_ROWS,
             A_B = B_ROWS,
             B_cols=B_COLS,

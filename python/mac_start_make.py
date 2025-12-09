@@ -13,8 +13,11 @@ def make_mac_head(mac_flag: int, mac_da: int, stye: int, data_da: int, data_bbt:
     words[0] = u32(mac_flag)
     words[1] = u32(mac_da)
     words[2] = u32(stye)
-    words[3] = u32(data_da)
-    words[4] = u32(data_bbt)
+    words[3] = 0x88b5
+    words[4] = u32(data_da)
+    words[5] = u32(data_bbt)
+    #words[5] = u32(ID)
+    #words[6] = u32(ALL)
     return words
 
 def header_words_to_bin_line(words: List[int]) -> str:
@@ -29,6 +32,7 @@ def header_words_to_bin_line(words: List[int]) -> str:
         panull_macs.append(f"{u32(words[i]):032b}")
     return "".join(panull_macs)
 
+XN_FLAG = 257
 
 
 def main(mac_da,mac_len):
@@ -77,7 +81,7 @@ def make_null(mac_da,mac_len,mac_add):
     mac_da = mac_da  
     flag = 0xCCA41704
 
-    null_mac = make_mac_head(flag, mac_da, 3, 0x88b5, 0)
+    null_mac = make_mac_head(flag, mac_da, 1, 0xc4000000,64)
 
     null_mac_BIN = header_words_to_bin_line(null_mac)
 
@@ -87,6 +91,71 @@ def make_null(mac_da,mac_len,mac_add):
             f.write(null_mac_BIN + '\n')
             for _ in range(mac_len):  
                 f.write('01' * 256 + '\n')    
+
+def make_XN(mac_da,mac_len,mac_add):
+
+
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    name0 = "XN_mac"
+
+    mif_dir = os.path.join(script_dir,"mif")
+
+    XN_file = os.path.join(mif_dir, f"{name0}.mif")
+
+  
+    mac_da = mac_da
+    flag = 0xCCA41704
+
+    
+
+    with open(XN_file, 'w') as f:
+        print('共添加帧数：',mac_add)
+        for i in range(mac_add):  
+            if(i == 0):
+                f.write('00' * 240 + f"{(12 & 0xFF):016b}" + f"{(96 & 0xFF):016b}" + '\n')    
+                f.write('00' * 240 + f"{(50 & 0xFF):016b}" + f"{(96 & 0xFF):016b}" + '\n')
+                f.write('00' * 240 + f"{(77 & 0xFF):016b}" + f"{(96 & 0xFF):016b}" + '\n')
+                f.write('00' * 240 + f"{(90 & 0xFF):016b}" + f"{(96 & 0xFF):016b}" + '\n')
+                for _ in range(mac_len-5): 
+                    f.write('00' * 240 + f"{(96 & 0xFF):016b}" + f"{(96 & 0xFF):016b}" + '\n')
+                f.write('00' * 240 + f"{(93 & 0xFF):016b}" + f"{(96 & 0xFF):016b}" + '\n')
+            elif(i == mac_add-1):
+                for _ in range(mac_len-5): 
+                    f.write('00' * 240 + f"{(95 & 0xFF):016b}" + f"{(96 & 0xFF):016b}" + '\n')
+                f.write('00' * 240 + f"{(94 & 0xFF):016b}" + f"{(96 & 0xFF):016b}" + '\n')
+                f.write('00' * 240 + f"{(77 & 0xFF):016b}" + f"{(96 & 0xFF):016b}" + '\n')
+                f.write('00' * 240 + f"{(58 & 0xFF):016b}" + f"{(96 & 0xFF):016b}" + '\n')
+                f.write('00' * 240 + f"{(33 & 0xFF):016b}" + f"{(96 & 0xFF):016b}" + '\n')
+                f.write('00' * 240 + f"{(12 & 0xFF):016b}" + f"{(96 & 0xFF):016b}" + '\n')
+            else:
+                for _ in range(mac_len-5): 
+                    f.write('00' * 240 + f"{(96 & 0xFF):016b}" + f"{(96 & 0xFF):016b}" + '\n')
+                f.write('00' * 240 + f"{(93 & 0xFF):016b}" + f"{(96 & 0xFF):016b}" + '\n')
+                for _ in range(4): 
+                    f.write('00' * 240 + f"{(96 & 0xFF):016b}" + f"{(96 & 0xFF):016b}" + '\n')
+
+def make_XN_head(mac_da):
+
+
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    name0 = "XN_head_mac"
+
+    mif_dir = os.path.join(script_dir,"mif")
+
+    XN_file = os.path.join(mif_dir, f"{name0}.mif")
+
+  
+    mac_da = mac_da
+    flag = 0xCCA41704
+
+    
+
+    with open(XN_file, 'w') as f:
+        XN_mac = make_mac_head(flag, mac_da, XN_FLAG,0,0)
+        null_mac_BIN = header_words_to_bin_line(XN_mac)
+        f.write(null_mac_BIN + '\n')
 
 if __name__ == "__main__":
     main(mac_da = 0xCCA41704,mac_len = 19)

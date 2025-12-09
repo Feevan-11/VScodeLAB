@@ -12,16 +12,16 @@ import matrix_multiple_precision
 
 
 if __name__ == "__main__":
-    A_ROW = 32
-    A_B = 32
-    B_COL = 32
-    descriptors = 0x08000
+    A_ROW = 16
+    A_B = 16
+    B_COL = 16
+    descriptors = 0x06000
     random = False
     block_width = 32
     element_size = 2
     APP0 = 0    
 
-    A_TYPE = 2          # FP16 0 
+    A_TYPE = 0          # FP16 0
     B_TYPE = 1          # BF16 1
     OUTPUT_TYPE = 0     # FP32 2
     mpu_select = 3      # 0 相同精度 ； 3 多精度
@@ -54,12 +54,12 @@ if __name__ == "__main__":
     elif(mood == 2):
         sg_mul_main(A_ROW,A_B,B_COL,descriptors,block_width = block_width, element_size = element_size, 
                     APP0 = mpu_select,MPU_ID='0001',MPU_WORD = MPU_WORD)  
-    print("\n")  
+    print("tf32")  
     if(mood == 1):
         matrix_add_main(random,A_ROW,B_COL)   
     elif(mood == 2):
-        if (mpu_select == 1):
-            matrix_multiple_precision.main(random,A_ROW,A_B,B_COL,A_type = A_TYPE,B_type = B_TYPE)
+        if (mpu_select == 3):
+            matrix_multiple_precision.main(random,A_ROW,A_B,B_COL,A_type = A_TYPE,B_type = B_TYPE,OUTPUT_TYPE = OUTPUT_TYPE)
         elif(mpu_select == 0):
             matrix_mul_main(random,A_ROW,A_B,B_COL,type = 0)
 
