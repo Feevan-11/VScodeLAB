@@ -27,7 +27,8 @@ addi x14, x14, 0x000
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
-addi x0, x0, 0 
+addi x0, x0, 0
+
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 
@@ -95,7 +96,8 @@ addi x0, x0, 0
 
 addi x0, x0, 0 
 addi x0, x0, 0 
-sw x12, 0x0(x11) 
+;sw x12, 0x0(x11) 
+addi x0, x0, 0
 addi x0, x0, 0
 
 addi x0, x0, 0 
@@ -142,6 +144,7 @@ addi x9, x9, 0x001
 addi x10, x10, 0x000      
 addi x11, x11, 0xFC0      
 addi x12, x12, 0xFC0
+
 addi x0, x0, 0
 addi x0, x0, 0 
 addi x0, x0, 0
@@ -187,6 +190,7 @@ addi x0, x0, 0
 addi x0, x0, 0 
 addi x0, x0, 0 
 lp.setup  x1, 20
+
 addi x0, x0, 0 
 addi x0, x0, 0 
 addi x0, x0, 0 

@@ -1050,7 +1050,7 @@ def SA_ID():
     
         process_mif(input_filename, output_filename)
 
-def SA():    
+def SA(id):    
     
     script_dir = os.path.dirname(os.path.abspath(__file__))
     mif_dir = os.path.join(script_dir, "mif")
@@ -1111,10 +1111,10 @@ def SA():
 
     NS = [
         {"input":"ASG",
-         "output":"SG",
+         "output":f"SG{id}",
         },
         {"input":"ASA",
-         "output":"SA",
+         "output":f"SA{id}",
         } 
     ]
     for n in NS:

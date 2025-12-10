@@ -605,8 +605,8 @@ def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A
     dma1_MM2S_sg_data = link_descriptors_in_memory(descriptors_DMA1_MM2S, base_addr=SGMEM_DMA1_start_MM2S, desc_size=64)
     dma0_S2MM_sg_data = link_descriptors_in_memory(descriptors_DMA0_S2MM, base_addr=SGMEM_DMA0_start, desc_size=64)
     dma1_S2MM_sg_data = link_descriptors_in_memory(descriptors_DMA1_S2MM, base_addr=SGMEM_DMA1_start, desc_size=64)
-    ethdma4_sg_DATA_data0 = link_descriptors_in_memory(descriptors_ethdma_DATA_MM2S, base_addr=SGMEM_ETHDMA1_BASE, desc_size=64)
-    ethdma4_sg_XN_data = link_descriptors_in_memory(descriptors_ethdma_XN_MM2S, base_addr=SGMEM_ETHDMA1_BASE+ETH4_DATA_MM2S_len, desc_size=64)
+    ethdma4_sg_DATA_data0 = link_descriptors_in_memory(descriptors_ethdma_DATA_MM2S, base_addr=SGMEM_ETHDMA4_BASE, desc_size=64)
+    ethdma4_sg_XN_data = link_descriptors_in_memory(descriptors_ethdma_XN_MM2S, base_addr=SGMEM_ETHDMA4_BASE+ETH4_DATA_MM2S_len, desc_size=64)
     #ethdma3_sg_DATA_data = link_descriptors_in_memory(descriptors_ETHDMA1_S2MM, base_addr=SGMEM_ETHDMA3_BASE, desc_size=64)
     
     dma0_sg_data = dma0_S2MM_sg_data + dma0_MM2S_sg_data
@@ -624,7 +624,7 @@ def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A
     dma0_file = os.path.join(txt_dir, f"{dma0_name}.txt")
     dma1_file = os.path.join(txt_dir, f"{dma1_name}.txt")
     ethdma4_file = os.path.join(txt_dir, f"{ethdma4_name}.txt")
-    ethdma3_file = os.path.join(txt_dir, f"{ethdma3_name}.txt")
+    #ethdma3_file = os.path.join(txt_dir, f"{ethdma3_name}.txt")
 
     ethdma4_sg_DATA_data = ethdma4_sg_DATA_data0 
 
@@ -666,22 +666,22 @@ def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A
         f1.write("x12 0x" + f"{((DMA1_MM2S_START+DMA1_MM2S_len-64) & 0xFFFFFFFF):08x}"+"\n")
         f1.write(f"; --- SEGMENT 2 ---" +"\n")
         f1.write("x1 0x"  + f"{(0x0          & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x2 0x"  + f"{(ethdma1_config          & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x2 0x"  + f"{(ethdma4_config          & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x3 0x"  + f"{(0x00001001              & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x4 0x"  + f"{(0x00001000              & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x5 0x"  + f"{(SGMEM_ETHDMA3_BASE      & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x6 0x"  + f"{(SGMEM_ETHDMA3_BASE      & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x7 0x"  + f"{(SGMEM_ETHDMA1_BASE  + ETH4_DATA_MM2S_len    & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x8 0x"  + f"{((SGMEM_ETHDMA1_BASE + ETH4_DATA_MM2S_len + ETH4_XN_MM2S_len - 64)      & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x7 0x"  + f"{(SGMEM_ETHDMA4_BASE  + ETH4_DATA_MM2S_len    & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x8 0x"  + f"{((SGMEM_ETHDMA4_BASE + ETH4_DATA_MM2S_len + ETH4_XN_MM2S_len - 64)      & 0xFFFFFFFF):08x}"+"\n")
         f1.write(f"; --- SEGMENT 3 ---" +"\n")
         f1.write("x1 0x"  + f"{(0x0         & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x2 0x"  + f"{(ethdma1_config          & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x2 0x"  + f"{(ethdma4_config          & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x3 0x"  + f"{(0x00001001              & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x4 0x"  + f"{(0x00001000              & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x5 0x"  + f"{(SGMEM_ETHDMA0_BASE         & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x6 0x"  + f"{(SGMEM_ETHDMA0_BASE      & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x7 0x"  + f"{(SGMEM_ETHDMA1_BASE      & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x8 0x"  + f"{((SGMEM_ETHDMA1_BASE  + ETH4_DATA_MM2S_len - 64)      & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x7 0x"  + f"{(SGMEM_ETHDMA4_BASE      & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x8 0x"  + f"{((SGMEM_ETHDMA4_BASE  + ETH4_DATA_MM2S_len - 64)      & 0xFFFFFFFF):08x}"+"\n")
 
 
     

@@ -111,26 +111,26 @@ def merge_all(mac_len):
     mac_num = merge__replace(mif_files, output_filename,mac_len)
     return mac_num
 
-def SA():
+def SA(id):
     script_dir = os.path.dirname(os.path.abspath(__file__))
     mif_dir = os.path.join(script_dir, "mif")
     mat_dir = os.path.join(script_dir, "mif")
     
     name0 = "ROM"
-    name1 = "SA"
+    name1 = f"SA{id}"
     mif_file0 = os.path.join(mif_dir, f"{name0}.mif")
     mif_file1 = os.path.join(mat_dir, f"{name1}.mif")
 
     print("The SA series is being processed...")
     merge_and_replace(mif_file0, mif_file1)
 
-def SG():
+def SG(id):
     script_dir = os.path.dirname(os.path.abspath(__file__))
     mif_dir = os.path.join(script_dir, "mif")
     mat_dir = os.path.join(script_dir, "mif")
     
     name0 = "ROM"
-    name1 = "SG"
+    name1 = f"SG{id}"
     mif_file0 = os.path.join(mif_dir, f"{name0}.mif")
     mif_file1 = os.path.join(mat_dir, f"{name1}.mif")
 
