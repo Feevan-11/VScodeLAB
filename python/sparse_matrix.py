@@ -23,6 +23,8 @@
 import numpy as np
 from typing import List, Tuple
 
+# === MOD: 新增常量，每拍逻辑上传 16 个 FP16 元素 ===
+VALUES_PER_BEAT = 16  # 对应硬件 row_nnz_num[15:4] 的计数单位
 
 
 def int_to_bits_le(value: int, bit_width: int) -> List[int]:
@@ -110,6 +112,11 @@ def pack_row_data_for_A(
       row_idx(2B) + nnz_per_row(2B)，均为小端字节序。
     若当前块行数 < 16，多余 slot 填 0。
     行号使用 0-based（0~65535），假设总行数 < 65536。
+
+    === MOD: row_nnz_list 现在不再是“真实 nnz 个数”，
+             而是 16bit 的编码：
+             [15:4] = group_cnt (这一行需要的拍数)
+             [3:0]  = last_valid (最后一拍有效元素个数，0 表示满 16 个)
     """
     bits = []
     for slot in range(16):
@@ -140,8 +147,13 @@ def pack_row_data_for_B(
 
     此时“行信息”中的 row_idx 实际表示 B 的列号：
       row_idx(2B) = 原始 B 的列索引（0-based）
-      nnz_per_row(2B) = 当前块内该列的非零数量
+      nnz_per_row(2B) = 当前块内该列的非零数量（或其编码）
+
     若当前块列数 < 16，多余 slot 填 0。
+
+    === MOD: col_nnz_list 同样使用编码：
+             [15:4] = group_cnt (该列非零值的拍数)
+             [3:0]  = last_valid (最后一拍有效元素个数，0 表示满 16 个)
     """
     bits = []
     for slot in range(16):
@@ -157,6 +169,121 @@ def pack_row_data_for_B(
 
     assert len(bits) == 16 * 32
     return bits
+
+
+# === MOD: 新增两个辅助函数，用于一行/一列地编码 group_cnt + last_valid，
+#          并且按照每拍 16 个 FP16 的方式生成非零值 bit 序列 ===
+
+def encode_row_nnz_and_values_A(block: np.ndarray):
+    """
+    对 A 的一个块（num_rows_block × num_cols_block）：
+      - 按行优先（row-major）收集每行非零值
+      - 对每行：
+          nnz = 真实非零个数
+          group_cnt = ceil(nnz / 16)
+          last_valid = nnz % 16
+          row_nnz_num = (group_cnt << 4) | (last_valid & 0xF)
+      - 非零值序列：
+          每拍 16 个 FP16，不足 16 补 0，按照行优先顺序拼接
+
+    返回：
+      row_nnz_nums: len = num_rows_block，每个为 16bit 编码的 row_nnz_num
+      value_bits:   所有非零值（含补 0）转成的小端 bit 序列
+    """
+    num_rows_block, num_cols_block = block.shape
+    row_nnz_nums: List[int] = []
+    value_bits: List[int] = []
+
+    for r in range(num_rows_block):
+        # 收集这一行的非零值（行优先）
+        row_values: List[np.float16] = []
+        for c in range(num_cols_block):
+            v = block[r, c]
+            if v != 0:
+                row_values.append(np.float16(v))
+
+        nnz = len(row_values)
+
+        if nnz == 0:
+            group_cnt = 0
+            last_valid = 0
+        else:
+            group_cnt = (nnz + VALUES_PER_BEAT - 1) // VALUES_PER_BEAT
+            last_valid = nnz % VALUES_PER_BEAT  # 0 表示最后一拍正好 16 个
+
+        row_nnz_num = (group_cnt << 4) | (last_valid & 0xF)
+        row_nnz_nums.append(row_nnz_num)
+
+        # 按拍输出，1 拍 = 16 个 FP16，不足补 0
+        idx = 0
+        for g in range(group_cnt):
+            remain = nnz - idx
+            take = min(VALUES_PER_BEAT, remain)
+            group_vals = row_values[idx: idx + take]
+            idx += take
+
+            if take < VALUES_PER_BEAT:
+                group_vals.extend([np.float16(0.0)] * (VALUES_PER_BEAT - take))
+
+            for v in group_vals:
+                value_bits.extend(float16_to_bits_le(v))
+
+    return row_nnz_nums, value_bits
+
+
+def encode_col_nnz_and_values_B(block: np.ndarray):
+    """
+    对 B 的一个块（num_rows_block × num_cols_block）：
+      - 按列优先（column-major）收集每列非零值
+      - 对每列：
+          nnz = 真实非零个数
+          group_cnt = ceil(nnz / 16)
+          last_valid = nnz % 16
+          col_nnz_num = (group_cnt << 4) | (last_valid & 0xF)
+      - 非零值序列：
+          每拍 16 个 FP16，不足 16 补 0，按照列优先顺序拼接
+
+    返回：
+      col_nnz_nums: len = num_cols_block，每个为 16bit 编码的 col_nnz_num
+      value_bits:   所有非零值（含补 0）转成的小端 bit 序列
+    """
+    num_rows_block, num_cols_block = block.shape
+    col_nnz_nums: List[int] = []
+    value_bits: List[int] = []
+
+    for c in range(num_cols_block):
+        col_values: List[np.float16] = []
+        for r in range(num_rows_block):
+            v = block[r, c]
+            if v != 0:
+                col_values.append(np.float16(v))
+
+        nnz = len(col_values)
+
+        if nnz == 0:
+            group_cnt = 0
+            last_valid = 0
+        else:
+            group_cnt = (nnz + VALUES_PER_BEAT - 1) // VALUES_PER_BEAT
+            last_valid = nnz % VALUES_PER_BEAT
+
+        col_nnz_num = (group_cnt << 4) | (last_valid & 0xF)
+        col_nnz_nums.append(col_nnz_num)
+
+        idx = 0
+        for g in range(group_cnt):
+            remain = nnz - idx
+            take = min(VALUES_PER_BEAT, remain)
+            group_vals = col_values[idx: idx + take]
+            idx += take
+
+            if take < VALUES_PER_BEAT:
+                group_vals.extend([np.float16(0.0)] * (VALUES_PER_BEAT - take))
+
+            for v in group_vals:
+                value_bits.extend(float16_to_bits_le(v))
+
+    return col_nnz_nums, value_bits
 
 
 # =========================
@@ -185,9 +312,7 @@ def build_packet_bits_A(
     block = A[row_start:row_end, col_start:col_end]  # shape: (num_rows_block, num_cols_block)
     num_rows_block, num_cols_block = block.shape
 
-    # 行非零统计
-    row_nnz = np.count_nonzero(block, axis=1).astype(int).tolist()
-    # 总非零数
+    # === MOD: 总非零数仍然是“真实 nnz”，用于包头 ===
     nnz_total = int(np.count_nonzero(block))
     nnz_clipped = min(nnz_total, 0xFFFF)  # 超过 16bit 的部分这里简单裁剪（极端全 1 才会超）
 
@@ -220,11 +345,14 @@ def build_packet_bits_A(
         nnz_count=nnz_clipped
     )
 
+    # === MOD: 使用新的编码函数生成 row_nnz_nums 和 value_bits ===
+    row_nnz_nums, value_bits = encode_row_nnz_and_values_A(block)
+
     # 打包行信息（Row Data）
     row_data_bits = pack_row_data_for_A(
         row_start=row_start,
         num_rows_block=num_rows_block,
-        row_nnz_list=row_nnz,
+        row_nnz_list=row_nnz_nums,
         total_rows_A=total_rows_A
     )
 
@@ -232,14 +360,6 @@ def build_packet_bits_A(
     col_mask_bits: List[int] = []
     for mask in col_masks:
         col_mask_bits.extend(int_to_bits_le(mask, 16))
-
-    # 打包非零值序列（Non-Zero Values），A 按行优先
-    value_bits: List[int] = []
-    for r in range(num_rows_block):
-        for c in range(num_cols_block):
-            v = block[r, c]
-            if v != 0:
-                value_bits.extend(float16_to_bits_le(np.float16(v)))
 
     # 拼接整个包的 bit 流
     packet_bits = header_bits + row_data_bits + col_mask_bits + value_bits
@@ -280,10 +400,7 @@ def build_packet_bits_B(
     block = B[row_start:row_end, col_start:col_end]  # shape: (num_rows_block, num_cols_block)
     num_rows_block, num_cols_block = block.shape
 
-    # 每列非零统计（Row Data 使用“列信息”）
-    col_nnz = np.count_nonzero(block, axis=0).astype(int).tolist()
-
-    # 总非零数
+    # === MOD: 总非零数同样用真实 nnz，用于包头 ===
     nnz_total = int(np.count_nonzero(block))
     nnz_clipped = min(nnz_total, 0xFFFF)
 
@@ -315,11 +432,14 @@ def build_packet_bits_B(
         nnz_count=nnz_clipped
     )
 
+    # === MOD: 使用新的编码函数生成 col_nnz_nums 和 value_bits ===
+    col_nnz_nums, value_bits = encode_col_nnz_and_values_B(block)
+
     # Row Data：此时 row_idx 对应 B 的列索引
     row_data_bits = pack_row_data_for_B(
         col_start=col_start,
         num_cols_block=num_cols_block,
-        col_nnz_list=col_nnz,
+        col_nnz_list=col_nnz_nums,
         total_cols_B=total_cols_B
     )
 
@@ -327,14 +447,6 @@ def build_packet_bits_B(
     col_mask_bits: List[int] = []
     for mask in row_masks:
         col_mask_bits.extend(int_to_bits_le(mask, 16))
-
-    # 非零值序列：B 按列优先
-    value_bits: List[int] = []
-    for c in range(num_cols_block):
-        for r in range(num_rows_block):
-            v = block[r, c]
-            if v != 0:
-                value_bits.extend(float16_to_bits_le(np.float16(v)))
 
     packet_bits = header_bits + row_data_bits + col_mask_bits + value_bits
 
@@ -526,7 +638,7 @@ def write_packet_stats_file(
 # 示例主函数
 # =========================
 
-def main(matrix_size,sparsity):
+def main(matrix_size, sparsity):
     # ======= 可根据需要修改的参数 =======
     # 矩阵尺寸
     M = matrix_size   # A 的行数
@@ -534,8 +646,8 @@ def main(matrix_size,sparsity):
     N = matrix_size   # B 的列数
 
     # 稀疏度（非零比例）
-    density_A = 1-sparsity
-    density_B = 1-sparsity
+    density_A = 1 - sparsity
+    density_B = 1 - sparsity
 
     # 随机种子
     seed_A = 1
@@ -553,13 +665,13 @@ def main(matrix_size,sparsity):
     B_packets = compress_matrix_B_to_packets(B)
 
     print("Writing A_packets.txt ...")
-    A_lines_per_packet = write_packets_file(A_packets, ".\sparse\matrix_a_packets.mif")
+    A_lines_per_packet = write_packets_file(A_packets, ".\\sparse\\matrix_a_packets.mif")
 
     print("Writing B_packets.txt ...")
-    B_lines_per_packet = write_packets_file(B_packets, ".\sparse\matrix_b_packets.mif")
+    B_lines_per_packet = write_packets_file(B_packets, ".\\sparse\\matrix_b_packets.mif")
 
     print("Writing packet_stats.txt ...")
-    write_packet_stats_file(A_lines_per_packet, B_lines_per_packet, ".\sparse\packet_stats.txt")
+    write_packet_stats_file(A_lines_per_packet, B_lines_per_packet, ".\\sparse\\packet_stats.txt")
 
     print("Done.")
     print(f"Matrix A: {len(A_packets)} packets")
@@ -567,4 +679,4 @@ def main(matrix_size,sparsity):
 
 
 if __name__ == "__main__":
-    main(matrix_size = 32,sparsity=0.9)
+    main(matrix_size=32, sparsity=0.9)

@@ -441,6 +441,7 @@ def flat(descriptor_list):
 WRITE_BACK = 0x20000
 
 def generate_ethdma_descriptors_for_MM2S(
+    HEAD_in_base=0x40000000,
     data_in_base=0x40000000,
     MAC_LENTH = 64,
     SG_NUM = 100
@@ -451,7 +452,7 @@ def generate_ethdma_descriptors_for_MM2S(
     block_size_bytes0=  0x08000000 + 64
     block_size_bytes =  0x04000000 + MAC_LENTH
     addr = 0
-    addr0 = data_in_base 
+    addr0 = HEAD_in_base 
 
     for j in range(SG_NUM):
       addr0 = addr0 + 64*j
@@ -578,7 +579,7 @@ def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A
     )
     M_NUM = int((A_ROWS/block_width) * (B_COLS/block_width))*2
     descriptors_ethdma_DATA_MM2S = generate_ethdma_descriptors_for_MM2S(
-        
+        HEAD_in_base=DDR1_START,
         data_in_base=data0_in,
         MAC_LENTH = block_width*block_width,
         SG_NUM = M_NUM
