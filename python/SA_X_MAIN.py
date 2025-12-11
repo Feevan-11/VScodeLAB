@@ -560,6 +560,7 @@ def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A
     mac_start_make.make_XN_head(mac_da,XN_FLAG-1)
     mac_start_make.make_Array(mac_da,M_NUM)
     mac_start_make.make_XN(mac_da,mac_lenth,XN_NUM)
+    mac_start_make.make_f(mac_da,mac_lenth,16)
     hex_to_bin.dmasg()
     matrix_mul.main(False ,A__ROWS,B__ROWS,B__COLS, A_TYPE , MPU_ID)
     
@@ -575,6 +576,7 @@ def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A
     MAC.main_auto(flag,mac_da,1,"Array_mac",mac_lenth,DDR1_START)
     MAC.main_auto(flag,mac_da,1,"XN_head_mac",mac_lenth,DDR1_XN_HEAD)
     MAC.main_auto(flag,mac_da,1,"XN_mac",mac_lenth,DDR1_XN_DATA)
+    MAC.main_auto(flag,mac_da,1,"f_mac",mac_lenth,DDR1_XN_DATA)
     
     #merge_mif_files.SA()
 

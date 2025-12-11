@@ -169,6 +169,29 @@ def make_XN(mac_da,mac_len,mac_add):
                 for _ in range(4): 
                     f.write('00' * 240 + f"{(96 & 0xFF):016b}" + f"{(96 & 0xFF):016b}" + '\n')
 
+def make_f(mac_da,mac_len,mac_add):
+
+
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    name0 = "f_mac"
+
+    mif_dir = os.path.join(script_dir,"mif")
+
+    XN_file = os.path.join(mif_dir, f"{name0}.mif")
+
+  
+    mac_da = mac_da
+    flag = 0xCCA41704
+
+    
+
+    with open(XN_file, 'w') as f:
+        print('共添加帧数：',mac_add)
+        for i in range(mac_add):  
+            for i in range(mac_len):
+                f.write('ff' * 256 )
+
 def make_XN_head(mac_da,XN_FLAG):
 
 

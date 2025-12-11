@@ -29,44 +29,52 @@ addi x0, x0, 0
 addi x25, x25, 1
 
 addi x0, x0, 0 
-sw x6, 0x34(x2)
+;sw x6, 0x34(x2)
 addi x0, x0, 0
-addi x0, x0, 0
-
-addi x0, x0, 0 
-sw x4,  0x38(x2)
-addi x0, x0, 0 
-addi x0, x0, 0
-
-addi x0, x0, 0
-sw x5, 0x30(x2) 
 addi x0, x0, 0
 addi x0, x0, 0
 
 addi x0, x0, 0 
-sw x8, 0x40(x2)
+;sw x4,  0x38(x2)
+addi x0, x0, 0 
 addi x0, x0, 0
 addi x0, x0, 0
 
 addi x0, x0, 0
-sw x6, 0x34(x1)
-addi x0, x0, 0 
+;sw x5, 0x30(x2) 
+addi x0, x0, 0
+addi x0, x0, 0
 addi x0, x0, 0
 
 addi x0, x0, 0 
-sw x3,  0x38(x1)
-addi x0, x0, 0 
+;sw x8, 0x40(x2)
+addi x0, x0, 0
+addi x0, x0, 0
 addi x0, x0, 0
 
 addi x0, x0, 0
-sw x5, 0x30(x1)
+;sw x6, 0x34(x1)
 addi x0, x0, 0 
+addi x0, x0, 0
+addi x0, x0, 0
+
+addi x0, x0, 0 
+;sw x3,  0x38(x1)
+addi x0, x0, 0 
+addi x0, x0, 0
 addi x0, x0, 0
 
 addi x0, x0, 0
-sw x7, 0x40(x1) 
+;sw x5, 0x30(x1)
+addi x0, x0, 0 
+addi x0, x0, 0
+addi x0, x0, 0
+
+addi x0, x0, 0
+;sw x7, 0x40(x1) 
 addi x0, x0, 0 
 addi x0, x0, 0 
+addi x0, x0, 0
 
 addi x0, x0, 0 
 addi x0, x0, 0 
@@ -89,43 +97,51 @@ addi x0, x0, 0
 addi x0, x0, 0
 
 addi x0, x0, 0 
-sw x6, 0x4(x1)
+;sw x6, 0x4(x1)
 addi x0, x0, 0
-addi x0, x0, 0
-
-addi x0, x0, 0 
-sw x9,  0x8(x1)
-addi x0, x0, 0 
-addi x0, x0, 0
-
-addi x0, x0, 0
-sw x5, 0x0(x1) 
 addi x0, x0, 0
 addi x0, x0, 0
 
 addi x0, x0, 0 
-sw x11, 0x10(x1)
+;sw x9,  0x8(x1)
+addi x0, x0, 0 
 addi x0, x0, 0
 addi x0, x0, 0
 
 addi x0, x0, 0
-sw x6, 0x4(x2)
-addi x0, x0, 0 
+;sw x5, 0x0(x1) 
+addi x0, x0, 0
+addi x0, x0, 0
 addi x0, x0, 0
 
 addi x0, x0, 0 
-sw x10,  0x8(x2)
-addi x0, x0, 0 
+;sw x11, 0x10(x1)
+addi x0, x0, 0
+addi x0, x0, 0
 addi x0, x0, 0
 
 addi x0, x0, 0
-sw x5, 0x0(x2)
+;sw x6, 0x4(x2)
 addi x0, x0, 0 
+addi x0, x0, 0
+addi x0, x0, 0
+
+addi x0, x0, 0 
+;sw x10,  0x8(x2)
+addi x0, x0, 0 
+addi x0, x0, 0
 addi x0, x0, 0
 
 addi x0, x0, 0
-sw x12, 0x10(x2) 
+;sw x5, 0x0(x2)
 addi x0, x0, 0 
+addi x0, x0, 0
+addi x0, x0, 0
+
+addi x0, x0, 0
+;sw x12, 0x10(x2) 
+addi x0, x0, 0 
+addi x0, x0, 0
 addi x0, x0, 0
 
 addi x0, x0, 0 
@@ -186,22 +202,26 @@ addi x0, x0, 0
 
 addi x0, x0, 0
 addi x0, x0, 0 
-sw x4, 0x4(x2)
+;sw x4, 0x4(x2)
+addi x0, x0, 0
 addi x0, x0, 0
 
 addi x0, x0, 0
 addi x0, x0, 0 
-sw x7,  0x8(x2)
+;sw x7,  0x8(x2)
 addi x0, x0, 0 
-
-addi x0, x0, 0
-addi x0, x0, 0
-sw x3, 0x0(x2) 
 addi x0, x0, 0
 
 addi x0, x0, 0
 addi x0, x0, 0
-sw x8, 0x10(x2) 
+;sw x3, 0x0(x2) 
+addi x0, x0, 0
+addi x0, x0, 0
+
+addi x0, x0, 0
+addi x0, x0, 0
+;sw x8, 0x10(x2) 
+addi x0, x0, 0
 addi x0, x0, 0
 
 addi x0, x0, 0 

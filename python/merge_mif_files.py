@@ -89,15 +89,8 @@ def merge_all(mac_len):
     
 
     names = [
-    "DMA0_with_headers",
-    "DMA1_with_headers", 
-    "MATRIX_A_with_headers",
-    "MATRIX_B_with_headers",
     "SA_with_headers",
     "ETHDMA4_with_headers",
-    "Array_mac_with_headers",
-    "XN_head_mac_with_headers",
-    "XN_mac_with_headers",
     "START_MAC"
     ]
     mif_file_o = os.path.join(mif_dir, f"ALL_MAC.mif")
