@@ -1,11 +1,11 @@
 | PC       | Slot3                  | Slot2                  | Slot1                 | Slot0                  |
 |----------|------------------------|------------------------|-----------------------|------------------------|
 | `0x0000` | `lui x1, 0xFF004`      | `lui x2, 0xFF004`      | `lui x3, 0x1`         | `lui x4, 0x1`          |
-| `0x0010` | `lui x5, 0xF4000`      | `lui x6, 0xF5A00`      | `lui x7, 0x6`         | `lui x8, 0xF4006`      |
-| `0x0020` | `lui x9, 0xF4200`      | `lui x10, 0xFF004`     | `lui x11, 0xF5A00`    | `lui x12, 0xF5A05`     |
+| `0x0010` | `lui x5, 0xF4000`      | `lui x6, 0xF5A00`      | `lui x7, 0x0`         | `lui x8, 0xF4000`      |
+| `0x0020` | `lui x9, 0xF4200`      | `lui x10, 0xFF004`     | `lui x11, 0xF5A00`    | `lui x12, 0xF5A00`     |
 | `0x0030` | `addi x1, x1, 0x400`   | `addi x2, x2, 0x440`   | `addi x3, x3, 0x1`    | `addi x4, x4, 0x0`     |
-| `0x0040` | `addi x5, x5, 0x0`     | `addi x6, x6, 0x0`     | `addi x7, x7, 0x800`  | `addi x8, x8, 0x800`   |
-| `0x0050` | `addi x9, x9, 0x0`     | `addi x10, x10, 0xC00` | `addi x11, x11, 0x0`  | `addi x12, x12, 0x7C0` |
+| `0x0040` | `addi x5, x5, 0x0`     | `addi x6, x6, 0x0`     | `addi x7, x7, 0x500`  | `addi x8, x8, 0x500`   |
+| `0x0050` | `addi x9, x9, 0x0`     | `addi x10, x10, 0xC00` | `addi x11, x11, 0x0`  | `addi x12, x12, 0x4C0` |
 | `0x0060` | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `sw x4,  0x0(x1)`     | `addi x0, x0, 0`       |
 | `0x0070` | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `sw x4, 0x4(x1)`      | `addi x0, x0, 0`       |
 | `0x0080` | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `sw x5, 0x18(x1)`     | `addi x0, x0, 0`       |
@@ -34,11 +34,11 @@
 | `0x01F0` | `lui x11, 0x0`         | `lui x12, 0x0`         | `lui x13, 0x0`        | `lui x14, 0x0`         |
 | `0x0200` | `lui x15, 0x0`         | `lui x16, 0x0`         | `lui x17, 0x0`        | `lui x18, 0xCCA41`     |
 | `0x0210` | `lui x19, 0x0`         | `lui x20, 0x40000`     | `lui x21, 0x40000`    | `lui x22, 0x0`         |
-| `0x0220` | `lui x23, 0x4006E`     | `lui x24, 0x0`         | `addi x0, x0, 0`      | `addi x0, x0, 0`       |
+| `0x0220` | `lui x23, 0x40006`     | `lui x24, 0x0`         | `addi x0, x0, 0`      | `addi x0, x0, 0`       |
 | `0x0230` | `addi x11, x11, 0x0`   | `addi x12, x12, 0x0`   | `addi x13, x13, 0xFF` | `addi x14, x14, 0xF4`  |
 | `0x0240` | `addi x15, x15, 0xF0`  | `addi x16, x16, 0xF1`  | `addi x17, x17, 0xF2` | `addi x18, x18, 0x704` |
 | `0x0250` | `addi x19, x19, 0x0`   | `addi x20, x20, 0x0`   | `addi x21, x21, 0x40` | `addi x22, x22, 0x500` |
-| `0x0260` | `addi x23, x23, 0xB00` | `addi x24, x24, 0x0`   | `addi x0, x0, 0`      | `addi x0, x0, 0`       |
+| `0x0260` | `addi x23, x23, 0xF00` | `addi x24, x24, 0x0`   | `addi x0, x0, 0`      | `addi x0, x0, 0`       |
 | `0x0270` | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `addi x0, x0, 0`       |
 | `0x0280` | `addi x0, x0, 0`       | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `lp.setup x1, 0x20`    |
 | `0x0290` | `lw x19, 0x0(x23)`     | `addi x0, x0, 0`       | `addi x0, x0, 0`      | `addi x0, x0, 0`       |

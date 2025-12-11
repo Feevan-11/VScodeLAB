@@ -495,7 +495,7 @@ def generate_ethdma_XN_for_MM2S(
 
 def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A_TYPE = 0,B_TYPE = 0, MPU_ID = 0,
           mac_da = 0xF0000000 , flag = 0xCCA41704, mac_lenth= 99):
-
+    WRITE_BACK = A__ROWS*B__ROWS*element_size
     if MPU_ID == 0:
         data0_in      = Data_Mem0
         data1_in      = Data_Mem1
@@ -580,7 +580,7 @@ def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A
     M_NUM = int((A_ROWS/block_width) * (B_COLS/block_width))*2
     descriptors_ethdma_DATA_MM2S = generate_ethdma_descriptors_for_MM2S(
         HEAD_in_base=DDR1_START,
-        data_in_base=data0_in,
+        data_in_base=data0_out,
         MAC_LENTH = block_width*block_width,
         SG_NUM = M_NUM
     )
@@ -666,7 +666,7 @@ def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A
         f1.write("x12 0x" + f"{((DMA1_MM2S_START+DMA1_MM2S_len-64) & 0xFFFFFFFF):08x}"+"\n")
         f1.write(f"; --- SEGMENT 2 ---" +"\n")
         f1.write("x1 0x"  + f"{(0x0          & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x2 0x"  + f"{(ethdma4_config          & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x2 0x"  + f"{(ethdma2_config          & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x3 0x"  + f"{(0x00001001              & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x4 0x"  + f"{(0x00001000              & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x5 0x"  + f"{(SGMEM_ETHDMA3_BASE      & 0xFFFFFFFF):08x}"+"\n")
@@ -703,7 +703,7 @@ def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A
     MAC.main_auto(flag,mac_da,1,'MATRIX_A',mac_lenth,data0_in)
     MAC.main_auto(flag,mac_da,1,'MATRIX_B',mac_lenth,data1_in)
     MAC.main_auto(flag,mac_da,1,"SA",mac_lenth,ROM_START)
-    MAC.main_auto(flag,mac_da,1,"ETHDMA4",mac_lenth,SGMEM_ETHDMA1_BASE)
+    MAC.main_auto(flag,mac_da,1,"ETHDMA4",mac_lenth,SGMEM_ETHDMA4_BASE)
     MAC.main_auto(flag,mac_da,1,"Array_mac",mac_lenth,DDR1_START)
     MAC.main_auto(flag,mac_da,1,"XN_head_mac",mac_lenth,DDR1_XN_HEAD)
     MAC.main_auto(flag,mac_da,1,"XN_mac",mac_lenth,DDR1_XN_DATA)

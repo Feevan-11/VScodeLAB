@@ -96,8 +96,8 @@ def merge_all(mac_len):
     "SA_with_headers",
     "ETHDMA4_with_headers",
     "Array_mac_with_headers",
-    "XN_head_mac_with_headers",
-    "XN_mac_with_headers",
+    #"XN_head_mac_with_headers",
+    #"XN_mac_with_headers",
     "START_MAC"
     ]
     mif_file_o = os.path.join(mif_dir, f"ALL_MAC.mif")
