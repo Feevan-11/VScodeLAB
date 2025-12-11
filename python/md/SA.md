@@ -34,9 +34,9 @@
 | `0x01F0` | `addi x0, x0, 0`    | `addi x0, x0, 0`      | `addi x0, x0, 0`      | `addi x0, x0, 0`      |
 | `0x0200` | `addi x0, x0, 0`    | `addi x0, x0, 0`      | `addi x0, x0, 0`      | `addi x0, x0, 0`      |
 | `0x0210` | `lui x1, 0x0`       | `lui x2, 0xFF004`     | `lui x3, 0x1`         | `lui x4, 0x1`         |
-| `0x0220` | `lui x5, 0xF5A00`   | `lui x6, 0xF5A00`     | `lui x7, 0xF5C00`     | `lui x8, 0xF5C00`     |
-| `0x0230` | `addi x1, x1, 0x0`  | `addi x2, x2, 0x800`  | `addi x3, x3, 0x1`    | `addi x4, x4, 0x0`    |
-| `0x0240` | `addi x5, x5, 0x0`  | `addi x6, x6, 0x0`    | `addi x7, x7, 0x100`  | `addi x8, x8, 0x5C0`  |
+| `0x0220` | `lui x5, 0x0`       | `lui x6, 0x0`         | `lui x7, 0xF5C00`     | `lui x8, 0xF5C00`     |
+| `0x0230` | `addi x1, x1, 0x0`  | `addi x2, x2, 0x0`    | `addi x3, x3, 0x1`    | `addi x4, x4, 0x0`    |
+| `0x0240` | `addi x5, x5, 0x0`  | `addi x6, x6, 0x0`    | `addi x7, x7, 0x100`  | `addi x8, x8, 0x4C0`  |
 | `0x0250` | `addi x0, x0, 0`    | `addi x0, x0, 0`      | `addi x0, x0, 0`      | `addi x25, x25, 1`    |
 | `0x0260` | `addi x0, x0, 0`    | `addi x0, x0, 0`      | `sw x0, 0x0(x2)`      | `addi x0, x0, 0`      |
 | `0x0270` | `addi x0, x0, 0`    | `addi x0, x0, 0`      | `sw x4, 0x4(x2)`      | `addi x0, x0, 0`      |
@@ -55,7 +55,7 @@
 | `0x0340` | `addi x0, x0, 0`    | `addi x0, x0, 0`      | `addi x0, x0, 0`      | `lp.goto x2, -0x10`   |
 | `0x0350` | `addi x0, x0, 0`    | `addi x0, x0, 0`      | `addi x0, x0, 0`      | `addi x0, x0, 0`      |
 | `0x0360` | `lui x1, 0x0`       | `lui x2, 0xFF004`     | `lui x3, 0x1`         | `lui x4, 0x1`         |
-| `0x0370` | `lui x5, 0xF5400`   | `lui x6, 0xF5400`     | `lui x7, 0xF5C00`     | `lui x8, 0xF5C00`     |
+| `0x0370` | `lui x5, 0x0`       | `lui x6, 0x0`         | `lui x7, 0xF5C00`     | `lui x8, 0xF5C00`     |
 | `0x0380` | `addi x1, x1, 0x0`  | `addi x2, x2, 0x0`    | `addi x3, x3, 0x1`    | `addi x4, x4, 0x0`    |
 | `0x0390` | `addi x5, x5, 0x0`  | `addi x6, x6, 0x0`    | `addi x7, x7, 0x0`    | `addi x8, x8, 0xC0`   |
 | `0x03A0` | `addi x0, x0, 0`    | `addi x0, x0, 0`      | `addi x0, x0, 0`      | `addi x25, x25, 1`    |

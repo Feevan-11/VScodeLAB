@@ -133,138 +133,6 @@ def write_txt_file_A(words, filename):
             hex_string = hex(int(bin_str, 2))
             f.write(hex_string+ "\n")
 
-
-def generate_cdma0_descriptors_for_matrix_A_IN(
-    A_rows=64,
-    A_cols=128,
-    block_width=16,
-    Global_0_base=0x00010000,
-    Shared_Men0_base=0x80000000,
-    element_size=2
-):
-    """
-    Generate a list of SG descriptors for matrix A (8 words per descriptor),
-    Suppose A is stored in rows, A_rows x A_cols in size, and block_width rows (entire columns) are moved at a time.
-    The destination address is switched back and forth between dest0/dest1.
-    Return value: descriptors_A, where descriptors_A is [ [word0,word1,...], [word0,word1,...], ... ]
-    """
-    descriptors = []
-    # There are (A_rows / block_width) sub-blocks in total (not taking into account the divisible remainder)
-    Anum_blocks = A_rows // block_width
-
-    # Each subblock: block_width rows, A_cols elements per row, each element = 4 bytes = > block_size_bytes
-    block_size_bytes = block_width * A_cols * element_size
-
-    for i in range(Anum_blocks):
-       
-        # SA：BASE + i* (block_width*A_cols*4)
-        src_addr = Global_0_base + i * block_size_bytes
-        #print(f'{src_addr:08x}')
-        # DA 0x80000000 / 0x90000000 
-        dst_addr = Shared_Men0_base + i * block_size_bytes
-        # Set next_desc_addr to 0 first, and then the main tone function will handle the links uniformly
-        next_desc_addr = 0
-        #if (i != 0):
-        desc_words = make_sg_cdma_descriptor(next_desc_addr, src_addr, dst_addr, block_size_bytes)
-        descriptors.append(desc_words)
-
-    return descriptors
-
-def generate_cdma1_descriptors_for_matrix_B_IN(
-    B_rows=128,
-    B_cols=64,
-    block_width=16,
-    Global_1_base=0x40001000,
-    Shared_Men1_base=0x90000000,
-    element_size=2
-):
-
-    descriptors = []
-    Bnum_blocks = B_cols // block_width
-
-    block_size_bytes = block_width * B_rows * element_size
-
-    for i in range(Bnum_blocks):
-       
-        src_addr = Global_1_base + i * block_size_bytes
-        dst_addr = Shared_Men1_base + i * block_size_bytes
-        next_desc_addr = 0
-        desc_words = make_sg_cdma_descriptor(next_desc_addr, src_addr, dst_addr, block_size_bytes)
-        descriptors.append(desc_words)
-
-    return descriptors
-
-def generate_cdma0_descriptors_for_matrix_A_OUT(
-    A_rows=64,
-    A_cols=128,
-    B_cols=64,
-    block_width=16,
-    Global_0_base=0x24000000,
-    Shared_Men0_base=0x84000000,
-    Shared_Men2_base=0x94000000,
-    element_size=4
-):
-
-    descriptors = []
-
-    Anum_blocks = A_rows // block_width
-    Bnum_blocks = B_cols // block_width
-
-    block_size_bytes = block_width * block_width * element_size
-    src_addr_add = 0
-
-    for i in range(Anum_blocks):
-
-        for j in range(Bnum_blocks):
-          A = i*Bnum_blocks + j
-
-          dst_addr = Global_0_base + A * block_size_bytes
-          src_addr = Shared_Men0_base if (A % 2 == 0) else Shared_Men2_base
-          src_addr = src_addr + src_addr_add
-          next_desc_addr = 0
-          
-          desc_words = make_sg_cdma_descriptor(next_desc_addr, src_addr, dst_addr, block_size_bytes)
-          descriptors.append(desc_words)
-          if(A % 2 == 1):
-                src_addr_add = src_addr_add + 512
-
-    return descriptors
-
-def generate_cdma1_descriptors_for_matrix_B_OUT(
-    A_rows=64,
-    B_rows=128,
-    B_cols=64,
-    block_width=16,
-    Global_1_base=0x68000000,
-    Shared_Men1_base=0x8c000000,
-    Shared_Men3_base=0x9c000000,
-    element_size=4
-):
-    
-    descriptors = []
-    Bnum_blocks = B_cols // block_width
-    Anum_blocks = A_rows // block_width
-
-    block_size_bytes = B_rows * block_width * element_size
-    src_addr_add = 0
-
-    for i in range(Anum_blocks):
-
-        for j in range(Bnum_blocks):
-            B = i*Bnum_blocks + j
-            dst_addr = Global_1_base + B * block_size_bytes
-
-            src_addr = Shared_Men1_base if (B % 2 == 0) else Shared_Men3_base
-            src_addr = src_addr + src_addr_add
-            next_desc_addr = 0
-            desc_words = make_sg_cdma_descriptor(next_desc_addr, src_addr, dst_addr, block_size_bytes)
-            descriptors.append(desc_words)
-            if (B % 2 == 1):
-                src_addr_add = src_addr_add + 512
-
-    return descriptors
-
-
 def generate_dma0_descriptors_for_MM2S(
     A_rows=64,
     A_B=128,
@@ -665,21 +533,21 @@ def op_SA(A__ROWS=16,B__ROWS=16,B__COLS=16, block_width = 32, element_size = 2,A
         f1.write("x11 0x" + f"{((DMA0_MM2S_START+DMA0_MM2S_len-64) & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x12 0x" + f"{((DMA1_MM2S_START+DMA1_MM2S_len-64) & 0xFFFFFFFF):08x}"+"\n")
         f1.write(f"; --- SEGMENT 2 ---" +"\n")
-        f1.write("x1 0x"  + f"{(0x0          & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x2 0x"  + f"{(ethdma2_config          & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x3 0x"  + f"{(0x00001001              & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x4 0x"  + f"{(0x00001000              & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x5 0x"  + f"{(SGMEM_ETHDMA3_BASE      & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x6 0x"  + f"{(SGMEM_ETHDMA3_BASE      & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x7 0x"  + f"{(SGMEM_ETHDMA4_BASE  + ETH4_DATA_MM2S_len    & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x8 0x"  + f"{((SGMEM_ETHDMA4_BASE + ETH4_DATA_MM2S_len + ETH4_XN_MM2S_len - 64)      & 0xFFFFFFFF):08x}"+"\n")
-        f1.write(f"; --- SEGMENT 3 ---" +"\n")
-        f1.write("x1 0x"  + f"{(0x0         & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x1 0x"  + f"{(0x0                     & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x2 0x"  + f"{(ethdma4_config          & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x3 0x"  + f"{(0x00001001              & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x4 0x"  + f"{(0x00001000              & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x5 0x"  + f"{(SGMEM_ETHDMA0_BASE         & 0xFFFFFFFF):08x}"+"\n")
-        f1.write("x6 0x"  + f"{(SGMEM_ETHDMA0_BASE      & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x5 0x"  + f"{(0x0                     & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x6 0x"  + f"{(0x0                     & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x7 0x"  + f"{(SGMEM_ETHDMA4_BASE  + ETH4_DATA_MM2S_len    & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x8 0x"  + f"{((SGMEM_ETHDMA4_BASE + ETH4_DATA_MM2S_len + ETH4_XN_MM2S_len - 64)      & 0xFFFFFFFF):08x}"+"\n")
+        f1.write(f"; --- SEGMENT 3 ---" +"\n")
+        f1.write("x1 0x"  + f"{(0x0                     & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x2 0x"  + f"{(ethdma4_config          & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x3 0x"  + f"{(0x00001001              & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x4 0x"  + f"{(0x00001000              & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x5 0x"  + f"{(0x0                     & 0xFFFFFFFF):08x}"+"\n")
+        f1.write("x6 0x"  + f"{(0x0                     & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x7 0x"  + f"{(SGMEM_ETHDMA4_BASE      & 0xFFFFFFFF):08x}"+"\n")
         f1.write("x8 0x"  + f"{((SGMEM_ETHDMA4_BASE  + ETH4_DATA_MM2S_len - 64)      & 0xFFFFFFFF):08x}"+"\n")
 
@@ -761,7 +629,7 @@ DDR1_XN_DATA     = 0x80004000
 DDR1_XN_HEAD     = 0x80002000
 
 ROM_START   = 0xF0001500
-XN_NUM      = 10
+XN_NUM      = 8
 
 def main(matrix_List= [[16,16,16,32,2,0,0],[16,16,16,32,2,0,0],[16,16,16,32,2,0,0],[16,16,16,32,2,0,0]], MPU_ID = '1000',
          mac_da = 0xF0000000 , flag = 0xCCA41704 , mac_lenth= 99):

@@ -184,36 +184,6 @@ addi x0, x0, 0
 sw x0, 0x0(x2) 
 addi x0, x0, 0
 
-;addi x0, x0, 0
-;addi x0, x0, 0
-;sw x0, 0x0(x1) 
-;addi x0, x0, 0
-
-;addi x0, x0, 0
-;addi x0, x0, 0
-;addi x0, x0, 0
-;addi x0, x0, 0
-
-;addi x0, x0, 0
-;addi x0, x0, 0 
-;sw x4, 0x34(x1)
-;addi x0, x0, 0
-
-;addi x0, x0, 0
-;addi x0, x0, 0 
-;sw x5,  0x38(x1)
-;addi x0, x0, 0 
-
-;addi x0, x0, 0
-;addi x0, x0, 0
-;sw x3, 0x30(x1) 
-;addi x0, x0, 0
-
-;addi x0, x0, 0
-;addi x0, x0, 0
-;sw x6, 0x40(x1) 
-;addi x0, x0, 0
-
 addi x0, x0, 0
 addi x0, x0, 0 
 sw x4, 0x4(x2)
